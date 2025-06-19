@@ -267,5 +267,40 @@
             </div>
         </div>
     </div>
+
+    <!-- 底部导航栏 -->
+    <div class="bottom-nav flex items-center justify-around px-4" style="position: fixed; bottom: 0; left: 0; right: 0; height: 90px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px); border-radius: 24px 24px 0 0; box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.08);">
+        <div class="nav-item text-center cursor-pointer py-3 px-4" onclick="jumpToPage('home')">
+            <i class="fas fa-home text-gray-400 text-xl mb-1"></i>
+            <div class="text-xs font-medium text-gray-500">首页</div>
+        </div>
+        <div class="nav-item text-center cursor-pointer py-3 px-4" onclick="jumpToPage('mistakes')">
+            <i class="fas fa-book text-gray-400 text-xl mb-1"></i>
+            <div class="text-xs font-medium text-gray-500">错题本</div>
+        </div>
+        <div class="nav-item text-center cursor-pointer py-3 px-4" onclick="jumpToPage('camera')">
+            <i class="fas fa-camera text-gray-400 text-xl mb-1"></i>
+            <div class="text-xs font-medium text-gray-500">拍照</div>
+        </div>
+        <div class="nav-item text-center cursor-pointer py-3 px-4" onclick="jumpToPage('report')">
+            <i class="fas fa-chart-bar text-gray-400 text-xl mb-1"></i>
+            <div class="text-xs font-medium text-gray-500">报告</div>
+        </div>
+        <div class="nav-item text-center cursor-pointer py-3 px-4" onclick="jumpToPage('profile')">
+            <i class="fas fa-user text-gray-400 text-xl mb-1"></i>
+            <div class="text-xs font-medium text-gray-500">我的</div>
+        </div>
+    </div>
+
+    <script>
+        function jumpToPage(page) {
+            if (window.parent && window.parent.postMessage) {
+                window.parent.postMessage({
+                    type: 'jumpToPage',
+                    page: page
+                }, '*');
+            }
+        }
+    </script>
 </body>
 </html> 

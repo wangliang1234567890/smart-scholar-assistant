@@ -106,6 +106,16 @@
                 </div>
             </div>
 
+            <!-- 添加课程 -->
+            <div>
+                <div class="prototype-title">➕ 添加课程</div>
+                <div class="phone-frame">
+                    <div class="phone-screen">
+                        <iframe src="add-course.html" width="100%" height="100%" frameborder="0"></iframe>
+                    </div>
+                </div>
+            </div>
+
             <!-- 复习提醒 -->
             <div>
                 <div class="prototype-title">🔄 智能复习</div>
@@ -196,11 +206,39 @@
     </div>
 
     <script>
+        // 页面映射表
+        const pageMapping = {
+            'home': 'home.html',
+            'mistakes': 'mistakes.html',
+            'camera': 'camera.html',
+            'ai-practice': 'ai-practice.html',
+            'schedule': 'schedule.html',
+            'add-course': 'add-course.html',
+            'review': 'review.html',
+            'report': 'report.html',
+            'profile': 'profile.html',
+            'mistake-detail': 'mistake-detail.html',
+            'camera-result': 'camera-result.html',
+            'course-detail': 'course-detail.html',
+            'achievements': 'achievements.html',
+            'settings': 'settings.html'
+        };
+
         // 处理子页面导航消息
         window.addEventListener('message', (event) => {
-            if (event.data.startsWith('navigate:')) {
-                const targetPage = event.data.replace('navigate:', '');
-                
+            let targetPage = '';
+            
+            // 处理旧格式的消息 (navigate:xxx.html)
+            if (event.data.startsWith && event.data.startsWith('navigate:')) {
+                targetPage = event.data.replace('navigate:', '');
+            }
+            // 处理新格式的消息 (jumpToPage)
+            else if (event.data.type === 'jumpToPage') {
+                const pageName = event.data.page;
+                targetPage = pageMapping[pageName] || `${pageName}.html`;
+            }
+            
+            if (targetPage) {
                 // 查找包含目标页面的iframe
                 const iframes = document.querySelectorAll('iframe');
                 let targetIframe = null;
@@ -229,9 +267,11 @@
                         phoneFrame.style.transform = 'scale(1)';
                         phoneFrame.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)';
                     }, 2000);
+                    
+                    console.log('导航到页面:', targetPage);
+                } else {
+                    console.log('未找到目标页面:', targetPage);
                 }
-                
-                console.log('导航到页面:', targetPage);
             }
         });
 
@@ -239,6 +279,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('智能学霸小助手原型系统已加载');
             console.log('您可以在各个页面中点击按钮来体验页面间的跳转功能');
+            console.log('支持的页面:', Object.keys(pageMapping));
         });
     </script>
 </body>

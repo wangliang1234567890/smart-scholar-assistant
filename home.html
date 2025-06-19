@@ -38,13 +38,42 @@
             box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.08);
         }
         
-        .feature-card {
+        .welcome-section {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
             border-radius: 24px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+        }
+        
+        .quick-stats {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .quick-stats:hover {
+            transform: scale(1.02);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            position: relative;
         }
         
         .feature-card:hover {
@@ -52,29 +81,35 @@
             box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
         }
         
-        .welcome-card {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
+        .feature-card.primary {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(64, 224, 160, 0.1) 0%, rgba(72, 224, 168, 0.1) 100%);
+            border: 2px solid rgba(64, 224, 160, 0.3);
+        }
+        
+        .schedule-card {
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            border-radius: 24px;
+            border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
         }
         
-        .progress-circle {
-            width: 80px;
-            height: 80px;
+        .progress-ring {
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
-            position: relative;
             background: conic-gradient(#40E0A0 75%, #E2E8F0 0);
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
         }
         
-        .progress-circle::before {
+        .progress-ring::before {
             content: '';
-            width: 60px;
-            height: 60px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             background: white;
             position: absolute;
@@ -85,13 +120,13 @@
             z-index: 1;
             font-weight: 700;
             color: #40E0A0;
-            font-size: 18px;
+            font-size: 14px;
         }
         
         .icon-container {
-            width: 64px;
-            height: 64px;
-            border-radius: 20px;
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -100,26 +135,6 @@
         
         .feature-card:hover .icon-container {
             transform: scale(1.1);
-        }
-        
-        .badge {
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 14px;
-            padding: 8px 16px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-        }
-        
-        .stats-item {
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 16px;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-        
-        .stats-item:hover {
-            transform: scale(1.05);
-            background: rgba(255, 255, 255, 0.95);
         }
         
         .nav-item {
@@ -134,6 +149,26 @@
         
         .nav-item:not(.active):hover {
             background: rgba(255, 255, 255, 0.5);
+        }
+        
+        .badge {
+            background: linear-gradient(135deg, #40E0A0 0%, #48E0A8 100%);
+            color: white;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 12px;
+            padding: 4px 8px;
+            box-shadow: 0 2px 8px rgba(64, 224, 160, 0.3);
+        }
+        
+        .streak-indicator {
+            background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
         }
     </style>
 </head>
@@ -159,114 +194,142 @@
     <!-- 主内容区域 -->
     <div class="content-area px-6">
         <!-- 顶部欢迎区域 -->
-        <div class="pt-6 pb-8">
-            <div class="welcome-card p-6 mb-8">
-                <div class="flex justify-between items-center mb-6">
+        <div class="pt-6 pb-4">
+            <div class="welcome-section p-6">
+                <div class="flex justify-between items-center mb-4">
                     <div>
-                        <h1 class="text-gray-900 text-3xl font-bold mb-2">
-                            你好，小明！ 👋
+                        <h1 class="text-gray-900 text-2xl font-bold mb-1">
+                            你好，小明！👋
                         </h1>
-                        <p class="text-gray-600 text-lg font-medium">今天也要加油学习哦～</p>
+                        <p class="text-gray-600 text-base font-medium">今天也要加油学习哦～</p>
                     </div>
-                    <div class="w-16 h-16 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl flex items-center justify-center">
-                        <i class="fas fa-graduation-cap text-emerald-600 text-2xl"></i>
+                    <div class="streak-indicator">
+                        🔥 连续5天
                     </div>
                 </div>
 
-                <!-- 学习进度 -->
-                <div class="flex justify-between items-center">
-                    <div class="flex space-x-4">
-                        <div class="stats-item text-center p-4">
-                            <div class="text-2xl font-bold text-blue-500 mb-1">5</div>
-                            <div class="text-xs text-gray-600 font-medium">错题练习</div>
-                        </div>
-                        <div class="stats-item text-center p-4">
-                            <div class="text-2xl font-bold text-emerald-500 mb-1">3</div>
-                            <div class="text-xs text-gray-600 font-medium">课程复习</div>
-                        </div>
-                        <div class="stats-item text-center p-4">
-                            <div class="text-2xl font-bold text-orange-500 mb-1">120</div>
-                            <div class="text-xs text-gray-600 font-medium">学习积分</div>
-                        </div>
+                <!-- 今日学习概览 -->
+                <div class="flex space-x-4">
+                    <div class="quick-stats text-center p-3 flex-1">
+                        <div class="text-lg font-bold text-emerald-500 mb-1">3</div>
+                        <div class="text-xs text-gray-600">待复习</div>
                     </div>
-                    <div class="progress-circle">
+                    <div class="quick-stats text-center p-3 flex-1">
+                        <div class="text-lg font-bold text-blue-500 mb-1">12</div>
+                        <div class="text-xs text-gray-600">已完成</div>
+                    </div>
+                    <div class="quick-stats text-center p-3 flex-1">
+                        <div class="text-lg font-bold text-orange-500 mb-1">85%</div>
+                        <div class="text-xs text-gray-600">正确率</div>
+                    </div>
+                    <div class="progress-ring">
                         <div class="progress-text">75%</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 功能模块 -->
-        <div class="space-y-4">
-            <!-- 拍照录题 -->
-            <div class="feature-card p-6" onclick="jumpToPage('camera')">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <div class="icon-container bg-gradient-to-br from-red-50 to-pink-50">
-                            <i class="fas fa-camera text-red-500 text-2xl"></i>
+        <!-- 主要功能区域 -->
+        <div class="pb-4">
+            <div class="feature-grid">
+                <!-- 拍照录题 - 主功能 -->
+                <div class="feature-card primary p-6" onclick="jumpToPage('camera')">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="icon-container bg-gradient-to-br from-red-50 to-pink-50">
+                                <i class="fas fa-camera text-red-500 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900 text-lg">拍照录题</h3>
+                                <p class="text-gray-600 text-sm">智能识别，一键录入</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="font-bold text-gray-900 text-lg mb-1">拍照录题</h3>
-                            <p class="text-gray-600 text-sm font-medium">智能识别，快速录入错题</p>
+                        <div class="badge">
+                            快速
                         </div>
                     </div>
-                    <div class="badge bg-gradient-to-r from-red-500 to-pink-500 text-white">
-                        5 待处理
+                    <div class="text-xs text-gray-500">
+                        📸 对准题目轻松一拍，AI自动识别内容
+                    </div>
+                </div>
+
+                <!-- AI练习 -->
+                <div class="feature-card p-4" onclick="jumpToPage('ai-practice')">
+                    <div class="icon-container bg-gradient-to-br from-blue-50 to-indigo-50 mb-3">
+                        <i class="fas fa-brain text-blue-500 text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-1">AI专项练习</h3>
+                    <p class="text-gray-600 text-xs mb-2">智能生成变式题</p>
+                    <div class="badge">3 推荐</div>
+                </div>
+
+                <!-- 错题本 -->
+                <div class="feature-card p-4" onclick="jumpToPage('mistakes')">
+                    <div class="icon-container bg-gradient-to-br from-purple-50 to-violet-50 mb-3">
+                        <i class="fas fa-book text-purple-500 text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-1">我的错题本</h3>
+                    <p class="text-gray-600 text-xs mb-2">整理错题，巩固知识</p>
+                    <div class="badge bg-gradient-to-r from-purple-500 to-violet-500">24 题目</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 今日课程 -->
+        <div class="pb-4">
+            <div class="schedule-card p-5">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-900 text-lg">今日课程</h3>
+                    <button onclick="jumpToPage('schedule')" class="text-emerald-600 text-sm font-medium">查看全部</button>
+                </div>
+                
+                <div class="space-y-3">
+                    <div onclick="jumpToPage('schedule')" class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-2xl border-l-4 border-blue-500 cursor-pointer">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-1">数学培训班</h4>
+                                <p class="text-gray-600 text-sm">15:00 - 17:00 · 学而思教育</p>
+                            </div>
+                            <div class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium">
+                                2小时后
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-2xl border-l-4 border-green-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-1">英语口语班</h4>
+                                <p class="text-gray-600 text-sm">18:30 - 20:00 · 新东方校区</p>
+                            </div>
+                            <div class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-medium">
+                                5小时后
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- AI练习 -->
-            <div class="feature-card p-6" onclick="jumpToPage('ai-practice')">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <div class="icon-container bg-gradient-to-br from-blue-50 to-indigo-50">
-                            <i class="fas fa-brain text-blue-500 text-2xl"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-gray-900 text-lg mb-1">AI专项练习</h3>
-                            <p class="text-gray-600 text-sm font-medium">智能生成变式题目</p>
-                        </div>
+        <!-- 快捷功能 -->
+        <div class="pb-8">
+            <div class="feature-grid">
+                <div class="feature-card p-4" onclick="jumpToPage('review')">
+                    <div class="icon-container bg-gradient-to-br from-orange-50 to-yellow-50 mb-3">
+                        <i class="fas fa-clock text-orange-500 text-xl"></i>
                     </div>
-                    <div class="badge bg-gradient-to-r from-blue-500 to-indigo-500 text-white">
-                        3 推荐
-                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-1">智能复习</h3>
+                    <p class="text-gray-600 text-xs mb-2">科学复习计划</p>
+                    <div class="badge bg-gradient-to-r from-orange-500 to-yellow-500">8 待复习</div>
                 </div>
-            </div>
 
-            <!-- 课程表 -->
-            <div class="feature-card p-6" onclick="jumpToPage('schedule')">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <div class="icon-container bg-gradient-to-br from-emerald-50 to-green-50">
-                            <i class="fas fa-calendar text-emerald-500 text-2xl"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-gray-900 text-lg mb-1">今日课程</h3>
-                            <p class="text-gray-600 text-sm font-medium">数学培训班 15:00-17:00</p>
-                        </div>
+                <div class="feature-card p-4" onclick="jumpToPage('report')">
+                    <div class="icon-container bg-gradient-to-br from-teal-50 to-cyan-50 mb-3">
+                        <i class="fas fa-chart-line text-teal-500 text-xl"></i>
                     </div>
-                    <div class="badge bg-gradient-to-r from-emerald-500 to-green-500 text-white">
-                        2小时后
-                    </div>
-                </div>
-            </div>
-
-            <!-- 复习提醒 -->
-            <div class="feature-card p-6 mb-8" onclick="jumpToPage('review')">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <div class="icon-container bg-gradient-to-br from-purple-50 to-violet-50">
-                            <i class="fas fa-clock text-purple-500 text-2xl"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-gray-900 text-lg mb-1">智能复习</h3>
-                            <p class="text-gray-600 text-sm font-medium">基于遗忘曲线的复习提醒</p>
-                        </div>
-                    </div>
-                    <div class="badge bg-gradient-to-r from-purple-500 to-violet-500 text-white">
-                        8 待复习
-                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-1">学习报告</h3>
+                    <p class="text-gray-600 text-xs mb-2">查看学习数据</p>
+                    <div class="badge bg-gradient-to-r from-teal-500 to-cyan-500">本周</div>
                 </div>
             </div>
         </div>

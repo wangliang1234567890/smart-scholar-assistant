@@ -357,23 +357,23 @@
     <!-- 底部导航 -->
     <div class="bottom-nav">
         <div class="flex justify-around items-center h-full pt-2">
-            <div class="flex flex-col items-center">
+            <div class="flex flex-col items-center" onclick="jumpToPage('home')">
                 <div class="w-8 h-8 flex items-center justify-center mb-1">
                     <i class="fas fa-home text-gray-400 text-sm"></i>
                 </div>
                 <span class="text-xs text-gray-400">首页</span>
             </div>
-            <div class="flex flex-col items-center">
+            <div class="flex flex-col items-center" onclick="jumpToPage('mistakes')">
                 <div class="w-8 h-8 flex items-center justify-center mb-1">
                     <i class="fas fa-book text-gray-400 text-sm"></i>
                 </div>
                 <span class="text-xs text-gray-400">错题本</span>
             </div>
-            <div class="flex flex-col items-center">
+            <div class="flex flex-col items-center" onclick="jumpToPage('camera')">
                 <div class="w-8 h-8 flex items-center justify-center mb-1">
-                    <i class="fas fa-calendar text-gray-400 text-sm"></i>
+                    <i class="fas fa-camera text-gray-400 text-sm"></i>
                 </div>
-                <span class="text-xs text-gray-400">课程表</span>
+                <span class="text-xs text-gray-400">拍照</span>
             </div>
             <div class="flex flex-col items-center">
                 <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center mb-1">
@@ -381,7 +381,7 @@
                 </div>
                 <span class="text-xs text-blue-500 font-medium">报告</span>
             </div>
-            <div class="flex flex-col items-center">
+            <div class="flex flex-col items-center" onclick="jumpToPage('profile')">
                 <div class="w-8 h-8 flex items-center justify-center mb-1">
                     <i class="fas fa-user text-gray-400 text-sm"></i>
                 </div>
@@ -389,5 +389,16 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function jumpToPage(page) {
+            if (window.parent && window.parent.postMessage) {
+                window.parent.postMessage({
+                    type: 'jumpToPage',
+                    page: page
+                }, '*');
+            }
+        }
+    </script>
 </body>
 </html>

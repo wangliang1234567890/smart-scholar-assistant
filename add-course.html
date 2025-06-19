@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>添加课程</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #A8F5E8 0%, #B8F5E8 50%, #C8F5E8 100%);
+            min-height: 100vh;
+        }
+        
+        .status-bar {
+            height: 44px;
+            background: transparent;
+            color: #2D3748;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        .content-area {
+            height: calc(100vh - 44px - 90px);
+            overflow-y: auto;
+        }
+        
+        .bottom-nav {
+            height: 90px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 24px 24px 0 0;
+            box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.08);
+        }
+        
+        .form-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #E5E7EB;
+            border-radius: 16px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #40E0A0;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 0 0 4px rgba(64, 224, 160, 0.1);
+        }
+        
+        .time-picker {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .weekday-selector {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        
+        .weekday-btn {
+            padding: 12px 8px;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .weekday-btn.active {
+            background: #40E0A0;
+            border-color: #40E0A0;
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .weekday-btn:hover:not(.active) {
+            border-color: #40E0A0;
+            background: rgba(64, 224, 160, 0.1);
+        }
+        
+        .subject-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        
+        .subject-btn {
+            padding: 16px 12px;
+            border: 2px solid #E5E7EB;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .subject-btn.active {
+            border-color: #40E0A0;
+            background: rgba(64, 224, 160, 0.1);
+            transform: scale(1.02);
+        }
+        
+        .subject-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #40E0A0 0%, #48E0A8 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(64, 224, 160, 0.3);
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(64, 224, 160, 0.4);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .nav-item {
+            transition: all 0.3s ease;
+            border-radius: 16px;
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, #40E0A0 0%, #48E0A8 100%);
+            box-shadow: 0 4px 16px rgba(64, 224, 160, 0.3);
+        }
+        
+        .nav-item:not(.active):hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <!-- iOS状态栏 -->
+    <div class="status-bar flex justify-between items-center px-6">
+        <div class="flex items-center space-x-1">
+            <div class="w-1.5 h-1.5 bg-current rounded-full"></div>
+            <div class="w-1.5 h-1.5 bg-current rounded-full"></div>
+            <div class="w-1.5 h-1.5 bg-current rounded-full"></div>
+            <span class="ml-2">中国移动</span>
+        </div>
+        <div class="font-bold text-lg">9:41</div>
+        <div class="flex items-center space-x-2">
+            <i class="fas fa-signal text-lg"></i>
+            <i class="fas fa-wifi text-lg"></i>
+            <div class="w-7 h-4 border-2 border-current rounded-sm relative">
+                <div class="w-4 h-2 bg-current rounded-sm absolute top-0.5 left-0.5"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="content-area px-6">
+        <!-- 顶部导航栏 -->
+        <div class="pt-6 pb-4">
+            <div class="flex items-center justify-between mb-6">
+                <button onclick="goBack()" class="w-10 h-10 bg-white/80 rounded-full flex items-center justify-center backdrop-blur-lg">
+                    <i class="fas fa-arrow-left text-gray-700"></i>
+                </button>
+                <div class="text-center">
+                    <h1 class="text-2xl font-bold text-gray-900">添加课程</h1>
+                    <p class="text-gray-600 text-sm">创建新的课程安排</p>
+                </div>
+                <div class="w-10 h-10"></div> <!-- 占位符 -->
+            </div>
+        </div>
+
+        <!-- 添加课程表单 -->
+        <div class="form-card p-6 mb-6">
+            <form id="courseForm">
+                <!-- 课程名称 -->
+                <div class="form-group">
+                    <label class="form-label">课程名称</label>
+                    <input type="text" class="form-input" placeholder="例如：数学培训班" id="courseName" required>
+                </div>
+
+                <!-- 科目选择 -->
+                <div class="form-group">
+                    <label class="form-label">选择科目</label>
+                    <div class="subject-selector">
+                        <div class="subject-btn" data-subject="math">
+                            <div class="subject-icon bg-blue-100">
+                                <i class="fas fa-calculator text-blue-600"></i>
+                            </div>
+                            <div class="text-sm font-medium text-gray-900">数学</div>
+                        </div>
+                        <div class="subject-btn" data-subject="chinese">
+                            <div class="subject-icon bg-red-100">
+                                <i class="fas fa-book text-red-600"></i>
+                            </div>
+                            <div class="text-sm font-medium text-gray-900">语文</div>
+                        </div>
+                        <div class="subject-btn" data-subject="english">
+                            <div class="subject-icon bg-green-100">
+                                <i class="fas fa-globe text-green-600"></i>
+                            </div>
+                            <div class="text-sm font-medium text-gray-900">英语</div>
+                        </div>
+                        <div class="subject-btn" data-subject="science">
+                            <div class="subject-icon bg-purple-100">
+                                <i class="fas fa-flask text-purple-600"></i>
+                            </div>
+                            <div class="text-sm font-medium text-gray-900">科学</div>
+                        </div>
+                        <div class="subject-btn" data-subject="art">
+                            <div class="subject-icon bg-yellow-100">
+                                <i class="fas fa-palette text-yellow-600"></i>
+                            </div>
+                            <div class="text-sm font-medium text-gray-900">美术</div>
+                        </div>
+                        <div class="subject-btn" data-subject="music">
+                            <div class="subject-icon bg-pink-100">
+                                <i class="fas fa-music text-pink-600"></i>
+                            </div>
+                            <div class="text-sm font-medium text-gray-900">音乐</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 老师姓名 -->
+                <div class="form-group">
+                    <label class="form-label">任课老师</label>
+                    <input type="text" class="form-input" placeholder="例如：王老师" id="teacherName">
+                </div>
+
+                <!-- 上课时间 -->
+                <div class="form-group">
+                    <label class="form-label">上课时间</label>
+                    <div class="time-picker">
+                        <input type="time" class="form-input" id="startTime" value="15:00" required>
+                        <span class="text-gray-500 font-medium">至</span>
+                        <input type="time" class="form-input" id="endTime" value="17:00" required>
+                    </div>
+                </div>
+
+                <!-- 星期选择 -->
+                <div class="form-group">
+                    <label class="form-label">上课日期</label>
+                    <div class="weekday-selector">
+                        <div class="weekday-btn" data-day="1">
+                            <div class="text-xs text-gray-500 mb-1">周一</div>
+                            <div class="font-medium">MON</div>
+                        </div>
+                        <div class="weekday-btn" data-day="2">
+                            <div class="text-xs text-gray-500 mb-1">周二</div>
+                            <div class="font-medium">TUE</div>
+                        </div>
+                        <div class="weekday-btn" data-day="3">
+                            <div class="text-xs text-gray-500 mb-1">周三</div>
+                            <div class="font-medium">WED</div>
+                        </div>
+                        <div class="weekday-btn" data-day="4">
+                            <div class="text-xs text-gray-500 mb-1">周四</div>
+                            <div class="font-medium">THU</div>
+                        </div>
+                        <div class="weekday-btn" data-day="5">
+                            <div class="text-xs text-gray-500 mb-1">周五</div>
+                            <div class="font-medium">FRI</div>
+                        </div>
+                        <div class="weekday-btn" data-day="6">
+                            <div class="text-xs text-gray-500 mb-1">周六</div>
+                            <div class="font-medium">SAT</div>
+                        </div>
+                        <div class="weekday-btn" data-day="7">
+                            <div class="text-xs text-gray-500 mb-1">周日</div>
+                            <div class="font-medium">SUN</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 上课地点 -->
+                <div class="form-group">
+                    <label class="form-label">上课地点</label>
+                    <input type="text" class="form-input" placeholder="例如：学而思教育" id="location">
+                </div>
+
+                <!-- 课程描述 -->
+                <div class="form-group">
+                    <label class="form-label">课程描述 <span class="text-gray-400 text-sm">(可选)</span></label>
+                    <textarea class="form-input" placeholder="例如：小数运算专题" id="description" rows="3"></textarea>
+                </div>
+
+                <!-- 提醒设置 -->
+                <div class="form-group">
+                    <label class="form-label">课前提醒</label>
+                    <select class="form-input" id="reminder">
+                        <option value="15">提前15分钟</option>
+                        <option value="30">提前30分钟</option>
+                        <option value="60">提前1小时</option>
+                        <option value="120">提前2小时</option>
+                        <option value="0">不提醒</option>
+                    </select>
+                </div>
+
+                <!-- 提交按钮 -->
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-plus mr-2"></i>
+                    创建课程
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 底部导航栏 -->
+    <div class="bottom-nav flex items-center justify-around px-4">
+        <div class="nav-item text-center cursor-pointer py-3 px-4" onclick="jumpToPage('home')">
+            <i class="fas fa-home text-gray-400 text-xl mb-1"></i>
+            <div class="text-xs font-medium text-gray-500">首页</div>
+        </div>
+        <div class="nav-item text-center cursor-pointer py-3 px-4" onclick="jumpToPage('mistakes')">
+            <i class="fas fa-book text-gray-400 text-xl mb-1"></i>
+            <div class="text-xs font-medium text-gray-500">错题本</div>
+        </div>
+        <div class="nav-item text-center cursor-pointer py-3 px-4" onclick="jumpToPage('camera')">
+            <i class="fas fa-camera text-gray-400 text-xl mb-1"></i>
+            <div class="text-xs font-medium text-gray-500">拍照</div>
+        </div>
+        <div class="nav-item text-center cursor-pointer py-3 px-4" onclick="jumpToPage('report')">
+            <i class="fas fa-chart-bar text-gray-400 text-xl mb-1"></i>
+            <div class="text-xs font-medium text-gray-500">报告</div>
+        </div>
+        <div class="nav-item text-center cursor-pointer py-3 px-4" onclick="jumpToPage('profile')">
+            <i class="fas fa-user text-gray-400 text-xl mb-1"></i>
+            <div class="text-xs font-medium text-gray-500">我的</div>
+        </div>
+    </div>
+
+    <script>
+        let selectedSubject = '';
+        let selectedDays = [];
+
+        function jumpToPage(page) {
+            if (window.parent && window.parent.postMessage) {
+                window.parent.postMessage({
+                    type: 'jumpToPage',
+                    page: page
+                }, '*');
+            }
+        }
+
+        function goBack() {
+            if (window.parent && window.parent.postMessage) {
+                window.parent.postMessage({
+                    type: 'jumpToPage',
+                    page: 'schedule'
+                }, '*');
+            }
+        }
+
+        // 科目选择交互
+        document.querySelectorAll('.subject-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.subject-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                selectedSubject = this.dataset.subject;
+            });
+        });
+
+        // 星期选择交互
+        document.querySelectorAll('.weekday-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const day = this.dataset.day;
+                if (this.classList.contains('active')) {
+                    this.classList.remove('active');
+                    selectedDays = selectedDays.filter(d => d !== day);
+                } else {
+                    this.classList.add('active');
+                    selectedDays.push(day);
+                }
+            });
+        });
+
+        // 表单提交
+        document.getElementById('courseForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                courseName: document.getElementById('courseName').value,
+                subject: selectedSubject,
+                teacherName: document.getElementById('teacherName').value,
+                startTime: document.getElementById('startTime').value,
+                endTime: document.getElementById('endTime').value,
+                days: selectedDays,
+                location: document.getElementById('location').value,
+                description: document.getElementById('description').value,
+                reminder: document.getElementById('reminder').value
+            };
+
+            // 验证必填字段
+            if (!formData.courseName || !formData.subject || selectedDays.length === 0) {
+                alert('请填写课程名称、选择科目和上课日期！');
+                return;
+            }
+
+            // 模拟保存成功
+            showSuccessMessage();
+        });
+
+        function showSuccessMessage() {
+            const submitBtn = document.querySelector('.submit-btn');
+            const originalText = submitBtn.innerHTML;
+            
+            submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i>创建成功！';
+            submitBtn.style.background = 'linear-gradient(135deg, #10B981 0%, #34D399 100%)';
+            
+            setTimeout(() => {
+                // 跳转回课程表页面
+                if (window.parent && window.parent.postMessage) {
+                    window.parent.postMessage({
+                        type: 'jumpToPage',
+                        page: 'schedule'
+                    }, '*');
+                }
+            }, 1500);
+        }
+
+        // 初始化时选择一个默认科目
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('.subject-btn[data-subject="math"]').click();
+        });
+    </script>
+</body>
+</html> 
