@@ -7,76 +7,153 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Nunito', 'Comic Sans MS', cursive, -apple-system, BlinkMacSystemFont, sans-serif;
             margin: 0;
             padding: 0;
-            background: #000;
+            background: linear-gradient(135deg, #4A4A4A 0%, #2D2D2D 100%);
         }
+        
         .status-bar {
             height: 44px;
             background: transparent;
-            color: white;
-            font-size: 14px;
-            font-weight: 600;
+            color: #FFE4E1;
+            font-size: 15px;
+            font-weight: 700;
         }
+        
         .camera-view {
-            height: calc(100vh - 44px - 120px);
+            height: calc(100vh - 44px - 140px);
             background: url('https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80') center/cover;
             position: relative;
             overflow: hidden;
         }
+        
         .camera-controls {
-            height: 120px;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(10px);
+            height: 140px;
+            background: linear-gradient(135deg, rgba(255, 182, 193, 0.9) 0%, rgba(230, 230, 250, 0.9) 100%);
+            backdrop-filter: blur(20px);
         }
+        
         .viewfinder {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 300px;
-            height: 200px;
-            border: 2px solid #fff;
-            border-radius: 8px;
+            width: 320px;
+            height: 220px;
+            border: 3px solid #FFB6C1;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(255, 182, 193, 0.5);
         }
+        
         .viewfinder::before {
             content: '';
             position: absolute;
-            top: -1px;
-            left: -1px;
-            right: -1px;
-            bottom: -1px;
-            border: 2px dashed rgba(255,255,255,0.5);
-            border-radius: 8px;
-            animation: pulse 2s infinite;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border: 3px dashed rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            animation: rainbow-pulse 3s infinite;
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
+        
+        @keyframes rainbow-pulse {
+            0% { 
+                border-color: #FFB6C1;
+                opacity: 0.7;
+            }
+            33% { 
+                border-color: #87CEEB;
+                opacity: 1;
+            }
+            66% { 
+                border-color: #98FB98;
+                opacity: 1;
+            }
+            100% { 
+                border-color: #FFB6C1;
+                opacity: 0.7;
+            }
         }
+        
         .shutter-button {
-            width: 70px;
-            height: 70px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
-            background: white;
-            border: 4px solid rgba(255,255,255,0.3);
-            transition: all 0.2s ease;
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%);
+            border: 5px solid rgba(255, 255, 255, 0.8);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
         }
+        
         .shutter-button:active {
-            transform: scale(0.95);
+            transform: scale(0.9);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.6);
         }
+        
         .overlay-tip {
             position: absolute;
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
+            background: linear-gradient(135deg, rgba(255, 182, 193, 0.95) 0%, rgba(255, 228, 225, 0.95) 100%);
+            color: #FF6B6B;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 700;
+            border: 2px solid rgba(255, 182, 193, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        
+        .control-button {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 248, 240, 0.9) 100%);
+            border-radius: 15px;
+            border: 2px solid rgba(255, 182, 193, 0.3);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .control-button:hover {
+            transform: scale(1.1);
+            border-color: #FFB6C1;
+            box-shadow: 0 8px 25px rgba(255, 182, 193, 0.3);
+        }
+        
+        .corner-decoration {
+            border-color: #FFB6C1;
+            box-shadow: 0 0 10px rgba(255, 182, 193, 0.5);
+        }
+        
+        .mode-indicator {
+            background: linear-gradient(135deg, rgba(255, 182, 193, 0.9) 0%, rgba(255, 228, 225, 0.9) 100%);
+            border: 2px solid rgba(255, 182, 193, 0.5);
+            backdrop-filter: blur(15px);
+        }
+        
+        .processing-overlay {
+            background: linear-gradient(135deg, rgba(255, 182, 193, 0.95) 0%, rgba(230, 230, 250, 0.95) 100%);
+            backdrop-filter: blur(20px);
+        }
+        
+        .processing-card {
+            background: linear-gradient(135deg, #FFFFFF 0%, #FFF8F0 100%);
+            border: 3px solid #FFB6C1;
+            box-shadow: 0 20px 60px rgba(255, 182, 193, 0.3);
+        }
+        
+        .loading-spinner {
+            border-color: #FFB6C1;
+            border-top-color: #FF6B6B;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -84,17 +161,17 @@
     <!-- iOS状态栏 -->
     <div class="status-bar flex justify-between items-center px-6">
         <div class="flex items-center space-x-1">
-            <div class="w-1 h-1 bg-white rounded-full"></div>
-            <div class="w-1 h-1 bg-white rounded-full"></div>
-            <div class="w-1 h-1 bg-white rounded-full"></div>
+            <div class="w-1.5 h-1.5 bg-current rounded-full"></div>
+            <div class="w-1.5 h-1.5 bg-current rounded-full"></div>
+            <div class="w-1.5 h-1.5 bg-current rounded-full"></div>
             <span class="ml-2">中国移动</span>
         </div>
-        <div>9:41</div>
-        <div class="flex items-center space-x-1">
-            <i class="fas fa-signal text-sm"></i>
-            <i class="fas fa-wifi text-sm"></i>
-            <div class="w-6 h-3 border border-white rounded-sm relative">
-                <div class="w-4 h-2 bg-white rounded-sm absolute top-0.5 left-0.5"></div>
+        <div class="font-bold text-lg">9:41</div>
+        <div class="flex items-center space-x-2">
+            <i class="fas fa-signal text-lg"></i>
+            <i class="fas fa-wifi text-lg"></i>
+            <div class="w-7 h-4 border-2 border-current rounded-sm relative">
+                <div class="w-4 h-2 bg-current rounded-sm absolute top-0.5 left-0.5"></div>
             </div>
         </div>
     </div>
@@ -103,39 +180,42 @@
     <div class="camera-view">
         <!-- 顶部提示 -->
         <div class="overlay-tip">
-            <i class="fas fa-lightbulb mr-2"></i>
-            请将题目完整放入取景框内
+            <i class="fas fa-magic mr-2"></i>
+            请将题目完整放入取景框内 ✨
         </div>
 
         <!-- 顶部工具栏 -->
-        <div class="absolute top-4 left-6 right-6 flex justify-between items-center">
-            <button class="w-10 h-10 bg-black/30 rounded-full flex items-center justify-center">
-                <i class="fas fa-times text-white text-lg"></i>
+        <div class="absolute top-20 left-6 right-6 flex justify-between items-center">
+            <button class="control-button w-14 h-14 flex items-center justify-center" onclick="goBack()">
+                <i class="fas fa-arrow-left text-gray-600 text-xl"></i>
             </button>
-            <div class="flex space-x-3">
-                <button class="w-10 h-10 bg-black/30 rounded-full flex items-center justify-center">
-                    <i class="fas fa-flash text-white"></i>
+            <div class="flex space-x-4">
+                <button class="control-button w-14 h-14 flex items-center justify-center">
+                    <i class="fas fa-flash text-yellow-500 text-xl"></i>
                 </button>
-                <button class="w-10 h-10 bg-black/30 rounded-full flex items-center justify-center">
-                    <i class="fas fa-cog text-white"></i>
+                <button class="control-button w-14 h-14 flex items-center justify-center">
+                    <i class="fas fa-cog text-gray-600 text-xl"></i>
                 </button>
             </div>
         </div>
 
         <!-- 取景框 -->
         <div class="viewfinder">
-            <div class="absolute -top-2 -left-2 w-4 h-4 border-l-2 border-t-2 border-white"></div>
-            <div class="absolute -top-2 -right-2 w-4 h-4 border-r-2 border-t-2 border-white"></div>
-            <div class="absolute -bottom-2 -left-2 w-4 h-4 border-l-2 border-b-2 border-white"></div>
-            <div class="absolute -bottom-2 -right-2 w-4 h-4 border-r-2 border-b-2 border-white"></div>
+            <div class="absolute -top-3 -left-3 w-6 h-6 border-l-4 border-t-4 corner-decoration rounded-tl-md"></div>
+            <div class="absolute -top-3 -right-3 w-6 h-6 border-r-4 border-t-4 corner-decoration rounded-tr-md"></div>
+            <div class="absolute -bottom-3 -left-3 w-6 h-6 border-l-4 border-b-4 corner-decoration rounded-bl-md"></div>
+            <div class="absolute -bottom-3 -right-3 w-6 h-6 border-r-4 border-b-4 corner-decoration rounded-br-md"></div>
+            
+            <!-- 中心对焦点 -->
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 border-2 border-white rounded-full opacity-70"></div>
         </div>
 
         <!-- 拍摄模式指示 -->
-        <div class="absolute bottom-4 left-6 right-6">
-            <div class="bg-black/50 rounded-full px-4 py-2 text-center">
-                <span class="text-white text-sm">
-                    <i class="fas fa-eye mr-2"></i>
-                    OCR智能识别模式
+        <div class="absolute bottom-6 left-6 right-6">
+            <div class="mode-indicator rounded-full px-6 py-3 text-center">
+                <span class="text-gray-700 text-lg font-bold">
+                    <i class="fas fa-robot mr-2 text-blue-500"></i>
+                    AI智能识别模式 🤖
                 </span>
             </div>
         </div>
@@ -143,48 +223,66 @@
 
     <!-- 相机控制区域 -->
     <div class="camera-controls">
-        <div class="flex justify-center items-center h-full px-6">
-            <div class="flex justify-between items-center w-full max-w-xs">
+        <div class="flex justify-center items-center h-full px-8">
+            <div class="flex justify-between items-center w-full max-w-sm">
                 <!-- 相册按钮 -->
-                <button class="w-12 h-12 bg-gray-600 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-images text-white"></i>
+                <button class="control-button w-16 h-16 flex items-center justify-center">
+                    <i class="fas fa-images text-purple-500 text-2xl"></i>
                 </button>
 
                 <!-- 拍照按钮 -->
-                <button onclick="takePhoto()" class="shutter-button flex items-center justify-center">
-                    <div class="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
-                        <i class="fas fa-camera text-white text-lg"></i>
+                <button onclick="takePhoto()" class="shutter-button flex items-center justify-center relative">
+                    <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center">
+                        <i class="fas fa-camera text-red-500 text-2xl"></i>
                     </div>
+                    <!-- 按钮装饰 -->
+                    <div class="absolute inset-0 rounded-full border-2 border-white opacity-50 animate-ping"></div>
                 </button>
 
                 <!-- 切换相机按钮 -->
-                <button class="w-12 h-12 bg-gray-600 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-sync-alt text-white"></i>
+                <button class="control-button w-16 h-16 flex items-center justify-center">
+                    <i class="fas fa-sync-alt text-green-500 text-2xl"></i>
                 </button>
             </div>
         </div>
 
         <!-- 操作提示 -->
-        <div class="absolute bottom-2 left-0 right-0 text-center">
-            <p class="text-white/70 text-xs">
-                点击拍照按钮或从相册选择图片
+        <div class="absolute bottom-3 left-0 right-0 text-center">
+            <p class="text-gray-700 text-sm font-semibold">
+                📸 点击拍照按钮或从相册选择图片 🖼️
             </p>
         </div>
     </div>
 
     <!-- 处理中遮罩层（隐藏状态） -->
-    <div class="fixed inset-0 bg-black/80 backdrop-filter backdrop-blur-sm z-50 flex items-center justify-center" style="display: none;">
-        <div class="bg-white rounded-2xl p-8 text-center max-w-sm mx-4">
-            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-brain text-blue-600 text-2xl"></i>
+    <div id="processingOverlay" class="fixed inset-0 processing-overlay z-50 flex items-center justify-center" style="display: none;">
+        <div class="processing-card rounded-3xl p-10 text-center max-w-sm mx-4">
+            <div class="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-robot text-blue-500 text-3xl"></i>
             </div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">AI正在识别中</h3>
-            <p class="text-gray-600 text-sm mb-6">
-                正在使用OCR技术识别题目内容<br>
-                请稍候...
+            <h3 class="text-2xl font-black text-gray-800 mb-3">AI正在识别中 🤖</h3>
+            <p class="text-gray-600 text-lg font-semibold mb-8">
+                正在使用OCR技术识别题目内容 ✨<br>
+                请稍候片刻...
             </p>
             <div class="flex justify-center">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div class="loading-spinner rounded-full h-10 w-10 border-4"></div>
+            </div>
+            
+            <!-- 进度提示 -->
+            <div class="mt-6 space-y-2">
+                <div class="flex justify-between text-sm text-gray-500 font-semibold">
+                    <span>🔍 图像预处理</span>
+                    <span>✅</span>
+                </div>
+                <div class="flex justify-between text-sm text-gray-500 font-semibold">
+                    <span>🧠 AI文字识别</span>
+                    <span class="animate-pulse">⏳</span>
+                </div>
+                <div class="flex justify-between text-sm text-gray-400 font-semibold">
+                    <span>📝 内容整理</span>
+                    <span>⏸️</span>
+                </div>
             </div>
         </div>
     </div>
@@ -192,12 +290,43 @@
     <script>
         function takePhoto() {
             // 显示处理中遮罩
-            document.querySelector('.fixed').style.display = 'flex';
+            document.getElementById('processingOverlay').style.display = 'flex';
+            
+            // 模拟拍照音效和震动反馈
+            if (navigator.vibrate) {
+                navigator.vibrate(100);
+            }
             
             // 模拟拍照和AI识别过程
             setTimeout(() => {
-                window.parent.postMessage('navigate:camera-result.html', '*');
-            }, 2500);
+                // 更新进度
+                const progressItems = document.querySelectorAll('#processingOverlay .flex.justify-between');
+                progressItems[1].querySelector('span:last-child').innerHTML = '✅';
+                progressItems[2].querySelector('span:last-child').innerHTML = '⏳';
+                progressItems[2].querySelector('span:last-child').classList.add('animate-pulse');
+            }, 1000);
+            
+            setTimeout(() => {
+                if (window.parent && window.parent.postMessage) {
+                    window.parent.postMessage({
+                        type: 'jumpToPage',
+                        page: 'camera-result'
+                    }, '*');
+                } else {
+                    alert('跳转到识别结果页面');
+                }
+            }, 3000);
+        }
+        
+        function goBack() {
+            if (window.parent && window.parent.postMessage) {
+                window.parent.postMessage({
+                    type: 'jumpToPage',
+                    page: 'home'
+                }, '*');
+            } else {
+                alert('返回首页');
+            }
         }
     </script>
 </body>
