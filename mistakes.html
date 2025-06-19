@@ -192,8 +192,13 @@
                         <h1 class="text-gray-900 text-3xl font-bold mb-2">我的错题本</h1>
                         <p class="text-gray-600 text-lg font-medium">整理错题，巩固知识</p>
                     </div>
-                    <div class="w-16 h-16 bg-gradient-to-br from-red-50 to-pink-50 rounded-2xl flex items-center justify-center">
-                        <i class="fas fa-book text-red-500 text-2xl"></i>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="jumpToPage('print-worksheet')" class="w-12 h-12 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl flex items-center justify-center group hover:scale-110 transition-all duration-300" title="生成打印试卷">
+                            <i class="fas fa-print text-blue-500 text-lg group-hover:text-blue-600"></i>
+                        </button>
+                        <div class="w-16 h-16 bg-gradient-to-br from-red-50 to-pink-50 rounded-2xl flex items-center justify-center">
+                            <i class="fas fa-book text-red-500 text-2xl"></i>
+                        </div>
                     </div>
                 </div>
 

@@ -255,7 +255,12 @@
         }
 
         function generateAIPractice() {
-            window.parent.postMessage('navigate:ai-practice.html', '*');
+            if (window.parent && window.parent.postMessage) {
+                window.parent.postMessage({
+                    type: 'jumpToPage',
+                    page: 'ai-practice-config'
+                }, '*');
+            }
         }
 
         function markAsLearned() {

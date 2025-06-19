@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>孩子管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #A8F5E8 0%, #B8F5E8 50%, #C8F5E8 100%);
+            min-height: 100vh;
+        }
+        
+        .status-bar {
+            height: 44px;
+            background: transparent;
+            color: #2D3748;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        .content-area {
+            height: calc(100vh - 44px);
+            overflow-y: auto;
+        }
+        
+        .child-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 2px solid transparent;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .child-card.active {
+            border-color: #40E0A0;
+            background: rgba(64, 224, 160, 0.1);
+        }
+        
+        .add-child-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 2px dashed #E5E7EB;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .add-child-card:hover {
+            border-color: #40E0A0;
+            background: rgba(64, 224, 160, 0.05);
+        }
+        
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 16px;
+        }
+        
+        .stat-item {
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 16px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .action-btn {
+            background: linear-gradient(135deg, #40E0A0 0%, #48E0A8 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 16px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(64, 224, 160, 0.3);
+            width: 100%;
+        }
+        
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .grade-tag {
+            background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .current-tag {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- iOS状态栏 -->
+    <div class="status-bar flex justify-between items-center px-6">
+        <div class="flex items-center space-x-1">
+            <div class="w-1.5 h-1.5 bg-current rounded-full"></div>
+            <div class="w-1.5 h-1.5 bg-current rounded-full"></div>
+            <div class="w-1.5 h-1.5 bg-current rounded-full"></div>
+            <span class="ml-2">中国移动</span>
+        </div>
+        <div class="font-bold text-lg">9:41</div>
+        <div class="flex items-center space-x-2">
+            <i class="fas fa-signal text-lg"></i>
+            <i class="fas fa-wifi text-lg"></i>
+            <div class="w-7 h-4 border-2 border-current rounded-sm relative">
+                <div class="w-4 h-2 bg-current rounded-sm absolute top-0.5 left-0.5"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="content-area px-6">
+        <!-- 顶部导航栏 -->
+        <div class="pt-6 pb-6">
+            <div class="flex items-center justify-between mb-6">
+                <button onclick="goBack()" class="w-10 h-10 bg-white/80 rounded-full flex items-center justify-center backdrop-blur-lg">
+                    <i class="fas fa-arrow-left text-gray-700"></i>
+                </button>
+                <div class="text-center">
+                    <h1 class="text-2xl font-bold text-gray-900">孩子管理</h1>
+                    <p class="text-gray-600 text-sm">切换或添加孩子信息</p>
+                </div>
+                <div class="w-10 h-10"></div>
+            </div>
+        </div>
+
+        <!-- 当前使用的孩子 -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-star text-yellow-500 mr-2"></i>
+                当前使用
+            </h3>
+            
+            <div class="child-card active p-6" data-child="xiaoming">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="relative">
+                        <div class="avatar bg-blue-100 flex items-center justify-center">
+                            <i class="fas fa-user text-blue-500 text-3xl"></i>
+                        </div>
+                        <div class="current-tag absolute -top-2 -right-2">
+                            当前
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-3 mb-2">
+                            <h4 class="text-xl font-bold text-gray-900">小明</h4>
+                            <div class="grade-tag">3年级</div>
+                        </div>
+                        <p class="text-gray-600 mb-2">学号：202401001 · 实验小学</p>
+                        <p class="text-gray-500 text-sm">上次学习：2小时前</p>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="text-lg font-bold text-blue-600 mb-1">24</div>
+                        <div class="text-xs text-gray-600">错题总数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="text-lg font-bold text-green-600 mb-1">18</div>
+                        <div class="text-xs text-gray-600">已掌握</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="text-lg font-bold text-orange-600 mb-1">6</div>
+                        <div class="text-xs text-gray-600">待复习</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 其他孩子 -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-users text-blue-500 mr-2"></i>
+                其他孩子
+            </h3>
+
+            <div class="space-y-4">
+                <!-- 孩子2 -->
+                <div class="child-card p-6" data-child="xiaoli" onclick="switchChild('xiaoli')">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="avatar bg-pink-100 flex items-center justify-center">
+                            <i class="fas fa-user text-pink-500 text-3xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-3 mb-2">
+                                <h4 class="text-xl font-bold text-gray-900">小丽</h4>
+                                <div class="grade-tag">1年级</div>
+                            </div>
+                            <p class="text-gray-600 mb-2">学号：202401002 · 实验小学</p>
+                            <p class="text-gray-500 text-sm">上次学习：1天前</p>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="text-lg font-bold text-blue-600 mb-1">8</div>
+                            <div class="text-xs text-gray-600">错题总数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="text-lg font-bold text-green-600 mb-1">6</div>
+                            <div class="text-xs text-gray-600">已掌握</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="text-lg font-bold text-orange-600 mb-1">2</div>
+                            <div class="text-xs text-gray-600">待复习</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 添加新孩子 -->
+        <div class="mb-8">
+            <div class="add-child-card p-8 text-center" onclick="addNewChild()">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-plus text-gray-400 text-2xl"></i>
+                </div>
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">添加新孩子</h4>
+                <p class="text-gray-600 text-sm">为家庭中的其他孩子创建学习档案</p>
+            </div>
+        </div>
+
+        <!-- 切换按钮 -->
+        <div class="pb-8">
+            <button class="action-btn" onclick="confirmSwitch()" id="switchBtn" disabled>
+                <i class="fas fa-sync-alt mr-2"></i>
+                切换到选中的孩子
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let selectedChild = 'xiaoming';
+        let currentChild = 'xiaoming';
+
+        function jumpToPage(page) {
+            if (window.parent && window.parent.postMessage) {
+                window.parent.postMessage({
+                    type: 'jumpToPage',
+                    page: page
+                }, '*');
+            }
+        }
+
+        function goBack() {
+            jumpToPage('profile');
+        }
+
+        function switchChild(childId) {
+            document.querySelectorAll('.child-card:not([data-child="xiaoming"])').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            const selectedCard = document.querySelector(`[data-child="${childId}"]`);
+            selectedCard.classList.add('active');
+            selectedChild = childId;
+            
+            const switchBtn = document.getElementById('switchBtn');
+            switchBtn.disabled = false;
+        }
+
+        function confirmSwitch() {
+            alert('切换到小丽的学习数据！\n\n现在显示小丽的错题本和学习进度。');
+            jumpToPage('home');
+        }
+
+        function addNewChild() {
+            alert('添加新孩子功能\n\n可以设置:\n• 孩子姓名\n• 年级信息\n• 学校名称\n• 头像选择');
+        }
+    </script>
+</body>
+</html> 
