@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能复习</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+        }
+        .status-bar {
+            height: 44px;
+            background: transparent;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .content-area {
+            height: calc(100vh - 44px);
+            overflow-y: auto;
+        }
+        .review-card {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        .memory-curve {
+            background: linear-gradient(90deg, #10b981 0%, #f59e0b 50%, #ef4444 100%);
+            height: 6px;
+            border-radius: 3px;
+        }
+        .memory-indicator {
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            border: 3px solid;
+            position: relative;
+            top: -3px;
+        }
+        .review-item {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        .review-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .priority-high { border-left: 4px solid #ef4444; }
+        .priority-medium { border-left: 4px solid #f59e0b; }
+        .priority-low { border-left: 4px solid #10b981; }
+    </style>
+</head>
+<body>
+    <!-- iOS状态栏 -->
+    <div class="status-bar flex justify-between items-center px-6">
+        <div class="flex items-center space-x-1">
+            <div class="w-1 h-1 bg-white rounded-full"></div>
+            <div class="w-1 h-1 bg-white rounded-full"></div>
+            <div class="w-1 h-1 bg-white rounded-full"></div>
+            <span class="ml-2">中国移动</span>
+        </div>
+        <div>9:41</div>
+        <div class="flex items-center space-x-1">
+            <i class="fas fa-signal text-sm"></i>
+            <i class="fas fa-wifi text-sm"></i>
+            <div class="w-6 h-3 border border-white rounded-sm relative">
+                <div class="w-4 h-2 bg-white rounded-sm absolute top-0.5 left-0.5"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="content-area px-6">
+        <!-- 顶部导航栏 -->
+        <div class="flex justify-between items-center py-4">
+            <button class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                <i class="fas fa-arrow-left text-white"></i>
+            </button>
+            <div class="text-center">
+                <h1 class="text-white text-lg font-semibold">智能复习</h1>
+                <p class="text-white/80 text-sm">基于艾宾浩斯遗忘曲线</p>
+            </div>
+            <button class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                <i class="fas fa-cog text-white"></i>
+            </button>
+        </div>
+
+        <!-- 复习概况卡片 -->
+        <div class="review-card p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">今日复习计划</h3>
+            
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-red-600">8</div>
+                    <div class="text-xs text-gray-500">急需复习</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-yellow-600">5</div>
+                    <div class="text-xs text-gray-500">即将遗忘</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">12</div>
+                    <div class="text-xs text-gray-500">记忆巩固</div>
+                </div>
+            </div>
+
+            <!-- 记忆曲线可视化 -->
+            <div class="mb-4">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm text-gray-600">记忆强度分布</span>
+                    <span class="text-sm text-gray-500">25 道题目</span>
+                </div>
+                <div class="memory-curve relative">
+                    <div class="memory-indicator border-red-600" style="left: 15%"></div>
+                    <div class="memory-indicator border-yellow-600" style="left: 45%"></div>
+                    <div class="memory-indicator border-green-600" style="left: 75%"></div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>易忘</span>
+                    <span>一般</span>
+                    <span>牢固</span>
+                </div>
+            </div>
+
+            <button class="w-full bg-purple-600 text-white py-3 rounded-lg font-medium">
+                <i class="fas fa-play mr-2"></i>
+                开始今日复习
+            </button>
+        </div>
+
+        <!-- 复习任务列表 -->
+        <div class="space-y-4 mb-6">
+            <h3 class="text-white text-lg font-semibold">复习任务</h3>
+            
+            <!-- 高优先级复习项 -->
+            <div class="review-item priority-high p-4">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-exclamation-triangle text-red-600"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900">小数乘法 - 紧急</h4>
+                            <p class="text-gray-500 text-sm">上次复习：3天前</p>
+                        </div>
+                    </div>
+                    <div class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">
+                        高风险
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 p-3 rounded-lg mb-3">
+                    <p class="text-sm text-gray-700">
+                        包含 3 道错题，记忆强度：15%
+                    </p>
+                </div>
+
+                <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
+                    <span>遗忘风险: 85%</span>
+                    <span>建议复习时间: 15分钟</span>
+                </div>
+
+                <div class="flex space-x-2">
+                    <button class="flex-1 bg-red-50 text-red-600 py-2 rounded-lg text-sm font-medium">
+                        <i class="fas fa-clock mr-1"></i>
+                        立即复习
+                    </button>
+                    <button class="flex-1 bg-gray-50 text-gray-600 py-2 rounded-lg text-sm font-medium">
+                        <i class="fas fa-calendar mr-1"></i>
+                        延后1小时
+                    </button>
+                </div>
+            </div>
+
+            <!-- 中等优先级复习项 -->
+            <div class="review-item priority-medium p-4">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-clock text-yellow-600"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900">组词造句</h4>
+                            <p class="text-gray-500 text-sm">上次复习：1天前</p>
+                        </div>
+                    </div>
+                    <div class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">
+                        中风险
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 p-3 rounded-lg mb-3">
+                    <p class="text-sm text-gray-700">
+                        包含 2 道错题，记忆强度：45%
+                    </p>
+                </div>
+
+                <div class="flex space-x-2">
+                    <button class="flex-1 bg-yellow-50 text-yellow-600 py-2 rounded-lg text-sm font-medium">
+                        <i class="fas fa-play mr-1"></i>
+                        开始复习
+                    </button>
+                    <button class="flex-1 bg-gray-50 text-gray-600 py-2 rounded-lg text-sm font-medium">
+                        <i class="fas fa-eye mr-1"></i>
+                        查看详情
+                    </button>
+                </div>
+            </div>
+
+            <!-- 低优先级复习项 -->
+            <div class="review-item priority-low p-4">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-check-circle text-green-600"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900">英语单词拼写</h4>
+                            <p class="text-gray-500 text-sm">上次复习：12小时前</p>
+                        </div>
+                    </div>
+                    <div class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                        低风险
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 p-3 rounded-lg mb-3">
+                    <p class="text-sm text-gray-700">
+                        包含 1 道错题，记忆强度：78%
+                    </p>
+                </div>
+
+                <div class="flex space-x-2">
+                    <button class="flex-1 bg-green-50 text-green-600 py-2 rounded-lg text-sm font-medium">
+                        <i class="fas fa-sync mr-1"></i>
+                        巩固练习
+                    </button>
+                    <button class="flex-1 bg-gray-50 text-gray-600 py-2 rounded-lg text-sm font-medium">
+                        <i class="fas fa-thumbs-up mr-1"></i>
+                        标记掌握
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 复习统计卡片 -->
+        <div class="review-card p-4 mb-8">
+            <h4 class="font-semibold text-gray-900 mb-3">本周复习统计</h4>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="text-center">
+                    <div class="text-xl font-bold text-purple-600">45</div>
+                    <div class="text-xs text-gray-500">已复习题目</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-xl font-bold text-green-600">89%</div>
+                    <div class="text-xs text-gray-500">平均记忆保持率</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>错题本</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f8fafc;
+        }
+        .status-bar {
+            height: 44px;
+            background: white;
+            color: #1f2937;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .content-area {
+            height: calc(100vh - 44px - 83px);
+            overflow-y: auto;
+        }
+        .bottom-nav {
+            height: 83px;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        .mistake-card {
+            background: white;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+        .mistake-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .subject-tag {
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .difficulty-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <!-- iOS状态栏 -->
+    <div class="status-bar flex justify-between items-center px-6">
+        <div class="flex items-center space-x-1">
+            <div class="w-1 h-1 bg-gray-800 rounded-full"></div>
+            <div class="w-1 h-1 bg-gray-800 rounded-full"></div>
+            <div class="w-1 h-1 bg-gray-800 rounded-full"></div>
+            <span class="ml-2">中国移动</span>
+        </div>
+        <div>9:41</div>
+        <div class="flex items-center space-x-1">
+            <i class="fas fa-signal text-sm"></i>
+            <i class="fas fa-wifi text-sm"></i>
+            <div class="w-6 h-3 border border-gray-800 rounded-sm relative">
+                <div class="w-4 h-2 bg-gray-800 rounded-sm absolute top-0.5 left-0.5"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="content-area">
+        <!-- 顶部导航栏 -->
+        <div class="bg-white px-6 py-4 border-b border-gray-100">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">错题本</h1>
+                    <p class="text-gray-500 text-sm mt-1">共 23 道错题</p>
+                </div>
+                <div class="flex space-x-3">
+                    <button class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-search text-blue-600"></i>
+                    </button>
+                    <button class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-plus text-red-600"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分类筛选 -->
+        <div class="px-6 py-4 bg-white">
+            <div class="flex space-x-3 overflow-x-auto">
+                <button class="bg-blue-500 text-white px-4 py-2 rounded-full text-sm whitespace-nowrap">
+                    全部 (23)
+                </button>
+                <button class="bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-sm whitespace-nowrap">
+                    数学 (12)
+                </button>
+                <button class="bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-sm whitespace-nowrap">
+                    语文 (8)
+                </button>
+                <button class="bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-sm whitespace-nowrap">
+                    英语 (3)
+                </button>
+            </div>
+        </div>
+
+        <!-- 错题列表 -->
+        <div class="px-6 py-4 space-y-4">
+            <!-- 错题卡片1 -->
+            <div class="mistake-card p-4">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center space-x-2">
+                        <span class="subject-tag bg-red-100 text-red-600 px-3 py-1">数学</span>
+                        <span class="text-xs text-gray-500">小数乘法</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="difficulty-dot bg-red-500"></div>
+                        <span class="text-xs text-gray-500">困难</span>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 p-3 rounded-lg mb-3">
+                    <p class="text-sm text-gray-700">
+                        计算：0.25 × 4.8 = ?
+                    </p>
+                </div>
+
+                <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
+                    <span>错误次数: 2</span>
+                    <span>录入时间: 2024-01-15</span>
+                </div>
+
+                <div class="flex space-x-2">
+                    <button onclick="startAIPractice()" class="flex-1 bg-blue-50 text-blue-600 py-2 rounded-lg text-sm font-medium">
+                        <i class="fas fa-brain mr-1"></i>
+                        AI练习
+                    </button>
+                    <button onclick="viewMistakeDetail()" class="flex-1 bg-green-50 text-green-600 py-2 rounded-lg text-sm font-medium">
+                        <i class="fas fa-eye mr-1"></i>
+                        查看解析
+                    </button>
+                </div>
+            </div>
+
+            <!-- 错题卡片2 -->
+            <div class="mistake-card p-4">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center space-x-2">
+                        <span class="subject-tag bg-blue-100 text-blue-600 px-3 py-1">语文</span>
+                        <span class="text-xs text-gray-500">组词造句</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="difficulty-dot bg-yellow-500"></div>
+                        <span class="text-xs text-gray-500">中等</span>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 p-3 rounded-lg mb-3">
+                    <p class="text-sm text-gray-700">
+                        请用"美丽"一词造句。
+                    </p>
+                </div>
+
+                <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
+                    <span>错误次数: 1</span>
+                    <span>录入时间: 2024-01-14</span>
+                </div>
+
+                <div class="flex space-x-2">
+                    <button class="flex-1 bg-blue-50 text-blue-600 py-2 rounded-lg text-sm font-medium">
+                        <i class="fas fa-brain mr-1"></i>
+                        AI练习
+                    </button>
+                    <button class="flex-1 bg-green-50 text-green-600 py-2 rounded-lg text-sm font-medium">
+                        <i class="fas fa-eye mr-1"></i>
+                        查看解析
+                    </button>
+                </div>
+            </div>
+
+            <!-- 错题卡片3 -->
+            <div class="mistake-card p-4">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center space-x-2">
+                        <span class="subject-tag bg-purple-100 text-purple-600 px-3 py-1">英语</span>
+                        <span class="text-xs text-gray-500">单词拼写</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="difficulty-dot bg-green-500"></div>
+                        <span class="text-xs text-gray-500">简单</span>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 p-3 rounded-lg mb-3">
+                    <p class="text-sm text-gray-700">
+                        What's the correct spelling? Bea_tiful
+                    </p>
+                </div>
+
+                <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
+                    <span>错误次数: 1</span>
+                    <span>录入时间: 2024-01-13</span>
+                </div>
+
+                <div class="flex space-x-2">
+                    <button class="flex-1 bg-blue-50 text-blue-600 py-2 rounded-lg text-sm font-medium">
+                        <i class="fas fa-brain mr-1"></i>
+                        AI练习
+                    </button>
+                    <button class="flex-1 bg-green-50 text-green-600 py-2 rounded-lg text-sm font-medium">
+                        <i class="fas fa-eye mr-1"></i>
+                        查看解析
+                    </button>
+                </div>
+            </div>
+
+            <!-- 空间占位符 -->
+            <div class="h-4"></div>
+        </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <div class="bottom-nav">
+        <div class="flex justify-around items-center h-full pt-2">
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 flex items-center justify-center mb-1">
+                    <i class="fas fa-home text-gray-400 text-sm"></i>
+                </div>
+                <span class="text-xs text-gray-400">首页</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center mb-1">
+                    <i class="fas fa-book text-white text-sm"></i>
+                </div>
+                <span class="text-xs text-blue-500 font-medium">错题本</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 flex items-center justify-center mb-1">
+                    <i class="fas fa-calendar text-gray-400 text-sm"></i>
+                </div>
+                <span class="text-xs text-gray-400">课程表</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 flex items-center justify-center mb-1">
+                    <i class="fas fa-chart-bar text-gray-400 text-sm"></i>
+                </div>
+                <span class="text-xs text-gray-400">报告</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 flex items-center justify-center mb-1">
+                    <i class="fas fa-user text-gray-400 text-sm"></i>
+                </div>
+                <span class="text-xs text-gray-400">我的</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function viewMistakeDetail() {
+            window.parent.postMessage('navigate:mistake-detail.html', '*');
+        }
+
+        function startAIPractice() {
+            window.parent.postMessage('navigate:ai-practice.html', '*');
+        }
+    </script>
+</body>
+</html> 

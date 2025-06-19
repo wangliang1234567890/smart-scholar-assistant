@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>识别结果</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f8fafc;
+        }
+        .status-bar {
+            height: 44px;
+            background: white;
+            color: #1f2937;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .content-area {
+            height: calc(100vh - 44px);
+            overflow-y: auto;
+        }
+        .result-card {
+            background: white;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+        .image-preview {
+            width: 100%;
+            height: 200px;
+            background: url('https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80') center/cover;
+            border-radius: 12px;
+            position: relative;
+        }
+        .accuracy-badge {
+            background: linear-gradient(45deg, #10b981, #34d399);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .edit-area {
+            min-height: 120px;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <!-- iOS状态栏 -->
+    <div class="status-bar flex justify-between items-center px-6">
+        <div class="flex items-center space-x-1">
+            <div class="w-1 h-1 bg-gray-800 rounded-full"></div>
+            <div class="w-1 h-1 bg-gray-800 rounded-full"></div>
+            <div class="w-1 h-1 bg-gray-800 rounded-full"></div>
+            <span class="ml-2">中国移动</span>
+        </div>
+        <div>9:41</div>
+        <div class="flex items-center space-x-1">
+            <i class="fas fa-signal text-sm"></i>
+            <i class="fas fa-wifi text-sm"></i>
+            <div class="w-6 h-3 border border-gray-800 rounded-sm relative">
+                <div class="w-4 h-2 bg-gray-800 rounded-sm absolute top-0.5 left-0.5"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="content-area">
+        <!-- 顶部导航栏 -->
+        <div class="bg-white px-6 py-4 border-b border-gray-100">
+            <div class="flex justify-between items-center">
+                <button onclick="goBack()" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-arrow-left text-gray-600"></i>
+                </button>
+                <div class="text-center">
+                    <h1 class="text-lg font-semibold text-gray-900">识别结果</h1>
+                    <p class="text-gray-500 text-sm">AI智能识别</p>
+                </div>
+                <button onclick="retakePhoto()" class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-camera text-blue-600"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 space-y-6">
+            <!-- 识别准确度 -->
+            <div class="result-card p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-semibold text-gray-900 mb-1">识别完成</h3>
+                        <p class="text-gray-500 text-sm">AI处理耗时 2.3秒</p>
+                    </div>
+                    <div class="accuracy-badge">
+                        <i class="fas fa-eye mr-1"></i>
+                        准确率 95%
+                    </div>
+                </div>
+            </div>
+
+            <!-- 原始图片 -->
+            <div class="result-card p-4">
+                <h3 class="font-semibold text-gray-900 mb-3">原始图片</h3>
+                <div class="image-preview">
+                    <div class="absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded text-xs">
+                        <i class="fas fa-expand mr-1"></i>点击放大
+                    </div>
+                </div>
+            </div>
+
+            <!-- 识别内容 -->
+            <div class="result-card p-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-semibold text-gray-900">识别内容</h3>
+                    <button onclick="editContent()" class="text-blue-600 text-sm font-medium">
+                        <i class="fas fa-edit mr-1"></i>编辑
+                    </button>
+                </div>
+                
+                <div class="bg-blue-50 p-4 rounded-lg mb-4">
+                    <textarea id="recognizedText" class="w-full bg-transparent border-none resize-none focus:outline-none text-gray-800" readonly>
+小明去书店买书，买了3本故事书，每本12.5元，买了2本工具书，每本18.8元。请计算小明一共花了多少钱？</textarea>
+                </div>
+
+                <div class="text-xs text-gray-500 mb-4">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    如识别有误，可点击"编辑"按钮进行修改
+                </div>
+            </div>
+
+            <!-- 智能分析 -->
+            <div class="result-card p-4">
+                <h3 class="font-semibold text-gray-900 mb-3">
+                    <i class="fas fa-brain text-purple-600 mr-2"></i>
+                    智能分析
+                </h3>
+                
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-tag text-red-600"></i>
+                            <span class="text-sm">科目识别</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <span class="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs">数学</span>
+                            <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">应用题</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-star text-yellow-600"></i>
+                            <span class="text-sm">难度等级</span>
+                        </div>
+                        <span class="bg-yellow-100 text-yellow-600 px-2 py-1 rounded-full text-xs">中等</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-lightbulb text-blue-600"></i>
+                            <span class="text-sm">知识点</span>
+                        </div>
+                        <span class="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs">小数乘法运算</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 快速操作 -->
+            <div class="result-card p-4">
+                <h3 class="font-semibold text-gray-900 mb-3">快速操作</h3>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="generateSimilar()" class="bg-blue-50 text-blue-600 py-3 rounded-lg text-sm font-medium">
+                        <i class="fas fa-magic mr-2"></i>
+                        生成相似题
+                    </button>
+                    <button onclick="getAnswer()" class="bg-green-50 text-green-600 py-3 rounded-lg text-sm font-medium">
+                        <i class="fas fa-lightbulb mr-2"></i>
+                        查看答案
+                    </button>
+                    <button onclick="addToMistakes()" class="bg-purple-50 text-purple-600 py-3 rounded-lg text-sm font-medium">
+                        <i class="fas fa-bookmark mr-2"></i>
+                        加入错题本
+                    </button>
+                    <button onclick="startPractice()" class="bg-orange-50 text-orange-600 py-3 rounded-lg text-sm font-medium">
+                        <i class="fas fa-play mr-2"></i>
+                        开始练习
+                    </button>
+                </div>
+            </div>
+
+            <!-- 底部确认按钮 -->
+            <div class="grid grid-cols-2 gap-4 pb-8">
+                <button onclick="saveAsDraft()" class="bg-gray-100 text-gray-600 py-3 rounded-lg font-medium">
+                    <i class="fas fa-save mr-2"></i>
+                    保存草稿
+                </button>
+                <button onclick="confirmSave()" class="bg-blue-600 text-white py-3 rounded-lg font-medium">
+                    <i class="fas fa-check mr-2"></i>
+                    确认保存
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function goBack() {
+            window.parent.postMessage('navigate:camera.html', '*');
+        }
+
+        function retakePhoto() {
+            window.parent.postMessage('navigate:camera.html', '*');
+        }
+
+        function editContent() {
+            const textarea = document.getElementById('recognizedText');
+            if (textarea.readOnly) {
+                textarea.readOnly = false;
+                textarea.focus();
+                textarea.style.border = '2px solid #3b82f6';
+                textarea.style.borderRadius = '8px';
+                textarea.style.padding = '8px';
+                event.target.innerHTML = '<i class="fas fa-save mr-1"></i>保存';
+            } else {
+                textarea.readOnly = true;
+                textarea.style.border = 'none';
+                textarea.style.padding = '0';
+                event.target.innerHTML = '<i class="fas fa-edit mr-1"></i>编辑';
+                alert('内容已保存！');
+            }
+        }
+
+        function generateSimilar() {
+            window.parent.postMessage('navigate:ai-practice.html', '*');
+        }
+
+        function getAnswer() {
+            alert('正确答案：3×12.5+2×18.8=37.5+37.6=75.1元');
+        }
+
+        function addToMistakes() {
+            alert('已添加到错题本！');
+            setTimeout(() => {
+                window.parent.postMessage('navigate:mistakes.html', '*');
+            }, 1000);
+        }
+
+        function startPractice() {
+            window.parent.postMessage('navigate:ai-practice.html', '*');
+        }
+
+        function saveAsDraft() {
+            alert('已保存为草稿！');
+            setTimeout(() => {
+                window.parent.postMessage('navigate:home.html', '*');
+            }, 1000);
+        }
+
+        function confirmSave() {
+            alert('保存成功！已添加到错题本');
+            setTimeout(() => {
+                window.parent.postMessage('navigate:mistakes.html', '*');
+            }, 1000);
+        }
+    </script>
+</body>
+</html> 

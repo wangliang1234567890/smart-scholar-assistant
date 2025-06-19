@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI专项练习</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .status-bar {
+            height: 44px;
+            background: transparent;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .content-area {
+            height: calc(100vh - 44px);
+            overflow-y: auto;
+        }
+        .practice-card {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        .option-button {
+            transition: all 0.3s ease;
+            border: 2px solid #e5e7eb;
+        }
+        .option-button:hover {
+            background: #f3f4f6;
+            border-color: #3b82f6;
+        }
+        .option-button.selected {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            color: #1d4ed8;
+        }
+        .progress-bar {
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.3);
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: white;
+            transition: width 0.3s ease;
+        }
+        .ai-badge {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- iOS状态栏 -->
+    <div class="status-bar flex justify-between items-center px-6">
+        <div class="flex items-center space-x-1">
+            <div class="w-1 h-1 bg-white rounded-full"></div>
+            <div class="w-1 h-1 bg-white rounded-full"></div>
+            <div class="w-1 h-1 bg-white rounded-full"></div>
+            <span class="ml-2">中国移动</span>
+        </div>
+        <div>9:41</div>
+        <div class="flex items-center space-x-1">
+            <i class="fas fa-signal text-sm"></i>
+            <i class="fas fa-wifi text-sm"></i>
+            <div class="w-6 h-3 border border-white rounded-sm relative">
+                <div class="w-4 h-2 bg-white rounded-sm absolute top-0.5 left-0.5"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="content-area px-6">
+        <!-- 顶部导航栏 -->
+        <div class="flex justify-between items-center py-4">
+            <button class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                <i class="fas fa-arrow-left text-white"></i>
+            </button>
+            <div class="text-center">
+                <h1 class="text-white text-lg font-semibold">AI专项练习</h1>
+                <p class="text-white/80 text-sm">小数乘法专项</p>
+            </div>
+            <button class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                <i class="fas fa-question text-white"></i>
+            </button>
+        </div>
+
+        <!-- 进度指示器 -->
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-white/80 text-sm">进度</span>
+                <span class="text-white text-sm font-medium">3/5</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 60%"></div>
+            </div>
+        </div>
+
+        <!-- AI练习卡片 -->
+        <div class="practice-card p-6 mb-6">
+            <!-- AI标识 -->
+            <div class="flex justify-between items-center mb-4">
+                <div class="ai-badge">
+                    <i class="fas fa-brain mr-1"></i>
+                    AI智能生成
+                </div>
+                <div class="text-sm text-gray-500">
+                    <i class="fas fa-clock mr-1"></i>
+                    剩余时间: 02:45
+                </div>
+            </div>
+
+            <!-- 题目内容 -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">第3题</h3>
+                <div class="bg-blue-50 p-4 rounded-lg mb-4">
+                    <p class="text-gray-800 leading-relaxed">
+                        小明去商店买文具，买了3支铅笔，每支铅笔1.25元，买了2个橡皮，每个橡皮0.8元。请计算小明一共花了多少钱？
+                    </p>
+                </div>
+                
+                <!-- 提示信息 -->
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
+                    <div class="flex items-center">
+                        <i class="fas fa-lightbulb text-yellow-600 mr-2"></i>
+                        <span class="text-yellow-800 text-sm">
+                            提示：这是一道小数乘法和加法的综合题目
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 选项 -->
+            <div class="space-y-3 mb-6">
+                <button class="option-button w-full p-4 rounded-lg text-left flex items-center">
+                    <div class="w-6 h-6 border-2 border-gray-400 rounded-full mr-3 flex items-center justify-center">
+                        <span class="text-sm font-medium">A</span>
+                    </div>
+                    <span>5.35元</span>
+                </button>
+
+                <button class="option-button w-full p-4 rounded-lg text-left flex items-center selected">
+                    <div class="w-6 h-6 bg-blue-600 border-2 border-blue-600 rounded-full mr-3 flex items-center justify-center">
+                        <span class="text-sm font-medium text-white">B</span>
+                    </div>
+                    <span>5.35元</span>
+                </button>
+
+                <button class="option-button w-full p-4 rounded-lg text-left flex items-center">
+                    <div class="w-6 h-6 border-2 border-gray-400 rounded-full mr-3 flex items-center justify-center">
+                        <span class="text-sm font-medium">C</span>
+                    </div>
+                    <span>4.95元</span>
+                </button>
+
+                <button class="option-button w-full p-4 rounded-lg text-left flex items-center">
+                    <div class="w-6 h-6 border-2 border-gray-400 rounded-full mr-3 flex items-center justify-center">
+                        <span class="text-sm font-medium">D</span>
+                    </div>
+                    <span>5.15元</span>
+                </button>
+            </div>
+
+            <!-- 底部按钮 -->
+            <div class="flex space-x-3">
+                <button class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-lg font-medium">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    上一题
+                </button>
+                <button class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-medium">
+                    下一题
+                    <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- 底部工具栏 -->
+        <div class="practice-card p-4 mb-6">
+            <div class="flex justify-between items-center">
+                <button class="flex items-center space-x-2 text-gray-600">
+                    <i class="fas fa-bookmark"></i>
+                    <span class="text-sm">收藏</span>
+                </button>
+                <button class="flex items-center space-x-2 text-gray-600">
+                    <i class="fas fa-eye"></i>
+                    <span class="text-sm">解析</span>
+                </button>
+                <button class="flex items-center space-x-2 text-gray-600">
+                    <i class="fas fa-flag"></i>
+                    <span class="text-sm">标记</span>
+                </button>
+                <button class="flex items-center space-x-2 text-gray-600">
+                    <i class="fas fa-share"></i>
+                    <span class="text-sm">分享</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 成绩预览卡片 -->
+        <div class="practice-card p-4 mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-1">本次练习</h4>
+                    <p class="text-gray-500 text-sm">已完成 2/5 题</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-2xl font-bold text-green-600">100%</div>
+                    <div class="text-xs text-gray-500">正确率</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

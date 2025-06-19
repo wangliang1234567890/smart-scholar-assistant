@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .status-bar {
+            height: 44px;
+            background: transparent;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .content-area {
+            height: calc(100vh - 44px - 83px);
+            overflow-y: auto;
+        }
+        .bottom-nav {
+            height: 83px;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        .profile-card {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        .menu-item {
+            background: white;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+        .menu-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            border: 4px solid rgba(255,255,255,0.3);
+        }
+        .badge {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #92400e;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .level-progress {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .level-fill {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.8s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- iOS状态栏 -->
+    <div class="status-bar flex justify-between items-center px-6">
+        <div class="flex items-center space-x-1">
+            <div class="w-1 h-1 bg-white rounded-full"></div>
+            <div class="w-1 h-1 bg-white rounded-full"></div>
+            <div class="w-1 h-1 bg-white rounded-full"></div>
+            <span class="ml-2">中国移动</span>
+        </div>
+        <div>9:41</div>
+        <div class="flex items-center space-x-1">
+            <i class="fas fa-signal text-sm"></i>
+            <i class="fas fa-wifi text-sm"></i>
+            <div class="w-6 h-3 border border-white rounded-sm relative">
+                <div class="w-4 h-2 bg-white rounded-sm absolute top-0.5 left-0.5"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="content-area px-6">
+        <!-- 用户信息卡片 -->
+        <div class="profile-card p-6 mt-6 mb-6">
+            <div class="flex items-center space-x-4 mb-6">
+                <div class="avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="flex-1">
+                    <h2 class="text-xl font-bold text-gray-900">小明同学</h2>
+                    <p class="text-gray-500 text-sm">四年级二班</p>
+                    <div class="flex items-center space-x-2 mt-2">
+                        <div class="badge">
+                            <i class="fas fa-star mr-1"></i>
+                            学习之星 Lv.5
+                        </div>
+                    </div>
+                </div>
+                <button class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-edit text-gray-600"></i>
+                </button>
+            </div>
+
+            <!-- 等级进度 -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm text-gray-600">学习等级进度</span>
+                    <span class="text-sm text-gray-500">1580/2000 积分</span>
+                </div>
+                <div class="level-progress">
+                    <div class="level-fill" style="width: 79%"></div>
+                </div>
+                <div class="text-xs text-gray-500 mt-1">还需 420 积分升级到 Lv.6</div>
+            </div>
+
+            <!-- 学习统计 -->
+            <div class="grid grid-cols-3 gap-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">23</div>
+                    <div class="text-xs text-gray-500">连续学习天数</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">156</div>
+                    <div class="text-xs text-gray-500">累计练习题目</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600">8</div>
+                    <div class="text-xs text-gray-500">获得勋章</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 功能菜单 -->
+        <div class="space-y-4 mb-6">
+            <!-- 学习管理 -->
+            <div class="menu-item p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-cog text-blue-600"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-900">学习设置</h4>
+                            <p class="text-gray-500 text-sm">提醒时间、难度偏好</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </div>
+            </div>
+
+            <!-- 家长管理 -->
+            <div class="menu-item p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-users text-green-600"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-900">家长管理</h4>
+                            <p class="text-gray-500 text-sm">切换账户、权限设置</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </div>
+            </div>
+
+            <!-- 成就勋章 -->
+            <div onclick="viewAchievements()" class="menu-item p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-trophy text-yellow-600"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-900">成就勋章</h4>
+                            <p class="text-gray-500 text-sm">查看获得的所有勋章</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">3</span>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 学习数据 -->
+            <div class="menu-item p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chart-line text-purple-600"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-900">学习数据</h4>
+                            <p class="text-gray-500 text-sm">详细的学习分析报告</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </div>
+            </div>
+
+            <!-- 打印中心 -->
+            <div class="menu-item p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-print text-orange-600"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-900">打印中心</h4>
+                            <p class="text-gray-500 text-sm">试卷下载和打印管理</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </div>
+            </div>
+
+            <!-- 帮助与反馈 -->
+            <div class="menu-item p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-question-circle text-gray-600"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-900">帮助与反馈</h4>
+                            <p class="text-gray-500 text-sm">使用帮助、问题反馈</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 最近获得的勋章 -->
+        <div class="profile-card p-4 mb-8">
+            <h3 class="font-semibold text-gray-900 mb-4">最近获得勋章</h3>
+            <div class="flex space-x-4 overflow-x-auto">
+                <div class="flex-shrink-0 text-center">
+                    <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-2">
+                        <i class="fas fa-star text-yellow-600 text-xl"></i>
+                    </div>
+                    <div class="text-xs text-gray-600">连续学习</div>
+                </div>
+                <div class="flex-shrink-0 text-center">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-2">
+                        <i class="fas fa-brain text-blue-600 text-xl"></i>
+                    </div>
+                    <div class="text-xs text-gray-600">AI练习达人</div>
+                </div>
+                <div class="flex-shrink-0 text-center">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-2">
+                        <i class="fas fa-target text-green-600 text-xl"></i>
+                    </div>
+                    <div class="text-xs text-gray-600">精准答题</div>
+                </div>
+                <div class="flex-shrink-0 text-center">
+                    <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-2">
+                        <i class="fas fa-lock text-gray-400 text-xl"></i>
+                    </div>
+                    <div class="text-xs text-gray-400">未解锁</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <div class="bottom-nav">
+        <div class="flex justify-around items-center h-full pt-2">
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 flex items-center justify-center mb-1">
+                    <i class="fas fa-home text-gray-400 text-sm"></i>
+                </div>
+                <span class="text-xs text-gray-400">首页</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 flex items-center justify-center mb-1">
+                    <i class="fas fa-book text-gray-400 text-sm"></i>
+                </div>
+                <span class="text-xs text-gray-400">错题本</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 flex items-center justify-center mb-1">
+                    <i class="fas fa-calendar text-gray-400 text-sm"></i>
+                </div>
+                <span class="text-xs text-gray-400">课程表</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 flex items-center justify-center mb-1">
+                    <i class="fas fa-chart-bar text-gray-400 text-sm"></i>
+                </div>
+                <span class="text-xs text-gray-400">报告</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center mb-1">
+                    <i class="fas fa-user text-white text-sm"></i>
+                </div>
+                <span class="text-xs text-blue-500 font-medium">我的</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function viewAchievements() {
+            window.parent.postMessage('navigate:achievements.html', '*');
+        }
+
+        function openSettings() {
+            window.parent.postMessage('navigate:settings.html', '*');
+        }
+    </script>
+</body>
+</html> 

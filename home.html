@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .status-bar {
+            height: 44px;
+            background: transparent;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .content-area {
+            height: calc(100vh - 44px - 83px);
+            overflow-y: auto;
+        }
+        .bottom-nav {
+            height: 83px;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        .feature-card {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .progress-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            position: relative;
+            background: conic-gradient(#4F46E5 75%, #E5E7EB 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .progress-circle::before {
+            content: '';
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: white;
+            position: absolute;
+        }
+        .progress-text {
+            position: relative;
+            z-index: 1;
+            font-weight: 600;
+            color: #4F46E5;
+        }
+    </style>
+</head>
+<body>
+    <!-- iOS状态栏 -->
+    <div class="status-bar flex justify-between items-center px-6">
+        <div class="flex items-center space-x-1">
+            <div class="w-1 h-1 bg-white rounded-full"></div>
+            <div class="w-1 h-1 bg-white rounded-full"></div>
+            <div class="w-1 h-1 bg-white rounded-full"></div>
+            <span class="ml-2">中国移动</span>
+        </div>
+        <div>9:41</div>
+        <div class="flex items-center space-x-1">
+            <i class="fas fa-signal text-sm"></i>
+            <i class="fas fa-wifi text-sm"></i>
+            <div class="w-6 h-3 border border-white rounded-sm relative">
+                <div class="w-4 h-2 bg-white rounded-sm absolute top-0.5 left-0.5"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="content-area px-6">
+        <!-- 顶部欢迎区域 -->
+        <div class="pt-4 pb-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-white text-2xl font-bold">你好，小明！</h1>
+                    <p class="text-white/80 text-sm mt-1">今天也要加油学习哦～</p>
+                </div>
+                <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-white text-lg"></i>
+                </div>
+            </div>
+
+            <!-- 学习进度卡片 -->
+            <div class="feature-card p-4 mb-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-gray-800 font-semibold mb-2">今日学习进度</h3>
+                        <div class="flex items-center space-x-4">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-blue-600">5</div>
+                                <div class="text-xs text-gray-500">错题练习</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-green-600">3</div>
+                                <div class="text-xs text-gray-500">课程复习</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-purple-600">120</div>
+                                <div class="text-xs text-gray-500">学习积分</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-circle">
+                        <div class="progress-text text-sm">75%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 功能模块 -->
+        <div class="space-y-4">
+            <!-- 错题管理 -->
+            <div class="feature-card p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-camera text-red-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">拍照录题</h3>
+                            <p class="text-gray-500 text-sm">智能识别，快速录入错题</p>
+                        </div>
+                    </div>
+                    <div class="bg-red-500 text-white px-3 py-1 rounded-full text-xs">
+                        5 待处理
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI练习 -->
+            <div class="feature-card p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-brain text-blue-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">AI专项练习</h3>
+                            <p class="text-gray-500 text-sm">智能生成变式题目</p>
+                        </div>
+                    </div>
+                    <div class="bg-blue-500 text-white px-3 py-1 rounded-full text-xs">
+                        3 推荐
+                    </div>
+                </div>
+            </div>
+
+            <!-- 课程表 -->
+            <div class="feature-card p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-calendar text-green-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">今日课程</h3>
+                            <p class="text-gray-500 text-sm">数学培训班 15:00-17:00</p>
+                        </div>
+                    </div>
+                    <div class="bg-green-500 text-white px-3 py-1 rounded-full text-xs">
+                        2小时后
+                    </div>
+                </div>
+            </div>
+
+            <!-- 复习提醒 -->
+            <div class="feature-card p-4 mb-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-clock text-purple-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">智能复习</h3>
+                            <p class="text-gray-500 text-sm">基于遗忘曲线的复习提醒</p>
+                        </div>
+                    </div>
+                    <div class="bg-purple-500 text-white px-3 py-1 rounded-full text-xs">
+                        8 待复习
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <div class="bottom-nav">
+        <div class="flex justify-around items-center h-full pt-2">
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center mb-1">
+                    <i class="fas fa-home text-white text-sm"></i>
+                </div>
+                <span class="text-xs text-blue-500 font-medium">首页</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 flex items-center justify-center mb-1">
+                    <i class="fas fa-book text-gray-400 text-sm"></i>
+                </div>
+                <span class="text-xs text-gray-400">错题本</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 flex items-center justify-center mb-1">
+                    <i class="fas fa-calendar text-gray-400 text-sm"></i>
+                </div>
+                <span class="text-xs text-gray-400">课程表</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 flex items-center justify-center mb-1">
+                    <i class="fas fa-chart-bar text-gray-400 text-sm"></i>
+                </div>
+                <span class="text-xs text-gray-400">报告</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 flex items-center justify-center mb-1">
+                    <i class="fas fa-user text-gray-400 text-sm"></i>
+                </div>
+                <span class="text-xs text-gray-400">我的</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

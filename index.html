@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能学霸小助手 - 高保真原型</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: #f5f5f7;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .phone-frame {
+            width: 393px;
+            height: 852px;
+            background: #000;
+            border-radius: 47px;
+            padding: 8px;
+            margin: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            border-radius: 39px;
+            overflow: hidden;
+            background: white;
+        }
+        .prototype-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 40px;
+            padding: 40px;
+            justify-items: center;
+        }
+        .prototype-title {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen bg-gray-50">
+        <header class="bg-white shadow-sm border-b">
+            <div class="max-w-7xl mx-auto px-4 py-6">
+                <h1 class="text-3xl font-bold text-gray-900 text-center">
+                    <i class="fas fa-graduation-cap text-blue-500 mr-3"></i>
+                    智能学霸小助手 - 高保真原型设计
+                </h1>
+                <p class="text-gray-600 text-center mt-2">AI赋能的小学智能学习辅助小程序原型展示</p>
+            </div>
+        </header>
+
+        <div class="prototype-grid">
+            <!-- 首页 -->
+            <div>
+                <div class="prototype-title">📱 首页 - 学习概览</div>
+                <div class="phone-frame">
+                    <div class="phone-screen">
+                        <iframe src="home.html" width="100%" height="100%" frameborder="0"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 错题本 -->
+            <div>
+                <div class="prototype-title">📚 错题本</div>
+                <div class="phone-frame">
+                    <div class="phone-screen">
+                        <iframe src="mistakes.html" width="100%" height="100%" frameborder="0"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 拍照录题 -->
+            <div>
+                <div class="prototype-title">📸 拍照录题</div>
+                <div class="phone-frame">
+                    <div class="phone-screen">
+                        <iframe src="camera.html" width="100%" height="100%" frameborder="0"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI练习 -->
+            <div>
+                <div class="prototype-title">🧠 AI专项练习</div>
+                <div class="phone-frame">
+                    <div class="phone-screen">
+                        <iframe src="ai-practice.html" width="100%" height="100%" frameborder="0"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 课程表 -->
+            <div>
+                <div class="prototype-title">📅 课程表</div>
+                <div class="phone-frame">
+                    <div class="phone-screen">
+                        <iframe src="schedule.html" width="100%" height="100%" frameborder="0"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 复习提醒 -->
+            <div>
+                <div class="prototype-title">🔄 智能复习</div>
+                <div class="phone-frame">
+                    <div class="phone-screen">
+                        <iframe src="review.html" width="100%" height="100%" frameborder="0"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 学习报告 -->
+            <div>
+                <div class="prototype-title">📊 学习报告</div>
+                <div class="phone-frame">
+                    <div class="phone-screen">
+                        <iframe src="report.html" width="100%" height="100%" frameborder="0"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 个人中心 -->
+            <div>
+                <div class="prototype-title">👤 个人中心</div>
+                <div class="phone-frame">
+                    <div class="phone-screen">
+                        <iframe src="profile.html" width="100%" height="100%" frameborder="0"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 错题详情 -->
+            <div>
+                <div class="prototype-title">📖 错题详情</div>
+                <div class="phone-frame">
+                    <div class="phone-screen">
+                        <iframe src="mistake-detail.html" width="100%" height="100%" frameborder="0"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 拍照识别结果 -->
+            <div>
+                <div class="prototype-title">🔍 识别结果</div>
+                <div class="phone-frame">
+                    <div class="phone-screen">
+                        <iframe src="camera-result.html" width="100%" height="100%" frameborder="0"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 课程详情 -->
+            <div>
+                <div class="prototype-title">📝 课程详情</div>
+                <div class="phone-frame">
+                    <div class="phone-screen">
+                        <iframe src="course-detail.html" width="100%" height="100%" frameborder="0"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 我的成就 -->
+            <div>
+                <div class="prototype-title">🏆 我的成就</div>
+                <div class="phone-frame">
+                    <div class="phone-screen">
+                        <iframe src="achievements.html" width="100%" height="100%" frameborder="0"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 设置页面 -->
+            <div>
+                <div class="prototype-title">⚙️ 设置</div>
+                <div class="phone-frame">
+                    <div class="phone-screen">
+                        <iframe src="settings.html" width="100%" height="100%" frameborder="0"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="bg-white border-t mt-20">
+            <div class="max-w-7xl mx-auto px-4 py-8 text-center text-gray-600">
+                <p>© 2024 智能学霸小助手 | 高保真原型设计</p>
+                <p class="text-sm mt-2">使用 Tailwind CSS + FontAwesome 构建</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 处理子页面导航消息
+        window.addEventListener('message', (event) => {
+            if (event.data.startsWith('navigate:')) {
+                const targetPage = event.data.replace('navigate:', '');
+                
+                // 查找包含目标页面的iframe
+                const iframes = document.querySelectorAll('iframe');
+                let targetIframe = null;
+                
+                iframes.forEach(iframe => {
+                    if (iframe.src.includes(targetPage)) {
+                        targetIframe = iframe;
+                    }
+                });
+                
+                if (targetIframe) {
+                    // 平滑滚动到目标页面
+                    targetIframe.closest('.phone-frame').scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                    
+                    // 添加高亮效果
+                    const phoneFrame = targetIframe.closest('.phone-frame');
+                    phoneFrame.style.transform = 'scale(1.02)';
+                    phoneFrame.style.boxShadow = '0 25px 50px rgba(59, 130, 246, 0.4)';
+                    phoneFrame.style.transition = 'all 0.3s ease';
+                    
+                    // 2秒后恢复正常
+                    setTimeout(() => {
+                        phoneFrame.style.transform = 'scale(1)';
+                        phoneFrame.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)';
+                    }, 2000);
+                }
+                
+                console.log('导航到页面:', targetPage);
+            }
+        });
+
+        // 页面加载完成后的提示
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('智能学霸小助手原型系统已加载');
+            console.log('您可以在各个页面中点击按钮来体验页面间的跳转功能');
+        });
+    </script>
+</body>
+</html> 
