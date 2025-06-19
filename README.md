@@ -222,4 +222,5 @@ smart-scholar-assistant/
 
 ---
 
-⭐ 如果这个项目对您有帮助，请给个Star支持一下！
+⭐ 如果这个项目对您有帮助，请给个Star支持一下！#   s m a r t - s c h o l a r - a s s i s t a n t  
+ 
