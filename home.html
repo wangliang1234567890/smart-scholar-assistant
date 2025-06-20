@@ -13,15 +13,15 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #A8F5E8 0%, #B8F5E8 50%, #C8F5E8 100%);
+            background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 50%, #E2E8F0 100%);
             min-height: 100vh;
         }
         
         .status-bar {
             height: 44px;
             background: transparent;
-            color: #2D3748;
-            font-size: 15px;
+            color: #1E293B;
+            font-size: 17px;
             font-weight: 600;
         }
         
@@ -39,11 +39,10 @@
         }
         
         .welcome-section {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+            background: #FFFFFF;
+            border-radius: 20px;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
         }
         
         .quick-stats {
@@ -66,25 +65,25 @@
         }
         
         .feature-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+            background: #FFFFFF;
+            border-radius: 16px;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             overflow: hidden;
             position: relative;
         }
         
         .feature-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(15, 23, 42, 0.12);
+            border-color: #3B82F6;
         }
         
         .feature-card.primary {
             grid-column: 1 / -1;
-            background: linear-gradient(135deg, rgba(64, 224, 160, 0.1) 0%, rgba(72, 224, 168, 0.1) 100%);
-            border: 2px solid rgba(64, 224, 160, 0.3);
+            background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+            border: 2px solid #3B82F6;
         }
         
         .schedule-card {
@@ -99,7 +98,7 @@
             width: 60px;
             height: 60px;
             border-radius: 50%;
-            background: conic-gradient(#40E0A0 75%, #E2E8F0 0);
+            background: conic-gradient(#3B82F6 75%, #E2E8F0 0);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -119,7 +118,7 @@
             position: relative;
             z-index: 1;
             font-weight: 700;
-            color: #40E0A0;
+            color: #3B82F6;
             font-size: 14px;
         }
         
@@ -143,8 +142,8 @@
         }
         
         .nav-item.active {
-            background: linear-gradient(135deg, #40E0A0 0%, #48E0A8 100%);
-            box-shadow: 0 4px 16px rgba(64, 224, 160, 0.3);
+            background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
         }
         
         .nav-item:not(.active):hover {
@@ -152,13 +151,13 @@
         }
         
         .badge {
-            background: linear-gradient(135deg, #40E0A0 0%, #48E0A8 100%);
+            background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
             color: white;
             border-radius: 12px;
             font-weight: 600;
             font-size: 12px;
             padding: 4px 8px;
-            box-shadow: 0 2px 8px rgba(64, 224, 160, 0.3);
+            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
         }
         
         .streak-indicator {

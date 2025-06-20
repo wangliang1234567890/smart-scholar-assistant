@@ -13,21 +13,22 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #A8F5E8 0%, #B8F5E8 50%, #C8F5E8 100%);
+            background: #F5F5F7;
             min-height: 100vh;
         }
         
         .status-bar {
             height: 44px;
-            background: transparent;
-            color: #2D3748;
-            font-size: 15px;
+            background: white;
+            color: #000;
+            font-size: 17px;
             font-weight: 600;
         }
         
         .content-area {
             height: calc(100vh - 44px - 90px);
             overflow-y: auto;
+            background: white;
         }
         
         .bottom-nav {
@@ -38,106 +39,193 @@
             box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.08);
         }
         
-        .header-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+        .week-calendar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: white;
         }
         
-        .filter-button {
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 20px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
+        .day-item {
+            text-align: center;
+            flex: 1;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
         
-        .filter-button.active {
-            background: linear-gradient(135deg, #40E0A0 0%, #48E0A8 100%);
-            color: white;
-            box-shadow: 0 4px 16px rgba(64, 224, 160, 0.3);
+        .day-name {
+            font-size: 13px;
+            color: #8E8E93;
+            margin-bottom: 4px;
         }
         
-        .filter-button:not(.active):hover {
-            background: rgba(255, 255, 255, 0.95);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-        }
-        
-        .mistake-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .mistake-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
-        }
-        
-        .difficulty-badge {
-            border-radius: 16px;
+        .day-number {
+            font-size: 24px;
             font-weight: 600;
-            font-size: 12px;
-            padding: 6px 12px;
+            color: #000;
         }
         
-        .difficulty-easy {
-            background: linear-gradient(135deg, #10B981 0%, #34D399 100%);
+        .day-item.today .day-number {
+            background: #007AFF;
             color: white;
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
         }
         
-        .difficulty-medium {
-            background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+        .day-item.selected .day-number {
+            background: #34C759;
             color: white;
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
         }
         
-        .difficulty-hard {
-            background: linear-gradient(135deg, #EF4444 0%, #F87171 100%);
-            color: white;
+        .today-schedule {
+            padding: 20px;
+            background: white;
         }
         
-        .subject-tag {
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 16px;
-            font-weight: 500;
-            font-size: 14px;
-            padding: 8px 16px;
-            color: #64748B;
+        .schedule-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
         
-        .action-button {
-            width: 40px;
-            height: 40px;
+        .schedule-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #000;
+        }
+        
+        .schedule-date {
+            font-size: 15px;
+            color: #8E8E93;
+        }
+        
+        .schedule-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #F2F2F7;
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
         
-        .action-button:hover {
-            transform: scale(1.1);
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        .schedule-item.selected {
+            background: #E3F2FD;
+            border: 2px solid #007AFF;
         }
         
-        .stats-item {
-            background: rgba(255, 255, 255, 0.8);
+        .schedule-item:hover {
+            background: #E8E8ED;
+        }
+        
+        .schedule-time {
+            font-size: 17px;
+            font-weight: 500;
+            color: #000;
+            min-width: 60px;
+            margin-right: 16px;
+        }
+        
+        .schedule-content {
+            flex: 1;
+        }
+        
+        .schedule-subject {
+            font-size: 17px;
+            font-weight: 500;
+            color: #000;
+            margin-bottom: 4px;
+        }
+        
+        .schedule-teacher {
+            font-size: 15px;
+            color: #8E8E93;
+        }
+        
+        .status-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .status-ongoing {
+            background: #34C759;
+            color: white;
+        }
+        
+        .status-upcoming {
+            background: #FF9500;
+            color: white;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: #C7C7CC;
+            border-radius: 50%;
+        }
+        
+        .timeline-dot.active {
+            background: #007AFF;
+        }
+        
+        .batch-actions {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #007AFF;
+            border-radius: 24px;
+            padding: 12px 24px;
+            display: none;
+            z-index: 1000;
+        }
+        
+        .batch-actions.show {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .batch-text {
+            color: white;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        
+        .batch-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
             border-radius: 16px;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-        
-        .stats-item:hover {
-            transform: scale(1.05);
-            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 16px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
         }
         
         .nav-item {
@@ -146,242 +234,137 @@
         }
         
         .nav-item.active {
-            background: linear-gradient(135deg, #40E0A0 0%, #48E0A8 100%);
-            box-shadow: 0 4px 16px rgba(64, 224, 160, 0.3);
+            background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
         }
         
         .nav-item:not(.active):hover {
             background: rgba(255, 255, 255, 0.5);
-        }
-        
-        .empty-state {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
         }
     </style>
 </head>
 <body>
     <!-- iOS状态栏 -->
     <div class="status-bar flex justify-between items-center px-6">
+        <div class="font-bold">9:41</div>
         <div class="flex items-center space-x-1">
-            <div class="w-1.5 h-1.5 bg-current rounded-full"></div>
-            <div class="w-1.5 h-1.5 bg-current rounded-full"></div>
-            <div class="w-1.5 h-1.5 bg-current rounded-full"></div>
-            <span class="ml-2">中国移动</span>
-        </div>
-        <div class="font-bold text-lg">9:41</div>
-        <div class="flex items-center space-x-2">
-            <i class="fas fa-signal text-lg"></i>
-            <i class="fas fa-wifi text-lg"></i>
-            <div class="w-7 h-4 border-2 border-current rounded-sm relative">
-                <div class="w-4 h-2 bg-current rounded-sm absolute top-0.5 left-0.5"></div>
+            <div class="flex space-x-1">
+                <div class="w-1 h-1 bg-current rounded-full"></div>
+                <div class="w-1 h-1 bg-current rounded-full"></div>
+                <div class="w-1 h-1 bg-current rounded-full"></div>
+                <div class="w-1 h-1 bg-current rounded-full"></div>
+            </div>
+            <i class="fas fa-wifi text-sm ml-1"></i>
+            <div class="w-6 h-3 border border-current rounded-sm relative ml-1">
+                <div class="w-4 h-1.5 bg-current rounded-sm absolute top-0.5 right-0.5"></div>
             </div>
         </div>
     </div>
 
     <!-- 主内容区域 -->
-    <div class="content-area px-6">
-        <!-- 头部信息 -->
-        <div class="pt-6 pb-6">
-            <div class="header-card p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <div>
-                        <h1 class="text-gray-900 text-3xl font-bold mb-2">错题时间轴</h1>
-                        <p class="text-gray-600 text-lg font-medium">按时间查看错题记录</p>
-                    </div>
-                    <div class="flex items-center space-x-3">
-                        <button onclick="jumpToPage('mistake-timeline')" class="w-12 h-12 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl flex items-center justify-center group hover:scale-110 transition-all duration-300" title="错题时间轴">
-                            <i class="fas fa-clock text-green-500 text-lg group-hover:text-green-600"></i>
-                        </button>
-                        <button onclick="jumpToPage('print-worksheet')" class="w-12 h-12 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl flex items-center justify-center group hover:scale-110 transition-all duration-300" title="生成打印试卷">
-                            <i class="fas fa-print text-blue-500 text-lg group-hover:text-blue-600"></i>
-                        </button>
-                        <div class="w-16 h-16 bg-gradient-to-br from-red-50 to-pink-50 rounded-2xl flex items-center justify-center">
-                            <i class="fas fa-book text-red-500 text-2xl"></i>
-                        </div>
-                    </div>
-                </div>
+    <div class="content-area">
+        <!-- 页面标题 -->
+        <div class="px-6 py-4">
+            <h1 class="text-3xl font-bold text-black">错题轴</h1>
+        </div>
 
-                <!-- 统计信息 -->
-                <div class="flex space-x-4">
-                    <div class="stats-item text-center p-4 flex-1">
-                        <div class="text-2xl font-bold text-red-500 mb-1">24</div>
-                        <div class="text-xs text-gray-600 font-medium">总错题</div>
-                    </div>
-                    <div class="stats-item text-center p-4 flex-1">
-                        <div class="text-2xl font-bold text-emerald-500 mb-1">18</div>
-                        <div class="text-xs text-gray-600 font-medium">已掌握</div>
-                    </div>
-                    <div class="stats-item text-center p-4 flex-1">
-                        <div class="text-2xl font-bold text-orange-500 mb-1">6</div>
-                        <div class="text-xs text-gray-600 font-medium">待复习</div>
-                    </div>
-                </div>
+        <!-- 周历 -->
+        <div class="week-calendar border-b" style="border-color: #E5E5EA;">
+            <div class="day-item">
+                <div class="day-name">Sun</div>
+                <div class="day-number">13</div>
+            </div>
+            <div class="day-item">
+                <div class="day-name">Mon</div>
+                <div class="day-number">14</div>
+            </div>
+            <div class="day-item">
+                <div class="day-name">Tue</div>
+                <div class="day-number">15</div>
+            </div>
+            <div class="day-item today" onclick="selectDay(this, '2024-01-16')">
+                <div class="day-name">Wed</div>
+                <div class="day-number">16</div>
+            </div>
+            <div class="day-item">
+                <div class="day-name">Thu</div>
+                <div class="day-number">17</div>
+            </div>
+            <div class="day-item selected" onclick="selectDay(this, '2024-01-18')">
+                <div class="day-name">Fri</div>
+                <div class="day-number">18</div>
+            </div>
+            <div class="day-item">
+                <div class="day-name">Sat</div>
+                <div class="day-number">19</div>
             </div>
         </div>
 
-        <!-- 筛选按钮 -->
-        <div class="mb-6">
-            <div class="flex space-x-3 overflow-x-auto pb-2">
-                <button class="filter-button active px-6 py-3 whitespace-nowrap font-medium">
-                    全部
-                </button>
-                <button class="filter-button px-6 py-3 whitespace-nowrap font-medium text-gray-600">
-                    数学
-                </button>
-                <button class="filter-button px-6 py-3 whitespace-nowrap font-medium text-gray-600">
-                    语文
-                </button>
-                <button class="filter-button px-6 py-3 whitespace-nowrap font-medium text-gray-600">
-                    英语
-                </button>
-                <button class="filter-button px-6 py-3 whitespace-nowrap font-medium text-gray-600">
-                    科学
-                </button>
+        <!-- 今日错题 -->
+        <div class="today-schedule">
+            <div class="schedule-header">
+                <div class="schedule-title">今日错题</div>
+                <div class="schedule-date">2024年1月16日 星期三</div>
+            </div>
+
+            <!-- 错题列表 -->
+            <div class="schedule-item" onclick="toggleSelection(this, 'math-001')" data-subject="数学" data-count="2">
+                <div class="timeline-dot active"></div>
+                <div class="schedule-time">09:30</div>
+                <div class="schedule-content">
+                    <div class="schedule-subject">数学错题：分数乘除法运算 (2题)</div>
+                    <div class="schedule-teacher">错题来源：课堂练习册P24-26</div>
+                </div>
+                <div class="status-badge status-ongoing">已拍摄</div>
+            </div>
+
+            <div class="schedule-item" onclick="toggleSelection(this, 'chinese-001')" data-subject="语文" data-count="1">
+                <div class="timeline-dot"></div>
+                <div class="schedule-time">11:15</div>
+                <div class="schedule-content">
+                    <div class="schedule-subject">语文错题：阅读理解题 (1题)</div>
+                    <div class="schedule-teacher">错题来源：语文课堂作业</div>
+                </div>
+                <div class="status-badge status-upcoming">待录入</div>
+            </div>
+
+            <div class="schedule-item" onclick="toggleSelection(this, 'math-002')" data-subject="数学" data-count="3">
+                <div class="timeline-dot"></div>
+                <div class="schedule-time">15:20</div>
+                <div class="schedule-content">
+                    <div class="schedule-subject">数学错题：应用题专项练习 (3题)</div>
+                    <div class="schedule-teacher">错题来源：数学家庭作业</div>
+                </div>
+                <div class="status-badge status-ongoing">已拍摄</div>
+            </div>
+
+            <div class="schedule-item" onclick="toggleSelection(this, 'english-001')" data-subject="英语" data-count="2">
+                <div class="timeline-dot"></div>
+                <div class="schedule-time">17:45</div>
+                <div class="schedule-content">
+                    <div class="schedule-subject">英语错题：单词拼写练习 (2题)</div>
+                    <div class="schedule-teacher">错题来源：英语听写测验</div>
+                </div>
+                <div class="status-badge status-upcoming">待录入</div>
+            </div>
+
+            <div class="schedule-item" onclick="toggleSelection(this, 'chinese-002')" data-subject="语文" data-count="1">
+                <div class="timeline-dot"></div>
+                <div class="schedule-time">20:10</div>
+                <div class="schedule-content">
+                    <div class="schedule-subject">语文错题：古诗词默写 (1题)</div>
+                    <div class="schedule-teacher">错题来源：晚间复习作业</div>
+                </div>
+                <div class="status-badge status-upcoming">待录入</div>
             </div>
         </div>
+    </div>
 
-        <!-- 错题列表 -->
-        <div class="space-y-4 pb-8">
-            <!-- 错题卡片1 -->
-            <div class="mistake-card p-6" onclick="viewMistakeDetail('math-001')">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex items-center space-x-3">
-                        <div class="subject-tag">
-                            <i class="fas fa-calculator mr-2 text-blue-500"></i>
-                            数学
-                        </div>
-                        <div class="difficulty-badge difficulty-medium">
-                            中等
-                        </div>
-                    </div>
-                    <div class="text-xs text-gray-500 font-medium">2天前</div>
-                </div>
-
-                <div class="mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">分数运算</h3>
-                    <p class="text-gray-600 text-sm font-medium line-clamp-2">
-                        计算：3/4 + 1/6 = ?
-                    </p>
-                </div>
-
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center space-x-4">
-                        <span class="text-sm text-gray-500 font-medium">
-                            <i class="fas fa-redo mr-1 text-orange-500"></i>
-                            练习 2 次
-                        </span>
-                        <span class="text-sm text-gray-500 font-medium">
-                            <i class="fas fa-eye mr-1 text-blue-500"></i>
-                            查看 5 次
-                        </span>
-                    </div>
-                    
-                    <div class="flex space-x-2">
-                        <button class="action-button flex items-center justify-center" onclick="event.stopPropagation(); startPractice('math-001')">
-                            <i class="fas fa-play text-emerald-500"></i>
-                        </button>
-                        <button class="action-button flex items-center justify-center" onclick="event.stopPropagation(); shareMistake('math-001')">
-                            <i class="fas fa-share text-blue-500"></i>
-                        </button>
-                        <button class="action-button flex items-center justify-center" onclick="event.stopPropagation(); deleteMistake('math-001')">
-                            <i class="fas fa-trash text-red-500"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 错题卡片2 -->
-            <div class="mistake-card p-6" onclick="viewMistakeDetail('chinese-001')">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex items-center space-x-3">
-                        <div class="subject-tag">
-                            <i class="fas fa-book-open mr-2 text-green-500"></i>
-                            语文
-                        </div>
-                        <div class="difficulty-badge difficulty-easy">
-                            简单
-                        </div>
-                    </div>
-                    <div class="text-xs text-gray-500 font-medium">5天前</div>
-                </div>
-
-                <div class="mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">拼音识别</h3>
-                    <p class="text-gray-600 text-sm font-medium line-clamp-2">
-                        给下列汉字注音：翱翔
-                    </p>
-                </div>
-
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center space-x-4">
-                        <span class="text-sm text-emerald-600 font-medium bg-emerald-50 px-3 py-1 rounded-lg">
-                            <i class="fas fa-check mr-1"></i>
-                            已掌握
-                        </span>
-                    </div>
-                    
-                    <div class="flex space-x-2">
-                        <button class="action-button flex items-center justify-center" onclick="event.stopPropagation(); startPractice('chinese-001')">
-                            <i class="fas fa-play text-emerald-500"></i>
-                        </button>
-                        <button class="action-button flex items-center justify-center" onclick="event.stopPropagation(); shareMistake('chinese-001')">
-                            <i class="fas fa-share text-blue-500"></i>
-                        </button>
-                        <button class="action-button flex items-center justify-center" onclick="event.stopPropagation(); deleteMistake('chinese-001')">
-                            <i class="fas fa-trash text-red-500"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 错题卡片3 -->
-            <div class="mistake-card p-6" onclick="viewMistakeDetail('english-001')">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex items-center space-x-3">
-                        <div class="subject-tag">
-                            <i class="fas fa-globe mr-2 text-purple-500"></i>
-                            英语
-                        </div>
-                        <div class="difficulty-badge difficulty-hard">
-                            困难
-                        </div>
-                    </div>
-                    <div class="text-xs text-gray-500 font-medium">1周前</div>
-                </div>
-
-                <div class="mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">单词拼写</h3>
-                    <p class="text-gray-600 text-sm font-medium line-clamp-2">
-                        Complete the word: beaut_ful
-                    </p>
-                </div>
-
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center space-x-4">
-                        <span class="text-sm text-orange-600 font-medium bg-orange-50 px-3 py-1 rounded-lg">
-                            <i class="fas fa-clock mr-1"></i>
-                            待复习
-                        </span>
-                    </div>
-                    
-                    <div class="flex space-x-2">
-                        <button class="action-button flex items-center justify-center" onclick="event.stopPropagation(); startPractice('english-001')">
-                            <i class="fas fa-play text-emerald-500"></i>
-                        </button>
-                        <button class="action-button flex items-center justify-center" onclick="event.stopPropagation(); shareMistake('english-001')">
-                            <i class="fas fa-share text-blue-500"></i>
-                        </button>
-                        <button class="action-button flex items-center justify-center" onclick="event.stopPropagation(); deleteMistake('english-001')">
-                            <i class="fas fa-trash text-red-500"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- 批量操作浮动栏 -->
+    <div class="batch-actions" id="batchActions">
+        <div class="batch-text">已选择 <span id="selectedCount">0</span> 项</div>
+        <button class="batch-btn" onclick="generateAIPractice()">AI练习</button>
+        <button class="batch-btn" onclick="createWorksheet()">制作试卷</button>
     </div>
 
     <!-- 底部导航栏 -->
@@ -409,6 +392,8 @@
     </div>
 
     <script>
+        let selectedItems = new Set();
+        
         function jumpToPage(page) {
             if (window.parent && window.parent.postMessage) {
                 window.parent.postMessage({
@@ -418,55 +403,99 @@
             }
         }
 
-        function viewMistakeDetail(mistakeId) {
-            if (window.parent && window.parent.postMessage) {
-                window.parent.postMessage({
-                    type: 'jumpToPage',
-                    page: 'mistake-detail'
-                }, '*');
-            } else {
-                alert(`查看错题详情: ${mistakeId}`);
-            }
-        }
-
-        function startPractice(mistakeId) {
-            if (window.parent && window.parent.postMessage) {
-                window.parent.postMessage({
-                    type: 'jumpToPage',
-                    page: 'ai-practice'
-                }, '*');
-            } else {
-                alert(`开始练习: ${mistakeId}`);
-            }
-        }
-
-        function shareMistake(mistakeId) {
-            alert(`分享错题: ${mistakeId}`);
-        }
-
-        function deleteMistake(mistakeId) {
-            if (confirm('确定要删除这道错题吗？')) {
-                alert(`已删除错题: ${mistakeId}`);
-            }
-        }
-
-        // 筛选按钮交互
-        document.addEventListener('DOMContentLoaded', function() {
-            const filterButtons = document.querySelectorAll('.filter-button');
-            
-            filterButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // 移除所有按钮的active类
-                    filterButtons.forEach(btn => {
-                        btn.classList.remove('active');
-                        btn.classList.add('text-gray-600');
-                    });
-                    
-                    // 添加当前按钮的active类
-                    this.classList.add('active');
-                    this.classList.remove('text-gray-600');
-                });
+        function selectDay(dayElement, date) {
+            // 移除所有其他选中状态
+            document.querySelectorAll('.day-item').forEach(item => {
+                item.classList.remove('selected');
             });
+            
+            // 添加选中状态
+            if (!dayElement.classList.contains('today')) {
+                dayElement.classList.add('selected');
+            }
+            
+            // 更新日期显示
+            updateScheduleForDate(date);
+        }
+
+        function updateScheduleForDate(date) {
+            const dateObj = new Date(date);
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                weekday: 'long' 
+            };
+            const formattedDate = dateObj.toLocaleDateString('zh-CN', options);
+            
+            document.querySelector('.schedule-date').textContent = formattedDate;
+            
+            // 这里可以添加根据日期获取对应错题的逻辑
+            console.log('切换到日期:', date);
+        }
+
+        function toggleSelection(element, itemId) {
+            const subject = element.dataset.subject;
+            const count = parseInt(element.dataset.count);
+            
+            if (selectedItems.has(itemId)) {
+                selectedItems.delete(itemId);
+                element.classList.remove('selected');
+            } else {
+                selectedItems.add(itemId);
+                element.classList.add('selected');
+            }
+            
+            updateBatchActions();
+        }
+
+        function updateBatchActions() {
+            const batchActions = document.getElementById('batchActions');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            if (selectedItems.size > 0) {
+                batchActions.classList.add('show');
+                selectedCount.textContent = selectedItems.size;
+            } else {
+                batchActions.classList.remove('show');
+            }
+        }
+
+        function generateAIPractice() {
+            if (selectedItems.size === 0) return;
+            
+            alert(`正在为 ${selectedItems.size} 个错题生成AI练习...`);
+            
+            // 这里可以跳转到AI练习页面
+            if (window.parent && window.parent.postMessage) {
+                window.parent.postMessage({
+                    type: 'jumpToPage',
+                    page: 'ai-practice',
+                    data: { selectedItems: Array.from(selectedItems) }
+                }, '*');
+            }
+        }
+
+        function createWorksheet() {
+            if (selectedItems.size === 0) return;
+            
+            alert(`正在为 ${selectedItems.size} 个错题制作试卷...`);
+            
+            // 这里可以跳转到试卷制作页面
+            if (window.parent && window.parent.postMessage) {
+                window.parent.postMessage({
+                    type: 'jumpToPage',
+                    page: 'print-worksheet',
+                    data: { selectedItems: Array.from(selectedItems) }
+                }, '*');
+            }
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置当前日期
+            const today = new Date();
+            updateScheduleForDate(today.toISOString().split('T')[0]);
         });
     </script>
 </body>
