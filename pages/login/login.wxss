@@ -1,0 +1,252 @@
+/* pages/login/login.wxss */
+
+.login-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-lg);
+  box-sizing: border-box;
+}
+
+/* 背景装饰 */
+.background-decoration {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.decoration-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  animation: float 6s ease-in-out infinite;
+}
+
+.circle-1 {
+  width: 120rpx;
+  height: 120rpx;
+  top: 10%;
+  right: 20%;
+  animation-delay: 0s;
+}
+
+.circle-2 {
+  width: 80rpx;
+  height: 80rpx;
+  top: 30%;
+  left: 10%;
+  animation-delay: 2s;
+}
+
+.circle-3 {
+  width: 60rpx;
+  height: 60rpx;
+  bottom: 20%;
+  right: 15%;
+  animation-delay: 4s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(180deg);
+  }
+}
+
+/* Logo区域 */
+.logo-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: var(--spacing-xl);
+}
+
+.logo-container {
+  width: 160rpx;
+  height: 160rpx;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.app-name {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: white;
+  margin-bottom: var(--spacing-sm);
+  text-align: center;
+}
+
+.app-slogan {
+  font-size: var(--font-size-base);
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+}
+
+/* 功能介绍 */
+.features-section {
+  display: flex;
+  justify-content: space-around;
+  margin: var(--spacing-xl) 0;
+}
+
+.feature-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-md);
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: var(--border-radius-lg);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  min-width: 180rpx;
+}
+
+.feature-text {
+  margin-top: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  color: white;
+  font-weight: var(--font-weight-medium);
+}
+
+/* 登录区域 */
+.login-section {
+  margin-top: auto;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-xl);
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-xl);
+}
+
+.agreement-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.agreement-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.link-text {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.login-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+/* 自定义按钮样式 */
+.wx-login-btn {
+  height: 96rpx !important;
+  background: var(--color-primary) !important;
+  border: none !important;
+}
+
+.login-btn-text {
+  margin-left: var(--spacing-sm);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.guest-login-btn {
+  height: 80rpx !important;
+  background: var(--color-gray-50) !important;
+  border: 1px solid var(--color-gray-200) !important;
+}
+
+.guest-btn-text {
+  margin-left: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* 底部说明 */
+.footer-section {
+  margin-top: var(--spacing-lg);
+  text-align: center;
+}
+
+.footer-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.footer-text.secondary {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+/* 版本信息 */
+.version-info {
+  position: absolute;
+  bottom: var(--spacing-md);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.version-text {
+  font-size: var(--font-size-xs);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* 暗黑模式适配 */
+@media (prefers-color-scheme: dark) {
+  .login-section {
+    background: rgba(31, 41, 55, 0.95);
+  }
+  
+  .agreement-text {
+    color: var(--color-text-secondary-dark);
+  }
+  
+  .footer-text {
+    color: var(--color-text-secondary-dark);
+  }
+  
+  .footer-text.secondary {
+    color: var(--color-text-tertiary-dark);
+  }
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 375px) {
+  .login-container {
+    padding: var(--spacing-md);
+  }
+  
+  .app-name {
+    font-size: var(--font-size-xl);
+  }
+  
+  .features-section {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    align-items: center;
+  }
+  
+  .feature-card {
+    width: 100%;
+    max-width: 280rpx;
+  }
+} 

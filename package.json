@@ -1,0 +1,49 @@
+{
+  "name": "smart-study-assistant",
+  "version": "1.0.0",
+  "description": "智能学霸小助手 - 专为小学生设计的AI学习辅助微信小程序",
+  "main": "app.js",
+  "scripts": {
+    "dev": "echo 'Development mode - Use WeChat Developer Tools'",
+    "build": "echo 'Build for production'",
+    "lint": "eslint --ext .js .",
+    "lint:fix": "eslint --ext .js . --fix"
+  },
+  "keywords": [
+    "微信小程序",
+    "教育",
+    "AI",
+    "错题本",
+    "学习助手",
+    "小学生"
+  ],
+  "author": "Smart Study Team",
+  "license": "MIT",
+  "dependencies": {
+    "@vant/weapp": "^1.10.20",
+    "mobx-miniprogram": "^4.13.2",
+    "mobx-miniprogram-bindings": "^1.2.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "miniprogram-ci": "^1.8.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-team/smart-study-assistant.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-team/smart-study-assistant/issues"
+  },
+  "homepage": "https://github.com/your-team/smart-study-assistant#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "miniprogram": {
+    "framework": "WeChat Mini Program",
+    "cloud": true,
+    "components": [
+      "@vant/weapp"
+    ]
+  }
+} 

@@ -1,0 +1,389 @@
+/* pages/camera/camera.wxss */
+
+.camera-container {
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 相机预览区域 */
+.camera-section {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-preview {
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  position: relative;
+}
+
+/* 拍照框 */
+.camera-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  height: 60%;
+  pointer-events: none;
+}
+
+.frame-corner {
+  position: absolute;
+  width: 40rpx;
+  height: 40rpx;
+  border: 4rpx solid rgba(79, 70, 229, 0.8);
+}
+
+.corner-top-left {
+  top: 0;
+  left: 0;
+  border-right: none;
+  border-bottom: none;
+}
+
+.corner-top-right {
+  top: 0;
+  right: 0;
+  border-left: none;
+  border-bottom: none;
+}
+
+.corner-bottom-left {
+  bottom: 0;
+  left: 0;
+  border-right: none;
+  border-top: none;
+}
+
+.corner-bottom-right {
+  bottom: 0;
+  right: 0;
+  border-left: none;
+  border-top: none;
+}
+
+/* 相机提示 */
+.camera-tips {
+  position: absolute;
+  bottom: 40rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-full);
+  backdrop-filter: blur(10px);
+}
+
+.tips-text {
+  color: white;
+  font-size: var(--font-size-sm);
+}
+
+/* 相机控制栏 */
+.camera-controls {
+  position: absolute;
+  bottom: 60rpx;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 var(--spacing-xl);
+}
+
+.control-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm);
+}
+
+.control-text {
+  color: white;
+  font-size: var(--font-size-xs);
+}
+
+/* 拍照按钮 */
+.photo-btn {
+  width: 120rpx;
+  height: 120rpx;
+  border: 6rpx solid white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.photo-btn-inner {
+  width: 80rpx;
+  height: 80rpx;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.photo-btn:active .photo-btn-inner {
+  transform: scale(0.9);
+}
+
+/* 顶部控制栏 */
+.top-controls {
+  position: absolute;
+  top: 40rpx;
+  right: 40rpx;
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.top-btn {
+  width: 80rpx;
+  height: 80rpx;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+/* 图片预览区域 */
+.preview-section {
+  width: 100%;
+  height: 100%;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--border-radius-lg);
+}
+
+/* 预览控制栏 */
+.preview-controls {
+  padding: var(--spacing-xl);
+  display: flex;
+  gap: var(--spacing-md);
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.preview-btn {
+  flex: 1;
+  height: 88rpx !important;
+}
+
+/* 分析结果弹窗 */
+.result-popup {
+  max-height: 80vh !important;
+}
+
+.result-container {
+  background: white;
+  border-radius: var(--border-radius-xl) var(--border-radius-xl) 0 0;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--color-gray-100);
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+}
+
+.result-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.close-btn {
+  padding: var(--spacing-sm);
+}
+
+.result-content {
+  padding: 0 var(--spacing-lg) var(--spacing-lg);
+}
+
+/* 结果区块 */
+.result-section {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: var(--color-gray-50);
+  border-radius: var(--border-radius-lg);
+  border-left: 4rpx solid var(--color-primary);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+}
+
+.question-text {
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  background: white;
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-gray-200);
+}
+
+.answer-text {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-success);
+  background: rgba(16, 185, 129, 0.1);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.explanation-text {
+  font-size: var(--font-size-sm);
+  line-height: 1.8;
+  color: var(--color-text-secondary);
+  background: white;
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-gray-200);
+  white-space: pre-line;
+}
+
+/* 知识点标签 */
+.knowledge-points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.knowledge-tag {
+  margin: 0 !important;
+}
+
+/* 表单区域 */
+.form-section {
+  margin-top: var(--spacing-lg);
+  border-top: 1px solid var(--color-gray-100);
+  padding-top: var(--spacing-lg);
+}
+
+/* 操作按钮 */
+.result-actions {
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--color-gray-100);
+}
+
+.save-btn {
+  height: 88rpx !important;
+  background: var(--color-primary) !important;
+}
+
+/* 加载遮罩 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: var(--spacing-md);
+}
+
+.loading-text {
+  color: white;
+  font-size: var(--font-size-base);
+  margin-top: var(--spacing-md);
+}
+
+/* 暗黑模式适配 */
+@media (prefers-color-scheme: dark) {
+  .result-container {
+    background: var(--color-gray-900);
+  }
+  
+  .result-header {
+    background: var(--color-gray-900);
+    border-bottom-color: var(--color-gray-700);
+  }
+  
+  .result-title {
+    color: var(--color-text-primary-dark);
+  }
+  
+  .result-section {
+    background: var(--color-gray-800);
+  }
+  
+  .question-text,
+  .explanation-text {
+    background: var(--color-gray-700);
+    border-color: var(--color-gray-600);
+    color: var(--color-text-primary-dark);
+  }
+  
+  .form-section {
+    border-top-color: var(--color-gray-700);
+  }
+  
+  .result-actions {
+    border-top-color: var(--color-gray-700);
+  }
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 375px) {
+  .camera-controls {
+    padding: 0 var(--spacing-md);
+  }
+  
+  .photo-btn {
+    width: 100rpx;
+    height: 100rpx;
+  }
+  
+  .photo-btn-inner {
+    width: 70rpx;
+    height: 70rpx;
+  }
+  
+  .preview-controls {
+    flex-direction: column;
+  }
+  
+  .result-content {
+    padding: 0 var(--spacing-md) var(--spacing-md);
+  }
+} 

@@ -1,0 +1,99 @@
+<!--pages/login/login.wxml-->
+<view class="login-container">
+  <!-- 背景装饰 -->
+  <view class="background-decoration">
+    <view class="decoration-circle circle-1"></view>
+    <view class="decoration-circle circle-2"></view>
+    <view class="decoration-circle circle-3"></view>
+  </view>
+
+  <!-- 顶部Logo区域 -->
+  <view class="logo-section">
+    <view class="logo-container">
+      <van-icon name="star" size="80rpx" color="#4F46E5" />
+    </view>
+    <view class="app-name">智能学霸小助手</view>
+    <view class="app-slogan">AI赋能学习，错题不再难</view>
+  </view>
+
+  <!-- 功能介绍卡片 -->
+  <view class="features-section">
+    <view class="feature-card">
+      <van-icon name="photo" size="48rpx" color="#10B981" />
+      <text class="feature-text">拍照识题</text>
+    </view>
+    <view class="feature-card">
+      <van-icon name="star-o" size="48rpx" color="#F59E0B" />
+      <text class="feature-text">智能分析</text>
+    </view>
+    <view class="feature-card">
+      <van-icon name="clock-o" size="48rpx" color="#EF4444" />
+      <text class="feature-text">定时复习</text>
+    </view>
+  </view>
+
+  <!-- 登录区域 -->
+  <view class="login-section">
+    <!-- 用户协议 -->
+    <view class="agreement-section">
+      <van-checkbox-group bind:change="onAgreementChange">
+        <van-checkbox 
+          name="agreement" 
+          checked-color="#4F46E5"
+          icon-size="32rpx"
+        >
+          <text class="agreement-text">
+            我已阅读并同意
+            <text class="link-text" bindtap="onViewAgreement">《用户协议》</text>
+            和
+            <text class="link-text" bindtap="onViewPrivacy">《隐私政策》</text>
+          </text>
+        </van-checkbox>
+      </van-checkbox-group>
+    </view>
+
+    <!-- 微信登录按钮 -->
+    <view class="login-buttons">
+      <van-button
+        type="primary"
+        block
+        round
+        loading="{{loading}}"
+        disabled="{{!canLogin}}"
+        loading-text="登录中..."
+        bindtap="onWxLogin"
+        custom-class="wx-login-btn"
+      >
+        <van-icon name="wechat" size="40rpx" color="white" wx:if="{{!loading}}" />
+        <text class="login-btn-text">{{loading ? '登录中...' : '微信快速登录'}}</text>
+      </van-button>
+
+      <!-- 游客模式按钮 -->
+      <van-button
+        type="default"
+        block
+        round
+        bindtap="onGuestMode"
+        custom-class="guest-login-btn"
+      >
+        <van-icon name="user-o" size="32rpx" color="#6B7280" />
+        <text class="guest-btn-text">游客模式体验</text>
+      </van-button>
+    </view>
+  </view>
+
+  <!-- 底部说明 -->
+  <view class="footer-section">
+    <view class="footer-text">
+      首次登录将自动注册账号
+    </view>
+    <view class="footer-text secondary">
+      您的学习数据将安全保存在云端
+    </view>
+  </view>
+
+  <!-- 版本信息 -->
+  <view class="version-info">
+    <text class="version-text">Version 1.0.0</text>
+  </view>
+</view> 

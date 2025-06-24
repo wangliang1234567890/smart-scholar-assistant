@@ -1,0 +1,256 @@
+<!--pages/mistakes/mistakes.wxml-->
+<view class="mistakes-container">
+  <!-- 统计卡片 -->
+  <view class="statistics-section">
+    <view class="statistics-card">
+      <van-grid column-num="4" border="{{false}}">
+        <van-grid-item>
+          <view class="stat-item">
+            <view class="stat-number total">{{statistics.total}}</view>
+            <view class="stat-label">总错题</view>
+          </view>
+        </van-grid-item>
+        <van-grid-item>
+          <view class="stat-item">
+            <view class="stat-number new">{{statistics.new}}</view>
+            <view class="stat-label">新错题</view>
+          </view>
+        </van-grid-item>
+        <van-grid-item>
+          <view class="stat-item">
+            <view class="stat-number reviewing">{{statistics.reviewing}}</view>
+            <view class="stat-label">复习中</view>
+          </view>
+        </van-grid-item>
+        <van-grid-item>
+          <view class="stat-item">
+            <view class="stat-number mastered">{{statistics.mastered}}</view>
+            <view class="stat-label">已掌握</view>
+          </view>
+        </van-grid-item>
+      </van-grid>
+    </view>
+  </view>
+
+  <!-- 快捷操作 -->
+  <view class="quick-actions">
+    <van-button 
+      type="primary" 
+      round 
+      size="small"
+      bindtap="startPractice"
+      custom-class="action-btn practice-btn"
+    >
+      <van-icon name="play-circle" size="32rpx" />
+      开始练习
+    </van-button>
+    
+    <van-button 
+      type="info" 
+      round 
+      size="small"
+      bindtap="goToCamera"
+      custom-class="action-btn camera-btn"
+    >
+      <van-icon name="photograph" size="32rpx" />
+      拍照录题
+    </van-button>
+    
+    <van-button 
+      type="default" 
+      round 
+      size="small"
+      bindtap="goToAddManual"
+      custom-class="action-btn add-btn"
+    >
+      <van-icon name="plus" size="32rpx" />
+      手动添加
+    </van-button>
+  </view>
+
+  <!-- 搜索框 -->
+  <view class="search-section" wx:if="{{showSearch}}">
+    <van-search
+      value="{{searchKeyword}}"
+      placeholder="搜索题目内容或知识点"
+      use-action-slot
+      bindinput="onSearchInput"
+      bindsearch="onSearchConfirm"
+      bindclear="onSearchClear"
+    >
+      <view slot="action" bindtap="toggleSearch">取消</view>
+    </van-search>
+  </view>
+
+  <!-- 筛选器 -->
+  <view class="filter-section">
+    <view class="filter-header">
+      <van-dropdown-menu 
+        active-color="#4F46E5"
+        bind:change="onFilterMenuClick"
+        bind:close="onFilterMenuClose"
+      >
+        <van-dropdown-item 
+          value="{{filters.subject}}" 
+          options="{{subjects}}" 
+          bind:change="onSubjectFilterChange"
+        />
+        <van-dropdown-item 
+          value="{{filters.status}}" 
+          options="{{statuses}}" 
+          bind:change="onStatusFilterChange"
+        />
+        <van-dropdown-item 
+          value="{{filters.difficulty}}" 
+          options="{{difficulties}}" 
+          bind:change="onDifficultyFilterChange"
+        />
+      </van-dropdown-menu>
+      
+      <view class="search-btn" bindtap="toggleSearch">
+        <van-icon name="search" size="40rpx" color="#6B7280" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 错题列表 -->
+  <view class="mistakes-list">
+    <!-- 加载状态 -->
+    <van-loading 
+      wx:if="{{loading && mistakes.length === 0}}"
+      type="spinner" 
+      size="60rpx"
+      custom-class="loading-center"
+    >
+      加载中...
+    </van-loading>
+
+    <!-- 空状态 -->
+    <van-empty 
+      wx:elif="{{!loading && mistakes.length === 0}}"
+      image="search"
+      description="暂无错题记录"
+    >
+      <van-button 
+        round 
+        type="primary" 
+        size="small"
+        bindtap="goToCamera"
+        custom-class="empty-action-btn"
+      >
+        立即录题
+      </van-button>
+    </van-empty>
+
+    <!-- 错题卡片列表 -->
+    <view wx:else>
+      <van-swipe-cell 
+        wx:for="{{mistakes}}" 
+        wx:key="_id"
+        right-width="{{160}}"
+        custom-class="mistake-swipe-cell"
+      >
+        <!-- 错题卡片内容 -->
+        <view 
+          class="mistake-card" 
+          bindtap="onMistakeClick"
+          data-id="{{item._id}}"
+        >
+          <!-- 卡片头部 -->
+          <view class="mistake-header">
+            <view class="mistake-meta">
+              <van-tag 
+                type="primary" 
+                size="small"
+                custom-class="subject-tag"
+              >
+                {{item.subject}}
+              </van-tag>
+              <van-tag 
+                plain
+                size="small"
+                color="{{getStatusColor(item.status)}}"
+                custom-class="status-tag"
+              >
+                {{getStatusText(item.status)}}
+              </van-tag>
+              <text class="difficulty-text">{{getDifficultyText(item.difficulty)}}</text>
+            </view>
+            <text class="create-time">{{formatDate(item.createTime)}}</text>
+          </view>
+
+          <!-- 题目内容 -->
+          <view class="mistake-content">
+            <view class="question-preview">{{item.question}}</view>
+            <view class="answer-preview" wx:if="{{item.answer}}">
+              <text class="answer-label">答案：</text>
+              <text class="answer-text">{{item.answer}}</text>
+            </view>
+          </view>
+
+          <!-- 知识点标签 -->
+          <view class="knowledge-points" wx:if="{{item.knowledgePoints && item.knowledgePoints.length > 0}}">
+            <van-tag 
+              wx:for="{{item.knowledgePoints}}" 
+              wx:for-item="point"
+              wx:key="index"
+              type="default" 
+              size="small"
+              custom-class="knowledge-tag"
+            >
+              {{point}}
+            </van-tag>
+          </view>
+
+          <!-- 复习信息 -->
+          <view class="review-info" wx:if="{{item.reviewCount > 0}}">
+            <text class="review-count">已复习 {{item.reviewCount}} 次</text>
+            <text class="next-review" wx:if="{{item.nextReviewTime}}">
+              下次复习：{{formatDate(item.nextReviewTime)}}
+            </text>
+          </view>
+        </view>
+
+        <!-- 滑动操作按钮 -->
+        <view slot="right" class="swipe-actions">
+          <view 
+            class="swipe-btn mastered-btn"
+            bindtap="markAsMastered"
+            data-id="{{item._id}}"
+            wx:if="{{item.status !== 'mastered'}}"
+          >
+            <van-icon name="completed" size="40rpx" />
+            <text>掌握</text>
+          </view>
+          <view 
+            class="swipe-btn delete-btn"
+            bindtap="onDeleteMistake"
+            data-id="{{item._id}}"
+            data-question="{{item.question}}"
+          >
+            <van-icon name="delete" size="40rpx" />
+            <text>删除</text>
+          </view>
+        </view>
+      </van-swipe-cell>
+    </view>
+
+    <!-- 加载更多 -->
+    <view class="load-more" wx:if="{{!loading && mistakes.length > 0}}">
+      <van-loading 
+        wx:if="{{hasMore}}"
+        type="spinner" 
+        size="40rpx"
+        custom-class="load-more-loading"
+      >
+        加载更多...
+      </van-loading>
+      <text wx:else class="no-more-text">没有更多了</text>
+    </view>
+  </view>
+
+  <!-- 悬浮添加按钮 -->
+  <view class="floating-add-btn" bindtap="goToCamera">
+    <van-icon name="plus" size="48rpx" color="white" />
+  </view>
+</view> 

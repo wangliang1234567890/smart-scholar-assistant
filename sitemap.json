@@ -1,0 +1,25 @@
+{
+  "desc": "智能学霸小助手 - 关于本小程序的索引",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "pages/home/home"
+    },
+    {
+      "action": "disallow",
+      "page": "pages/login/login"
+    },
+    {
+      "action": "disallow",
+      "page": "pages/profile/profile"
+    },
+    {
+      "action": "disallow",
+      "page": "pages/settings/settings"
+    },
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
+} 

@@ -1,0 +1,143 @@
+<!-- pages/home/home.wxml -->
+<view class="page-container">
+  <!-- 用户头部区域 -->
+  <view class="header-section">
+    <view class="user-info" wx:if="{{userInfo}}" bind:tap="onProfile">
+      <image class="avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill" />
+      <view class="user-details">
+        <view class="nickname">{{userInfo.nickName || '智能学霸'}}</view>
+        <view class="level">Lv.{{userInfo.level || 1}} · {{userInfo.exp || 0}}经验值</view>
+      </view>
+      <van-icon name="arrow" />
+    </view>
+    
+    <!-- 问候语 -->
+    <view class="greeting">
+      <text class="greeting-text">{{getGreeting()}}，继续加油学习吧！</text>
+    </view>
+  </view>
+
+  <!-- 学习统计卡片 -->
+  <view class="stats-section">
+    <view class="stats-card card">
+      <view class="card-header">
+        <text>今日学习概览</text>
+        <view class="more-btn" bind:tap="onViewReport">
+          <text>查看报告</text>
+          <van-icon name="arrow" size="12px" />
+        </view>
+      </view>
+      
+      <view class="stats-grid">
+        <view class="stat-item">
+          <view class="stat-number text-primary">{{studyStats.todayMistakes}}</view>
+          <view class="stat-label">今日录题</view>
+        </view>
+        <view class="stat-item">
+          <view class="stat-number text-warning">{{studyStats.reviewTasks}}</view>
+          <view class="stat-label">待复习</view>
+        </view>
+        <view class="stat-item">
+          <view class="stat-number text-success">{{studyStats.masteredCount}}</view>
+          <view class="stat-label">已掌握</view>
+        </view>
+        <view class="stat-item">
+          <view class="stat-number text-info">{{studyStats.masteryRate}}%</view>
+          <view class="stat-label">掌握率</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快捷操作区域 -->
+  <view class="actions-section">
+    <view class="section-title">
+      <text>快捷操作</text>
+    </view>
+    
+    <van-grid column-num="2" border="{{false}}" gutter="16">
+      <van-grid-item
+        wx:for="{{quickActions}}"
+        wx:key="title"
+        custom-class="action-item"
+        data-path="{{item.path}}"
+        bind:click="onQuickAction"
+      >
+        <view class="action-content">
+          <view class="action-icon" style="background-color: {{item.color}}">
+            <van-icon name="{{item.icon}}" size="24px" color="white" />
+          </view>
+          <view class="action-info">
+            <view class="action-title">{{item.title}}</view>
+            <view class="action-desc">{{item.desc}}</view>
+          </view>
+        </view>
+      </van-grid-item>
+    </van-grid>
+  </view>
+
+  <!-- 学科统计区域 -->
+  <view class="subjects-section" wx:if="{{subjectStats.length > 0}}">
+    <view class="section-title">
+      <text>学科概况</text>
+      <view class="more-btn" bind:tap="onViewAllMistakes">
+        <text>查看全部</text>
+        <van-icon name="arrow" size="12px" />
+      </view>
+    </view>
+    
+    <van-cell-group border="{{false}}">
+      <van-cell
+        wx:for="{{subjectStats}}"
+        wx:key="name"
+        title="{{item.name}}"
+        value="{{item.count}}道题"
+        is-link
+        data-subject="{{item.name}}"
+        bind:click="onSubjectTap"
+      >
+        <van-icon slot="icon" name="{{item.icon}}" size="20px" custom-style="margin-right: 8px;" />
+      </van-cell>
+    </van-cell-group>
+  </view>
+
+  <!-- 复习提醒区域 -->
+  <view class="review-section" wx:if="{{studyStats.reviewTasks > 0}}">
+    <view class="review-card card">
+      <view class="review-content">
+        <van-icon name="clock-o" size="20px" color="#F59E0B" />
+        <view class="review-text">
+          <view class="review-title">复习提醒</view>
+          <view class="review-desc">有 {{studyStats.reviewTasks}} 道错题需要复习</view>
+        </view>
+        <view class="review-btn" bind:tap="onViewReview">
+          <text>去复习</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-section" wx:if="{{loading}}">
+    <van-skeleton title row="3" />
+  </view>
+
+  <!-- 空状态提示 -->
+  <view class="empty-section" wx:if="{{!loading && studyStats.totalMistakes === 0}}">
+    <view class="empty-content">
+      <van-icon name="records" size="64px" color="#D1D5DB" />
+      <view class="empty-title">还没有错题记录</view>
+      <view class="empty-desc">开始录入第一道错题，开启学习之旅吧！</view>
+      <view class="empty-actions">
+        <view class="empty-btn" bind:tap="onQuickAction" data-path="/pages/camera/camera">
+          <van-icon name="photograph" size="16px" />
+          <text>拍照录题</text>
+        </view>
+        <view class="empty-btn" bind:tap="onQuickAction" data-path="/pages/mistakes/add">
+          <van-icon name="edit" size="16px" />
+          <text>手动录入</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view> 
