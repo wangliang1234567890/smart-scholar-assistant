@@ -1,0 +1,80 @@
+<!-- pages/practice/practice.wxml -->
+<view class="page-container">
+  <view wx:if="{{loading}}" class="loading-placeholder">
+    <van-skeleton title row="10" />
+  </view>
+
+  <block wx:else>
+    <!-- Header -->
+    <view class="header-section">
+      <view class="header-title">挑战练习场</view>
+      <view class="header-subtitle">在这里巩固知识，挑战自我！</view>
+    </view>
+
+    <view class="content-section">
+      <!-- Practice Options -->
+      <view class="practice-options-grid">
+        <view wx:for="{{practiceOptions}}" wx:key="type" class="practice-option-card {{item.gradient}}" bind:tap="goToConfig" data-type="{{item.type}}">
+          <view class="card-icon-wrapper">
+            <image class="card-icon" src="{{item.icon}}" style="filter: brightness(0) invert(1);" />
+          </view>
+          <view class="card-title">{{item.title}}</view>
+          <view class="card-subtitle">{{item.subtitle}}</view>
+          <view class="card-count">{{item.count}}</view>
+        </view>
+      </view>
+
+      <!-- Today's Stats -->
+      <view class="card-wrapper">
+        <view class="section-header">
+          <image class="section-icon" src="/images/icons/stats-icon.svg" />
+          <view class="section-title">今日战报</view>
+          <view class="section-meta">正确率</view>
+        </view>
+        <view class="stats-content">
+          <view class="stats-details">
+            <view class="stat-item">
+              <view class="stat-value text-blue">{{todayStats.practiced}}</view>
+              <view class="stat-label">已练习</view>
+            </view>
+            <view class="stat-item">
+              <view class="stat-value text-green">{{todayStats.correct}}</view>
+              <view class="stat-label">答对</view>
+            </view>
+          </view>
+          <view class="stats-accuracy">
+            <view class="accuracy-value">{{todayStats.accuracy}}%</view>
+            <view class="accuracy-ratio">{{todayStats.correct}}/{{todayStats.total}}题</view>
+          </view>
+        </view>
+      </view>
+
+      <!-- Recent Records -->
+      <view class="recent-records-section">
+        <view class="section-header">
+          <image class="section-icon" src="/images/icons/practice-header.svg" />
+          <view class="section-title">最近记录</view>
+        </view>
+        <view class="records-list">
+          <view wx:if="{{recentRecords.length === 0}}" class="empty-list">
+            <text>暂无练习记录</text>
+          </view>
+          <block wx:else>
+            <view wx:for="{{recentRecords}}" wx:key="index" class="record-card" bind:tap="onRecordTap" data-record="{{item}}">
+              <view class="record-icon-wrapper {{item.gradient}}">
+                <image class="record-icon" src="{{item.icon}}" />
+              </view>
+              <view class="record-details">
+                <view class="record-title">{{item.type}} - {{item.subject}}</view>
+                <view class="record-meta">{{item.time}} · {{item.duration}}</view>
+              </view>
+              <view class="record-score {{item.score >= 70 ? 'text-green' : 'text-orange'}}">
+                {{item.score}}%
+              </view>
+            </view>
+          </block>
+        </view>
+      </view>
+    </view>
+  </block>
+</view> 

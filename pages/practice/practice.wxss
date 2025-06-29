@@ -1,0 +1,252 @@
+/* pages/practice/practice.wxss */
+
+/* General Container */
+.page-container {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  box-sizing: border-box; /* 确保内边距被正确计算 */
+  padding-bottom: 200rpx; /* 关键：增加足够的底部内边距，确保内容不会滚动到 TabBar 下方 */
+}
+
+.loading-placeholder {
+  padding: 32rpx;
+}
+
+/* Header Section - 极限压缩高度 */
+.header-section {
+  background-color: #ffffff;
+  text-align: center;
+  padding: 66rpx 32rpx; /* 增加垂直内边距以提高高度 */
+  margin-bottom: 0;
+}
+.header-icon {
+  width: 64rpx; /* 再次减小图标尺寸 */
+  height: 64rpx;
+  margin-bottom: 8rpx;
+}
+.header-title {
+  font-size: 36rpx; /* 减小标题字号 */
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 4rpx; /* 减小标题下边距 */
+}
+.header-subtitle {
+  font-size: 26rpx; /* 减小副标题字号 */
+  color: #888;
+}
+
+/* Content Section */
+.content-section {
+  padding: 0 32rpx;
+}
+
+/* Practice Options Grid */
+.practice-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24rpx;
+  margin-bottom: 32rpx;
+}
+
+.practice-option-card {
+  padding: 32rpx;
+  border-radius: 48rpx;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.card-icon-wrapper {
+  margin-bottom: 16rpx;
+}
+
+.card-icon {
+  width: 56rpx;
+  height: 56rpx;
+}
+
+.card-title {
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+.card-subtitle {
+  font-size: 26rpx;
+  opacity: 0.9;
+  margin-bottom: 16rpx;
+}
+
+.card-count {
+  font-size: 24rpx;
+  opacity: 0.8;
+}
+
+/* Card Wrapper for Stats and Records */
+.card-wrapper {
+  background-color: #ffffff;
+  border-radius: 48rpx;
+  padding: 32rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.05);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 32rpx;
+  gap: 16rpx;
+}
+
+.section-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  flex: 1;
+}
+
+.section-meta {
+  font-size: 26rpx;
+  color: #888;
+}
+
+/* Stats Content */
+.stats-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stats-details {
+  display: flex;
+  gap: 48rpx;
+}
+
+.stat-item {
+  text-align: left;
+}
+
+.stat-value {
+  font-size: 44rpx;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.stat-label {
+  font-size: 26rpx;
+  color: #888;
+  margin-top: 8rpx;
+}
+
+.stats-accuracy {
+  text-align: right;
+}
+
+.accuracy-value {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #10B981;
+}
+
+.accuracy-ratio {
+  font-size: 26rpx;
+  color: #888;
+  margin-top: 8rpx;
+}
+
+/* Recent Records */
+.recent-records-section {
+  /* This section itself doesn't need a card wrapper */
+}
+
+.records-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.record-card {
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border-radius: 48rpx;
+  padding: 24rpx;
+  gap: 24rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.05);
+}
+
+.record-icon-wrapper {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.record-icon {
+  width: 48rpx;
+  height: 48rpx;
+  filter: brightness(0) invert(1);
+}
+
+.record-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.record-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.record-meta {
+  font-size: 26rpx;
+  color: #888;
+  margin-top: 4rpx;
+}
+
+.record-score {
+  font-size: 36rpx;
+  font-weight: 700;
+}
+
+/* Utility Classes */
+.text-blue {
+  color: #3B82F6;
+}
+.text-green {
+  color: #10B981;
+}
+.text-orange {
+  color: #F97316;
+}
+
+.bg-grad-blue {
+  background-image: linear-gradient(135deg, #60A5FA, #3B82F6);
+}
+.bg-grad-orange {
+  background-image: linear-gradient(135deg, #FBBF24, #F59E0B);
+}
+.bg-grad-green {
+  background-image: linear-gradient(135deg, #4ADE80, #10B981);
+}
+
+.empty-list {
+  text-align: center;
+  padding: 40rpx;
+  color: #888;
+  font-size: 28rpx;
+}
