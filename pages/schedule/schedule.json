@@ -1,0 +1,14 @@
+{
+  "navigationBarTitleText": "课程表",
+  "navigationBarBackgroundColor": "#4F46E5",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#F8FAFC",
+  "enablePullDownRefresh": true,
+  "onReachBottomDistance": 50,
+  "usingComponents": {
+    "van-button": "@vant/weapp/button/index",
+    "van-icon": "@vant/weapp/icon/index",
+    "van-calendar": "@vant/weapp/calendar/index"
+  },
+  "styleIsolation": "shared"
+} 
