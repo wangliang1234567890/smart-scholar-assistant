@@ -1,61 +1,192 @@
 <!--pages/schedule/add.wxml-->
 <view class="add-course-container">
-  <van-cell-group inset title="基本信息">
-    <van-field
-      value="{{ formData.name }}"
-      label="课程名称"
-      placeholder="例如：数学培优班"
-      required
-      bind:change="onFieldChange"
-      data-field="name"
-    />
-    <van-field
-      value="{{ formData.teacher }}"
-      label="任课老师"
-      placeholder="例如：王老师"
-      bind:change="onFieldChange"
-      data-field="teacher"
-    />
-    <van-field
-      value="{{ formData.location }}"
-      label="上课地点"
-      placeholder="例如：学而思教育（XX路店）"
-      bind:change="onFieldChange"
-      data-field="location"
-    />
-  </van-cell-group>
-  
-  <van-cell-group inset title="时间安排">
-    <van-cell title="上课日期" is-link value="{{formData.date}}" bind:click="showPicker" data-type="date" />
-    <van-cell title="开始时间" is-link value="{{formData.startTime}}" bind:click="showPicker" data-type="startTime" />
-    <van-cell title="结束时间" is-link value="{{formData.endTime}}" bind:click="showPicker" data-type="endTime" />
-  </van-cell-group>
-
-  <van-cell-group inset title="重复设置">
-    <van-cell title="重复周期">
-       <van-radio-group value="{{ formData.repeatType }}" bind:change="onFieldChange" data-field="repeatType" direction="horizontal">
-        <van-radio name="none" class="radio-item">不重复</van-radio>
-        <van-radio name="weekly" class="radio-item">每周</van-radio>
-      </van-radio-group>
-    </van-cell>
-  </van-cell-group>
-
-  <!-- 提交按钮 -->
-  <view class="submit-wrapper">
-    <van-button type="primary" block round bind:tap="handleSubmit">
-      保存课程
-    </van-button>
+  <!-- 顶部导航栏 -->
+  <view class="course-header">
+    <view class="back-button" bind:tap="goBack">
+      <van-icon name="arrow-left" size="20" color="#333" />
+    </view>
+    <view class="header-center">
+      <view class="header-icon">
+        <van-icon name="calendar-o" size="24" color="#6366f1" />
+      </view>
+      <text class="header-title">添加课程</text>
+    </view>
+    <view class="header-placeholder"></view>
   </view>
 
-  <!-- 时间选择弹窗 -->
-  <van-popup show="{{ showPicker }}" position="bottom" bind:close="hidePicker">
+  <!-- 基本信息 -->
+  <view class="form-section">
+    <view class="section-title">基本信息</view>
+    
+    <!-- 课程名称 -->
+    <view class="form-item">
+      <text class="form-label">课程名称 <text class="required">*</text></text>
+      <input class="form-input" 
+             placeholder="请输入课程名称" 
+             value="{{formData.name}}" 
+             bind:input="onFieldChange" 
+             data-field="name" />
+    </view>
+
+    <!-- 科目选择 -->
+    <view class="form-item">
+      <text class="form-label">科目</text>
+      <view class="subject-grid">
+        <view wx:for="{{subjects}}" wx:key="value" 
+              class="subject-item {{formData.subject === item.value ? 'active' : ''}}"
+              bind:tap="selectSubject" 
+              data-value="{{item.value}}">
+          <view class="subject-icon {{item.value}}">
+            <text class="subject-text">{{item.short}}</text>
+          </view>
+          <text class="subject-name">{{item.name}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 任课老师 -->
+    <view class="form-item">
+      <text class="form-label">任课老师</text>
+      <input class="form-input" 
+             placeholder="请输入老师姓名" 
+             value="{{formData.teacher}}" 
+             bind:input="onFieldChange" 
+             data-field="teacher" />
+    </view>
+  </view>
+
+  <!-- 时间地点 -->
+  <view class="form-section">
+    <view class="section-title">时间地点</view>
+    
+    <!-- 上课日期 -->
+    <view class="form-item">
+      <text class="form-label">上课日期 <text class="required">*</text></text>
+      <view class="date-picker" bind:tap="showDatePicker">
+        <text class="picker-text {{formData.date ? '' : 'placeholder'}}">
+          {{formData.date || '年/月/日'}}
+        </text>
+        <van-icon name="calendar-o" size="16" color="#999" />
+      </view>
+    </view>
+
+    <!-- 时间选择 -->
+    <view class="time-row">
+      <view class="time-item">
+        <text class="form-label">开始时间 <text class="required">*</text></text>
+        <view class="time-picker" bind:tap="showTimePicker" data-type="startTime">
+          <text class="picker-text">{{formData.startTime}}</text>
+          <van-icon name="clock-o" size="16" color="#999" />
+        </view>
+      </view>
+      <view class="time-item">
+        <text class="form-label">结束时间</text>
+        <view class="time-picker" bind:tap="showTimePicker" data-type="endTime">
+          <text class="picker-text">{{formData.endTime}}</text>
+          <van-icon name="clock-o" size="16" color="#999" />
+        </view>
+      </view>
+    </view>
+
+    <!-- 上课地点 -->
+    <view class="form-item">
+      <text class="form-label">上课地点</text>
+      <input class="form-input" 
+             placeholder="请输入上课地点" 
+             value="{{formData.location}}" 
+             bind:input="onFieldChange" 
+             data-field="location" />
+    </view>
+  </view>
+
+  <!-- 课程类型 -->
+  <view class="form-section">
+    <view class="section-title">课程类型</view>
+    <view class="course-type-grid">
+      <view wx:for="{{courseTypes}}" wx:key="value" 
+            class="course-type-item {{formData.courseType === item.value ? 'active' : ''}}"
+            bind:tap="selectCourseType" 
+            data-value="{{item.value}}">
+        <text class="course-type-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 课程描述 -->
+  <view class="form-section">
+    <view class="section-title">课程描述</view>
+    <view class="form-item">
+      <textarea class="form-textarea" 
+                placeholder="请输入课程描述或备注..." 
+                value="{{formData.description}}" 
+                bind:input="onFieldChange" 
+                data-field="description" 
+                maxlength="200" 
+                auto-height>
+      </textarea>
+    </view>
+  </view>
+
+  <!-- 课程设置 -->
+  <view class="form-section">
+    <view class="section-title">课程设置</view>
+    
+    <!-- 课前提醒 -->
+    <view class="setting-item">
+      <view class="setting-left">
+        <view class="setting-icon reminder">
+          <van-icon name="bell" size="20" color="#faad14" />
+        </view>
+        <view class="setting-info">
+          <text class="setting-title">课前提醒</text>
+          <text class="setting-desc">上课前15分钟提醒</text>
+        </view>
+      </view>
+      <van-switch checked="{{formData.reminderEnabled}}" bind:change="onReminderToggle" />
+    </view>
+
+    <!-- 每周重复 -->
+    <view class="setting-item">
+      <view class="setting-left">
+        <view class="setting-icon repeat">
+          <van-icon name="replay" size="20" color="#52c41a" />
+        </view>
+        <view class="setting-info">
+          <text class="setting-title">每周重复</text>
+          <text class="setting-desc">每周同一时间重复</text>
+        </view>
+      </view>
+      <van-switch checked="{{formData.repeatEnabled}}" bind:change="onRepeatToggle" />
+    </view>
+  </view>
+
+  <!-- 底部保存按钮 -->
+  <view class="save-button-wrapper">
+    <view class="save-button" bind:tap="handleSubmit">
+      <van-icon name="bookmark" size="16" color="#fff" />
+      <text>保存课程</text>
+    </view>
+  </view>
+
+  <!-- 日期选择器 -->
+  <van-popup show="{{showDatePicker}}" position="bottom" bind:close="hideDatePicker">
     <van-datetime-picker
-      type="{{ pickerType }}"
-      value="{{ pickerValue }}"
-      bind:confirm="onPickerConfirm"
-      bind:cancel="hidePicker"
-      min-date="{{ minDate }}"
-      formatter="{{ formatter }}"
+      type="date"
+      value="{{datePickerValue}}"
+      bind:confirm="onDateConfirm"
+      bind:cancel="hideDatePicker"
+      min-date="{{minDate}}"
+      formatter="{{dateFormatter}}"
+    />
+  </van-popup>
+
+  <!-- 时间选择器 -->
+  <van-popup show="{{showTimePicker}}" position="bottom" bind:close="hideTimePicker">
+    <van-datetime-picker
+      type="time"
+      value="{{timePickerValue}}"
+      bind:confirm="onTimeConfirm"
+      bind:cancel="hideTimePicker"
     />
   </van-popup>
 </view> 
