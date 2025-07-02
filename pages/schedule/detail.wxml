@@ -159,11 +159,11 @@
 
     <!-- 底部操作按钮 -->
     <view class="action-buttons">
-      <van-button class="edit-btn" type="primary" block bind:tap="handleEdit">
+      <van-button class="edit-btn" block bind:tap="handleEdit">
         <van-icon name="edit" size="16" />
         编辑课程
       </van-button>
-      <van-button class="delete-btn" plain block bind:tap="handleDelete">
+      <van-button class="delete-btn" block bind:tap="handleDelete">
         <van-icon name="delete-o" size="16" />
         删除课程
       </van-button>
