@@ -187,24 +187,20 @@ Page({
       // 所需材料
       materials: [
         {
-          type: 'textbook',
           name: '数学练习册',
-          icon: '/images/icons/book.png'
+          type: '教材'
         },
         {
-          type: 'tool',
           name: '计算器',
-          icon: '/images/icons/calculator.png'
+          type: '工具'
         },
         {
-          type: 'stationery',
           name: '草稿纸',
-          icon: '/images/icons/paper.png'
+          type: '文具'
         },
         {
-          type: 'stationery',
           name: '文具',
-          icon: '/images/icons/pen.png'
+          type: '文具'
         }
       ],
       

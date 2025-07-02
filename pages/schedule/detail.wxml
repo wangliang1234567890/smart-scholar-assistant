@@ -115,14 +115,14 @@
     <!-- 课后作业 -->
     <view class="homework-section">
       <view class="section-header">课后作业</view>
-      <view class="homework-items">
-        <view wx:for="{{course.homework}}" wx:key="id" class="homework-task" bind:tap="toggleHomework" data-id="{{item.id}}">
-          <view class="homework-checkbox">
+      <view class="homework-list">
+        <view wx:for="{{course.homework}}" wx:key="id" class="homework-item" bind:tap="toggleHomework" data-id="{{item.id}}">
+          <view class="homework-status">
             <van-icon name="{{item.completed ? 'success' : 'circle'}}" 
-                      size="16" 
+                      size="20" 
                       color="{{item.completed ? '#52c41a' : '#d9d9d9'}}" />
           </view>
-          <text class="homework-text {{item.completed ? 'completed' : ''}}">{{item.title}}</text>
+          <text class="homework-title {{item.completed ? 'completed' : ''}}">{{item.title}}</text>
         </view>
       </view>
     </view>
@@ -130,27 +130,25 @@
     <!-- 所需材料 -->
     <view class="materials-section">
       <view class="section-header">所需材料</view>
-      <view class="materials-grid">
-        <view wx:for="{{course.materials}}" wx:key="type" class="material-card">
-          <view class="material-icon-wrapper">
-            <image wx:if="{{item.icon}}" src="{{item.icon}}" class="material-icon" />
-            <view wx:else class="material-default-icon">📖</view>
+      <view class="materials-container">
+        <view wx:for="{{course.materials}}" wx:key="name" class="material-item">
+          <view class="material-content">
+            <text class="material-name">{{item.name}}</text>
+            <text class="material-type">{{item.type}}</text>
           </view>
-          <text class="material-name">{{item.name}}</text>
-          <text class="material-category">{{item.type}}</text>
         </view>
       </view>
     </view>
 
-    <!-- 提醒设置 */
-    <view class="reminder-settings-section">
+    <!-- 提醒设置 -->
+    <view class="reminder-section">
       <view class="section-header">提醒设置</view>
-      <view class="reminder-option">
-        <view class="reminder-info">
-          <view class="reminder-icon-wrapper">
-            <van-icon name="bell" size="20" color="#faad14" />
+      <view class="reminder-item">
+        <view class="reminder-left">
+          <view class="reminder-icon">
+            <van-icon name="bell" size="24" color="#faad14" />
           </view>
-          <view class="reminder-text-info">
+          <view class="reminder-info">
             <text class="reminder-title">课前提醒</text>
             <text class="reminder-desc">上课前15分钟提醒</text>
           </view>
@@ -160,12 +158,12 @@
     </view>
 
     <!-- 底部操作按钮 -->
-    <view class="bottom-actions">
-      <van-button class="action-button edit-button" bind:tap="handleEdit">
+    <view class="action-buttons">
+      <van-button class="edit-btn" type="primary" block bind:tap="handleEdit">
         <van-icon name="edit" size="16" />
         编辑课程
       </van-button>
-      <van-button class="action-button delete-button" plain bind:tap="handleDelete">
+      <van-button class="delete-btn" plain block bind:tap="handleDelete">
         <van-icon name="delete-o" size="16" />
         删除课程
       </van-button>

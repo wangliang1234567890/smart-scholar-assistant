@@ -155,7 +155,7 @@
 .course-description-section,
 .homework-section,
 .materials-section,
-.reminder-settings-section {
+.reminder-section {
   background: #fff;
   margin: 16rpx 32rpx;
   border-radius: 16rpx;
@@ -238,78 +238,63 @@
   line-height: 1.6;
 }
 
-/* 作业部分 */
-.homework-items {
+/* 课后作业 */
+.homework-list {
   display: flex;
   flex-direction: column;
   gap: 16rpx;
 }
 
-.homework-task {
+.homework-item {
   display: flex;
   align-items: center;
   gap: 16rpx;
-  padding: 16rpx 0;
-  border-bottom: 1rpx solid #f0f0f0;
+  padding: 12rpx 0;
 }
 
-.homework-task:last-child {
-  border-bottom: none;
-}
-
-.homework-checkbox {
-  width: 32rpx;
-  height: 32rpx;
+.homework-status {
+  width: 40rpx;
+  height: 40rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.homework-text {
+.homework-title {
   flex: 1;
   font-size: 28rpx;
   color: #333;
+  line-height: 1.5;
   transition: all 0.3s;
 }
 
-.homework-text.completed {
+.homework-title.completed {
   color: #999;
   text-decoration: line-through;
 }
 
 /* 所需材料 */
-.materials-grid {
+.materials-container {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16rpx;
 }
 
-.material-card {
+.material-item {
   background: #f8f9fa;
   border-radius: 12rpx;
-  padding: 24rpx;
-  text-align: center;
+  padding: 24rpx 16rpx;
   border: 1rpx solid #e5e7eb;
   transition: all 0.3s;
 }
 
-.material-card:active {
+.material-item:active {
   background: #f0f0f0;
 }
 
-.material-icon-wrapper {
-  margin-bottom: 12rpx;
-}
-
-.material-icon {
-  width: 48rpx;
-  height: 48rpx;
-}
-
-.material-default-icon {
-  font-size: 48rpx;
-  line-height: 1;
+.material-content {
+  text-align: center;
 }
 
 .material-name {
@@ -320,38 +305,38 @@
   margin-bottom: 4rpx;
 }
 
-.material-category {
+.material-type {
   display: block;
   font-size: 24rpx;
   color: #666;
 }
 
 /* 提醒设置 */
-.reminder-option {
+.reminder-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.reminder-info {
+.reminder-left {
   display: flex;
   align-items: center;
   gap: 16rpx;
   flex: 1;
 }
 
-.reminder-icon-wrapper {
-  width: 48rpx;
-  height: 48rpx;
+.reminder-icon {
+  width: 56rpx;
+  height: 56rpx;
   background: #fff7e6;
-  border-radius: 12rpx;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.reminder-text-info {
+.reminder-info {
   flex: 1;
 }
 
@@ -370,7 +355,7 @@
 }
 
 /* 底部操作按钮 */
-.bottom-actions {
+.action-buttons {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -381,29 +366,34 @@
   padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
   border-top: 1rpx solid #f0f0f0;
   display: flex;
+  flex-direction: column;
   gap: 16rpx;
 }
 
-.action-button {
-  flex: 1;
+.edit-btn {
   height: 88rpx;
   border-radius: 44rpx;
-  font-size: 30rpx;
+  font-size: 32rpx;
   font-weight: 500;
+  background: #6366f1;
+  color: #fff;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8rpx;
 }
 
-.edit-button {
-  background: #6366f1;
-  color: #fff;
-  border: none;
-}
-
-.delete-button {
+.delete-btn {
+  height: 88rpx;
+  border-radius: 44rpx;
+  font-size: 32rpx;
+  font-weight: 500;
   background: transparent;
   color: #ff4d4f;
   border: 1rpx solid #ff4d4f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
 } 
