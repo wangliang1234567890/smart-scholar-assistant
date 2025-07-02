@@ -1,9 +1,8 @@
 /* pages/schedule/detail.wxss */
 .detail-container {
-  padding: 24rpx;
-  background-color: #f8f9fa;
+  background: #f8f9fa;
   min-height: 100vh;
-  padding-bottom: 180rpx;
+  padding-bottom: 120rpx;
 }
 
 .loading-wrapper {
@@ -11,53 +10,360 @@
   text-align: center;
 }
 
-.card {
-  background-color: #ffffff;
+/* 课程头部 */
+.course-header {
+  background: #fff;
+  padding: 24rpx 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.header-back {
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.course-basic {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-left: 16rpx;
+}
+
+.course-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 600;
+  font-size: 28rpx;
+}
+
+.course-icon.math {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+
+.course-icon.english {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.course-icon.chinese {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.course-info {
+  flex: 1;
+}
+
+.course-name {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.course-meta {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.header-actions {
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 课程状态统计 */
+.course-stats {
+  background: #fff;
+  margin: 16rpx 32rpx;
   border-radius: 16rpx;
   padding: 32rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
-}
-
-.header-card .course-title {
-  font-size: 40rpx;
-  font-weight: bold;
-  margin-bottom: 24rpx;
-}
-
-.card-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: space-around;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 48rpx;
+  font-weight: 600;
+  color: #6366f1;
+  margin-bottom: 8rpx;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #666;
+}
+
+/* 课程状态 */
+.course-status {
+  margin: 0 32rpx 16rpx;
+  display: flex;
+  justify-content: center;
+}
+
+.status-badge {
+  padding: 8rpx 24rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  color: #fff;
+}
+
+.status-badge.ongoing {
+  background: #10b981;
+}
+
+.status-badge.completed {
+  background: #6366f1;
+}
+
+.status-badge.cancelled {
+  background: #ef4444;
+}
+
+/* 通用部分 */
+.info-section,
+.description-section,
+.homework-section,
+.materials-section,
+.reminder-section {
+  background: #fff;
+  margin: 16rpx 32rpx;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
   font-size: 32rpx;
-  font-weight: bold;
-  color: var(--text-primary);
+  font-weight: 600;
+  color: #333;
   margin-bottom: 24rpx;
 }
 
-.notes-content, .homework-content {
+/* 课程信息 */
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.info-icon {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.info-icon.calendar {
+  background: #6366f1;
+}
+
+.info-icon.duration {
+  background: #10b981;
+}
+
+.info-icon.location {
+  background: #f59e0b;
+}
+
+.info-icon.teacher {
+  background: #8b5cf6;
+}
+
+.info-icon.type {
+  background: #ef4444;
+}
+
+.info-content {
+  flex: 1;
+}
+
+.info-label {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 4rpx;
+}
+
+.info-value {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+/* 课程描述 */
+.description-content {
   font-size: 28rpx;
-  color: var(--text-secondary);
+  color: #666;
   line-height: 1.6;
 }
 
+/* 课后作业 */
+.homework-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.homework-item {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 16rpx 0;
+}
+
+.homework-checkbox {
+  width: 32rpx;
+  height: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.homework-content {
+  flex: 1;
+}
+
+.homework-title {
+  font-size: 28rpx;
+  color: #333;
+  transition: all 0.3s;
+}
+
+.homework-title.completed {
+  color: #999;
+  text-decoration: line-through;
+}
+
+/* 所需材料 */
+.materials-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+}
+
+.material-item {
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  text-align: center;
+  border: 1rpx solid #e5e7eb;
+}
+
+.material-icon {
+  margin-bottom: 12rpx;
+}
+
+.material-image {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.material-label {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 4rpx;
+}
+
+.material-type {
+  font-size: 24rpx;
+  color: #666;
+}
+
+/* 提醒设置 */
+.reminder-item {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.reminder-icon {
+  width: 48rpx;
+  height: 48rpx;
+  background: #fef3c7;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reminder-content {
+  flex: 1;
+}
+
+.reminder-title {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 4rpx;
+}
+
+.reminder-desc {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.reminder-toggle {
+  margin-left: auto;
+}
+
+/* 操作按钮 */
 .action-buttons {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   display: flex;
-  padding: 24rpx;
+  gap: 16rpx;
+  padding: 24rpx 32rpx;
   padding-bottom: calc(24rpx + constant(safe-area-inset-bottom));
   padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
-  background-color: #ffffff;
-  border-top: 1rpx solid #ebedf0;
+  background: #fff;
+  border-top: 1rpx solid #f0f0f0;
 }
 
 .action-btn {
   flex: 1;
+  height: 88rpx;
+  border-radius: 44rpx;
+  font-size: 30rpx;
+  font-weight: 500;
 }
 
-.action-btn:first-child {
-  margin-right: 24rpx;
+.edit-btn {
+  background: #6366f1;
+  color: #fff;
+  border: none;
+}
+
+.delete-btn {
+  background: transparent;
+  color: #ef4444;
+  border: 1rpx solid #ef4444;
 } 

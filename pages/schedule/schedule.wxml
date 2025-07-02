@@ -1,87 +1,107 @@
 <!-- pages/schedule/schedule.wxml -->
 <view class="page-container">
-  <!-- 页面头部 -->
+  <!-- 头部区域 -->
   <view class="header-section">
-    <view class="header-content">
-      <view class="header-icon-wrapper">
-        <image src="/images/tab/schedule.svg" class="header-icon" style="filter: brightness(0) invert(1);" />
-      </view>
-      <view>
-        <view class="header-title">{{title}}</view>
-        <view class="header-subtitle">{{subtitle}}</view>
-      </view>
+    <view class="header-left">
+      <image src="/images/tab/schedule.svg" class="header-icon" />
+      <text class="header-title">课程表</text>
+    </view>
+    <view class="header-right">
+      <van-button size="small" type="primary" round bind:tap="navigateToAddCourse">
+        <van-icon name="plus" />
+        <text>添加</text>
+      </van-button>
     </view>
   </view>
 
-  <!-- 日期选择器 (Swiper) -->
-  <view class="content-section">
-    <swiper class="week-swiper" circular bindchange="onSwiperChange" current="{{swiperCurrent}}">
-      <block wx:for="{{swiperWeeks}}" wx:for-item="week" wx:key="weekId">
-        <swiper-item>
-          <view class="week-selector card">
-            <view class="week-days">
-              <view wx:for="{{week.days}}" wx:key="dayName" class="week-day-item">{{item.dayName}}</view>
-            </view>
-            <view class="date-numbers">
-              <view wx:for="{{week.days}}" wx:key="fullDate" class="date-item {{item.fullDate === selectedFullDate ? 'active' : ''}}" bind:tap="onDateSelect" data-date="{{item.fullDate}}">
-                <view class="date-number">{{item.date}}</view>
-                <view wx:if="{{item.hasCourse}}" class="course-dot"></view>
+  <!-- 当前周信息 -->
+  <view class="week-info">
+    <text class="week-text">{{weekText}}</text>
+  </view>
+
+  <!-- 视图切换 -->
+  <view class="view-toggle">
+    <view class="toggle-item {{viewMode === 'week' ? 'active' : ''}}" bind:tap="switchViewMode" data-mode="week">
+      <text>周视图</text>
+    </view>
+    <view class="toggle-item {{viewMode === 'day' ? 'active' : ''}}" bind:tap="switchViewMode" data-mode="day">
+      <text>日视图</text>
+    </view>
+  </view>
+
+  <!-- 周视图日历 -->
+  <view class="week-calendar">
+    <view class="week-header">
+      <view wx:for="{{weekDays}}" wx:key="index" class="week-day-header">{{item}}</view>
+    </view>
+    <view class="week-dates">
+      <view wx:for="{{currentWeekDates}}" wx:key="date" 
+            class="date-item {{item.isToday ? 'today' : ''}} {{item.isSelected ? 'selected' : ''}}"
+            bind:tap="onDateSelect" data-date="{{item.fullDate}}">
+        <view class="date-number">{{item.date}}</view>
+        <view wx:if="{{item.hasCourse}}" class="course-indicators">
+          <view wx:for="{{item.courses}}" wx:key="id" class="course-dot {{item.subject}}"></view>
         </view>
       </view>
     </view>
-        </swiper-item>
-      </block>
-    </swiper>
-    <!-- “全部课程”按钮移到 Swiper 外部 -->
-    <view class="all-courses-entry" bind:tap="showCalendar">
-      <text>全部课程</text>
-      <van-icon name="arrow" />
   </view>
 
   <!-- 今日课程 -->
-    <view class="today-schedule-section">
+  <view class="today-section">
     <view class="section-header">
-        <image class="section-icon" src="/images/icons/stats-icon.svg" />
-        <view class="section-title">今日课程 ({{currentDayName}})</view>
+      <text class="section-title">今日课程 ({{selectedDayCount}})</text>
+      <view class="header-action" bind:tap="navigateToAddCourse">
+        <van-icon name="plus" />
+        <text>添加</text>
+      </view>
     </view>
-    
-      <block wx:if="{{todayCourses.length > 0}}">
-    <!-- 课程列表 -->
-        <view class="course-list">
-          <view wx:for="{{todayCourses}}" wx:key="id" class="course-card">
+
+    <block wx:if="{{todayCourses.length > 0}}">
+      <view class="course-list">
+        <view wx:for="{{todayCourses}}" wx:key="id" class="course-item" bind:tap="onCourseDetail" data-course="{{item}}">
+          <view class="course-left">
+            <view class="course-icon {{item.subject}}">
+              <text class="icon-text">{{item.subjectShort}}</text>
+            </view>
+          </view>
+          <view class="course-content">
+            <view class="course-title">{{item.name}}</view>
             <view class="course-time">
-              <view class="start-time">{{item.startTime}}</view>
-              <view class="end-time">{{item.endTime}}</view>
+              <van-icon name="clock-o" size="12" />
+              <text>{{item.startTime}}-{{item.endTime}} ({{item.duration}}分钟)</text>
             </view>
-            <view class="course-divider"></view>
-            <view class="course-details">
-              <view class="course-title">{{item.name}}</view>
-              <view class="course-meta">{{item.teacher}} · {{item.location}}</view>
+            <view class="course-location">
+              <van-icon name="location-o" size="12" />
+              <text>{{item.location}}</text>
+            </view>
+            <view class="course-teacher">
+              <image src="{{item.teacherAvatar || '/images/default-avatar.png'}}" class="teacher-avatar" />
+              <text>{{item.teacher}}</text>
+            </view>
+            <view class="course-note">{{item.description}}</view>
+          </view>
+          <view class="course-right">
+            <view class="course-type">{{item.courseType}}</view>
+            <view wx:if="{{item.hasReminder}}" class="reminder-badge">
+              <van-icon name="bell" size="12" />
+              <text>已提醒</text>
             </view>
           </view>
         </view>
-      </block>
-      <block wx:else>
-        <!-- 空状态 -->
-        <view class="empty-schedule-card card">
-          <view class="empty-icon-wrapper" bind:tap="navigateToAddCourse">
-            <text class="empty-icon">+</text>
-          </view>
-          <view class="empty-text">今天还没有安排课程</view>
-          <van-button 
-            type="primary" 
-            round
-            custom-class="add-course-btn"
-            bind:tap="navigateToAddCourse"
-          >
-            <view class="flex-center">
-              <van-icon name="plus" class="btn-icon" />
-              <text>添加课程</text>
-            </view>
-          </van-button>
-        </view>
-      </block>
-    </view>
+      </view>
+    </block>
+    <block wx:else>
+      <!-- 空状态 -->
+      <view class="empty-state">
+        <image src="/images/empty-state-home.svg" class="empty-image" />
+        <text class="empty-title">今天还没有课程安排</text>
+        <text class="empty-desc">点击上方添加按钮，开始安排你的学习计划</text>
+        <van-button type="primary" round bind:tap="navigateToAddCourse">
+          <van-icon name="plus" />
+          <text>添加课程</text>
+        </van-button>
+      </view>
+    </block>
   </view>
 
   <!-- 全屏日历 -->

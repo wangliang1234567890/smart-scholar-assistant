@@ -1,93 +1,157 @@
 import LocalDB from '../../utils/local-db';
+import { formatTime } from '../../utils/util';
 
 const app = getApp()
 
 Page({
   data: {
-    title: '课程表',
-    subtitle: '', // 将由js动态生成
-    selectedFullDate: null,
-    swiperWeeks: [],
-    swiperCurrent: 1,
-    baseDateForSwiper: new Date(),
-    todayCourses: [], // 先设置为空数组
-    allCourses: [], // 存放所有模拟课程
-    loading: false,
-    showCalendar: false, // 控制全屏日历的显示
-    calendarFormatter: null, // 日历格式化函数
+    // 基础数据
+    weekText: '',
+    viewMode: 'week', // week | day
+    selectedDate: null,
+    selectedDayCount: 0,
+    
+    // 日历相关
+    weekDays: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+    currentWeekDates: [],
+    showCalendar: false,
+    calendarFormatter: null,
+    
+    // 课程数据
+    todayCourses: [],
+    allCourses: [],
+    loading: false
   },
 
   onLoad(options) {
-    this.initMockData();
-    this.updateSwiperWeeks(new Date());
+    console.log('课程表页面加载');
+    this.initializeData();
     this.setData({
       calendarFormatter: this.formatCalendarDay.bind(this)
     });
   },
 
   onShow() {
-    const { selectedFullDate } = this.data;
-    if (selectedFullDate) {
-      this.loadCoursesForDate(selectedFullDate);
+    this.loadAllCourses();
+    if (this.data.selectedDate) {
+      this.loadCoursesForDate(this.data.selectedDate);
     }
   },
 
+  // 初始化数据
+  initializeData() {
+    const today = new Date();
+    const todayStr = this.formatDate(today);
+    
+    this.setData({
+      selectedDate: todayStr,
+      weekText: this.getWeekText(today)
+    });
+    
+    this.generateCurrentWeek(today);
+    this.initMockData();
+  },
+
+  // 生成当前周的日期数据
+  generateCurrentWeek(baseDate) {
+    const week = [];
+    const today = new Date();
+    const todayStr = this.formatDate(today);
+    
+    // 获取周一的日期
+    const monday = new Date(baseDate);
+    const dayOfWeek = monday.getDay();
+    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    monday.setDate(monday.getDate() + daysToMonday);
+    
+    // 生成一周的日期
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + i);
+      const dateStr = this.formatDate(date);
+      const courses = this.getCoursesByDate(dateStr);
+      
+      week.push({
+        date: date.getDate(),
+        fullDate: dateStr,
+        isToday: dateStr === todayStr,
+        isSelected: dateStr === this.data.selectedDate,
+        hasCourse: courses.length > 0,
+        courses: courses
+      });
+    }
+    
+    this.setData({
+      currentWeekDates: week,
+      selectedDayCount: this.getCoursesByDate(this.data.selectedDate).length
+    });
+  },
+
+  // 初始化模拟数据
   initMockData() {
     const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const todayDate = String(today.getDate()).padStart(2, '0');
-
-    // 创建今天和明天的课程
     const mockCourses = [
       {
         id: 1,
-        date: `${year}-${month}-${todayDate}`,
-        name: '数学培优班',
-        teacher: '王老师',
-        location: '学而思教育中心',
-        startTime: '15:00',
-        endTime: '17:00',
+        name: '数学辅导',
+        subject: 'math',
+        subjectShort: '数',
+        teacher: '张老师',
+        teacherAvatar: '/images/default-avatar.png',
+        location: '教室A101',
+        startTime: '09:00',
+        endTime: '10:30',
+        duration: 90,
+        date: this.formatDate(today),
+        courseType: '线下课程',
+        description: '小学数学基础知识复习，包括加减乘除运算、分数计算、几何图形认识等内容。通过练习题和互动游戏的方式，帮助学生巩固数学基础。',
+        hasReminder: true
       },
       {
         id: 2,
-        date: `${year}-${month}-${todayDate}`,
-        name: '英语口语课',
-        teacher: 'Jessica',
+        name: '英语口语',
+        subject: 'english',
+        subjectShort: '英',
+        teacher: 'Lisa老师',
+        teacherAvatar: '/images/default-avatar.png',
         location: '在线教室',
-        startTime: '19:00',
-        endTime: '20:30',
+        startTime: '14:00',
+        endTime: '15:00',
+        duration: 60,
+        date: this.formatDate(today),
+        courseType: '在线课程',
+        description: '英语口语练习和对话',
+        hasReminder: true
       },
+      // 明天的课程
       {
         id: 3,
-        date: new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10), // 明天
-        name: '编程思维训练',
-        teacher: '李老师',
-        location: '少年宫302',
+        name: '语文阅读',
+        subject: 'chinese',
+        subjectShort: '语',
+        teacher: '王老师',
+        teacherAvatar: '/images/default-avatar.png',
+        location: '教室B102',
         startTime: '10:00',
         endTime: '11:30',
+        duration: 90,
+        date: this.formatDate(new Date(today.getTime() + 24 * 60 * 60 * 1000)),
+        courseType: '线下课程',
+        description: '语文阅读理解训练',
+        hasReminder: false
       }
     ];
-    this.setData({ allCourses: mockCourses });
+    
+    this.setData({ 
+      allCourses: mockCourses,
+      todayCourses: this.getCoursesByDate(this.data.selectedDate)
+    });
+    
+    // 重新生成周视图以显示课程标记
+    this.generateCurrentWeek(today);
   },
 
-  formatCalendarDay(day) {
-    const date = new Date(day.date);
-    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-
-    const hasCourse = this.data.allCourses.some(course => course.date === dateStr);
-
-    if (hasCourse) {
-      day.bottomInfo = '有课';
-    }
-
-    if (day.type === 'today') {
-      day.topInfo = '今天';
-    }
-
-    return day;
-  },
-
+  // 格式化日期
   formatDate(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -95,185 +159,117 @@ Page({
     return `${year}-${month}-${day}`;
   },
 
-  // 核心函数：生成包含上一周、当前周、下一周数据的数组
-  updateSwiperWeeks(baseDate) {
-    const weeks = [-1, 0, 1].map(offset => {
-      const date = new Date(baseDate);
-      date.setDate(date.getDate() + offset * 7);
-      return this.generateWeekData(date);
-    });
-
-    const todayStr = this.formatDate(new Date());
-    this.setData({
-      swiperWeeks: weeks,
-      baseDateForSwiper: baseDate,
-      selectedFullDate: this.data.selectedFullDate || todayStr,
-    }, () => {
-      if (!this.data.todayCourses.length) {
-        this.loadCoursesForDate(this.data.selectedFullDate);
-      }
-    });
-  },
-
-  // 生成单周的数据
-  generateWeekData(baseDate) {
-    const days = ['一', '二', '三', '四', '五', '六', '日'];
-    const weekData = { weekId: Math.random(), days: [] };
-    const startOfWeek = new Date(baseDate);
-    const dayOffset = startOfWeek.getDay() === 0 ? -6 : 1 - startOfWeek.getDay();
-    startOfWeek.setDate(startOfWeek.getDate() + dayOffset);
+  // 获取周文本
+  getWeekText(date) {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
     
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(startOfWeek);
-      date.setDate(startOfWeek.getDate() + i);
-      const fullDateStr = this.formatDate(date);
-      const hasCourse = this.data.allCourses.some(c => c.date === fullDateStr);
-      weekData.days.push({
-        dayName: `周${days[i]}`,
-        date: date.getDate(),
-        fullDate: fullDateStr,
-        hasCourse: hasCourse,
-      });
-    }
-    return weekData;
+    // 计算是第几周
+    const firstDay = new Date(year, 0, 1);
+    const dayOfYear = Math.floor((date - firstDay) / (24 * 60 * 60 * 1000)) + 1;
+    const weekOfYear = Math.ceil(dayOfYear / 7);
+    
+    return `${year}年${month}月 第${weekOfYear}周`;
   },
 
-  // Swiper 滑动事件
-  onSwiperChange(e) {
-    const { current, source } = e.detail;
-    if (source === 'touch') {
-      const newBaseDate = new Date(this.data.baseDateForSwiper);
-      if (current === 0) { // Swiped left
-        newBaseDate.setDate(newBaseDate.getDate() - 7);
-      } else if (current === 2) { // Swiped right
-        newBaseDate.setDate(newBaseDate.getDate() + 7);
-      }
-      this.updateSwiperWeeks(newBaseDate);
-      this.setData({ swiperCurrent: 1 }); // Reset to middle
-    }
+  // 根据日期获取课程
+  getCoursesByDate(dateStr) {
+    return this.data.allCourses.filter(course => course.date === dateStr);
   },
 
+  // 视图模式切换
+  switchViewMode(e) {
+    const mode = e.currentTarget.dataset.mode;
+    this.setData({ viewMode: mode });
+  },
+
+  // 选择日期
   onDateSelect(e) {
-    const fullDate = e.currentTarget.dataset.date;
-    this.setData({ selectedFullDate: fullDate });
-    this.loadCoursesForDate(fullDate);
-  },
-
-  onConfirmCalendar(event) {
-    const selectedDateObj = event.detail;
-    this.updateSwiperWeeks(selectedDateObj);
-    this.setData({ 
-      showCalendar: false,
-      selectedFullDate: this.formatDate(selectedDateObj),
+    const date = e.currentTarget.dataset.date;
+    const courses = this.getCoursesByDate(date);
+    
+    // 更新选中状态
+    const updatedWeekDates = this.data.currentWeekDates.map(item => ({
+      ...item,
+      isSelected: item.fullDate === date
+    }));
+    
+    this.setData({
+      selectedDate: date,
+      selectedDayCount: courses.length,
+      todayCourses: courses,
+      currentWeekDates: updatedWeekDates
     });
-    this.loadCoursesForDate(this.formatDate(selectedDateObj));
-  },
-
-  navigateToAddCourse() {
-    wx.navigateTo({
-      url: '/pages/schedule/add',
-    });
-  },
-
-  loadCoursesForDate(date) {
-    // 这里应是从数据库加载课程的真实逻辑
-    console.log(`正在为日期 ${date} 加载课程...`);
-    const courses = this.data.allCourses.filter(c => c.date === date);
-    this.setData({ todayCourses: courses });
   },
 
   // 课程详情
   onCourseDetail(e) {
-    const { course } = e.currentTarget.dataset
+    const course = e.currentTarget.dataset.course;
     wx.navigateTo({
       url: `/pages/schedule/detail?id=${course.id}`
-    })
+    });
   },
 
-  // 导航到课程地点
-  onNavigation(e) {
-    e.stopPropagation()
-    const { course } = e.currentTarget.dataset
-    
-    wx.getLocation({
-      type: 'gcj02',
-      success: (res) => {
-        wx.openLocation({
-          latitude: res.latitude,
-          longitude: res.longitude,
-          name: course.location,
-          address: course.location
-        })
-      },
-      fail: () => {
-        wx.showToast({
-          title: '获取位置失败',
-          icon: 'none'
-        })
-      }
-    })
-  },
-
-  // 记笔记
-  onTakeNotes(e) {
-    e.stopPropagation()
-    const { course } = e.currentTarget.dataset
-    
+  // 添加课程
+  navigateToAddCourse() {
     wx.navigateTo({
-      url: `/pages/notes/edit?courseId=${course.id}&courseName=${course.name}`
-    })
+      url: '/pages/schedule/add'
+    });
   },
 
-  // 打开日历
-  onCalendar() {
-    wx.showActionSheet({
-      itemList: ['查看月历', '选择日期范围', '导出课程表'],
-      success: (res) => {
-        switch(res.tapIndex) {
-          case 0:
-            this.showMonthCalendar()
-            break
-          case 1:
-            this.selectDateRange()
-            break
-          case 2:
-            this.exportSchedule()
-            break
-        }
-      }
-    })
+  // 加载所有课程
+  loadAllCourses() {
+    // TODO: 从数据库加载课程
+    console.log('加载所有课程');
   },
 
-  // 显示月历
-  showMonthCalendar() {
-    wx.showToast({
-      title: '功能开发中',
-      icon: 'none'
-    })
+  // 加载指定日期的课程
+  loadCoursesForDate(date) {
+    const courses = this.getCoursesByDate(date);
+    this.setData({
+      todayCourses: courses,
+      selectedDayCount: courses.length
+    });
   },
 
-  // 选择日期范围
-  selectDateRange() {
-    wx.showToast({
-      title: '功能开发中',
-      icon: 'none'
-    })
+  // 日历格式化
+  formatCalendarDay(day) {
+    const dateStr = this.formatDate(new Date(day.date));
+    const courses = this.getCoursesByDate(dateStr);
+    
+    if (courses.length > 0) {
+      day.bottomInfo = `${courses.length}课`;
+    }
+    
+    if (day.type === 'today') {
+      day.topInfo = '今天';
+    }
+    
+    return day;
   },
 
-  // 导出课程表
-  exportSchedule() {
-    wx.showToast({
-      title: '功能开发中',
-      icon: 'none'
-    })
-  },
-
-  // 显示/隐藏全屏日历
+  // 显示日历
   showCalendar() {
     this.setData({ showCalendar: true });
   },
 
+  // 关闭日历
   onCloseCalendar() {
     this.setData({ showCalendar: false });
   },
+
+  // 日历确认
+  onConfirmCalendar(event) {
+    const selectedDate = new Date(event.detail);
+    const dateStr = this.formatDate(selectedDate);
+    
+    this.setData({
+      showCalendar: false,
+      selectedDate: dateStr,
+      weekText: this.getWeekText(selectedDate)
+    });
+    
+    this.generateCurrentWeek(selectedDate);
+    this.loadCoursesForDate(dateStr);
+  }
 }) 

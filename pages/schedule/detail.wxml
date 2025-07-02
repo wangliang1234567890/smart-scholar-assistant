@@ -9,43 +9,160 @@
     <van-empty description="课程不存在或已被删除" />
   </block>
   <block wx:else>
-    <!-- 课程核心信息 -->
-    <view class="card header-card">
-      <view class="course-title">{{course.name}}</view>
-      <van-cell icon="manager-o" title="任课老师" value="{{course.teacher}}" />
-      <van-cell icon="location-o" title="上课地点" value="{{course.location}}" />
-      <van-cell icon="underway-o" title="上课时间" value="{{course.startTime}} - {{course.endTime}}" />
-      <van-cell icon="label-o" title="课程状态">
-        <van-tag type="primary">{{course.statusText}}</van-tag>
-      </van-cell>
-    </view>
-    
-    <!-- 课后笔记 -->
-    <view class="card notes-card">
-      <view class="card-header">
-        <text>课后笔记</text>
-        <van-button size="small" type="primary" plain bind:tap="editNotes">编辑笔记</van-button>
+    <!-- 课程头部信息 -->
+    <view class="course-header">
+      <view class="header-back" bind:tap="goBack">
+        <van-icon name="arrow-left" size="20" />
       </view>
-      <view class="notes-content">
-        {{course.notes || '暂无笔记，点击右上角编辑。'}}
+      <view class="course-basic">
+        <view class="course-icon {{course.subject}}">
+          <text class="icon-text">{{course.subjectShort}}</text>
+        </view>
+        <view class="course-info">
+          <view class="course-name">{{course.name}}</view>
+          <view class="course-meta">{{course.subject}} · {{course.teacher}}</view>
+        </view>
+      </view>
+      <view class="header-actions">
+        <van-icon name="ellipsis" size="20" />
       </view>
     </view>
-    
-    <!-- 课程作业 -->
-    <view class="card homework-card">
-      <view class="card-header">
-        <text>课程作业</text>
-        <van-button size="small" type="primary" plain bind:tap="manageHomework">管理作业</van-button>
+
+    <!-- 课程状态统计 -->
+    <view class="course-stats">
+      <view class="stat-item">
+        <view class="stat-number">{{course.completedLessons}}</view>
+        <view class="stat-label">已上课次</view>
       </view>
-      <view class="homework-content">
-        {{course.homework || '暂无作业信息。'}}
+      <view class="stat-item">
+        <view class="stat-number">{{course.totalLessons}}</view>
+        <view class="stat-label">总课时</view>
+      </view>
+      <view class="stat-item">
+        <view class="stat-number">{{course.completionRate}}%</view>
+        <view class="stat-label">完成进度</view>
+      </view>
+    </view>
+
+    <!-- 课程状态标签 -->
+    <view class="course-status">
+      <view class="status-badge {{course.status}}">{{course.statusText}}</view>
+    </view>
+
+    <!-- 课程信息 -->
+    <view class="info-section">
+      <view class="section-title">课程信息</view>
+      <view class="info-list">
+        <view class="info-item">
+          <view class="info-icon calendar">
+            <van-icon name="calendar-o" size="16" />
+          </view>
+          <view class="info-content">
+            <view class="info-label">上课时间</view>
+            <view class="info-value">{{course.scheduleTime}}</view>
+          </view>
+        </view>
+        <view class="info-item">
+          <view class="info-icon duration">
+            <van-icon name="clock-o" size="16" />
+          </view>
+          <view class="info-content">
+            <view class="info-label">课程时长</view>
+            <view class="info-value">{{course.duration}} 分钟</view>
+          </view>
+        </view>
+        <view class="info-item">
+          <view class="info-icon location">
+            <van-icon name="location-o" size="16" />
+          </view>
+          <view class="info-content">
+            <view class="info-label">上课地点</view>
+            <view class="info-value">{{course.location}}</view>
+          </view>
+        </view>
+        <view class="info-item">
+          <view class="info-icon teacher">
+            <van-icon name="manager-o" size="16" />
+          </view>
+          <view class="info-content">
+            <view class="info-label">任课老师</view>
+            <view class="info-value">{{course.teacher}}</view>
+          </view>
+        </view>
+        <view class="info-item">
+          <view class="info-icon type">
+            <van-icon name="label-o" size="16" />
+          </view>
+          <view class="info-content">
+            <view class="info-label">课程类型</view>
+            <view class="info-value">{{course.courseType}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 课程描述 -->
+    <view class="description-section">
+      <view class="section-title">课程描述</view>
+      <view class="description-content">
+        {{course.description}}
+      </view>
+    </view>
+
+    <!-- 课后作业 -->
+    <view class="homework-section">
+      <view class="section-title">课后作业</view>
+      <view class="homework-list">
+        <view wx:for="{{course.homework}}" wx:key="id" class="homework-item">
+          <view class="homework-checkbox {{item.completed ? 'completed' : ''}}" bind:tap="toggleHomework" data-id="{{item.id}}">
+            <van-icon name="{{item.completed ? 'success' : 'circle'}}" size="16" color="{{item.completed ? '#10b981' : '#d1d5db'}}" />
+          </view>
+          <view class="homework-content">
+            <view class="homework-title {{item.completed ? 'completed' : ''}}">{{item.title}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 所需材料 -->
+    <view class="materials-section">
+      <view class="section-title">所需材料</view>
+      <view class="materials-grid">
+        <view wx:for="{{course.materials}}" wx:key="type" class="material-item">
+          <view class="material-icon">
+            <image src="{{item.icon}}" class="material-image" />
+          </view>
+          <view class="material-label">{{item.name}}</view>
+          <view class="material-type">{{item.type}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 提醒设置 -->
+    <view class="reminder-section">
+      <view class="section-title">提醒设置</view>
+      <view class="reminder-item">
+        <view class="reminder-icon">
+          <van-icon name="bell" size="20" color="#f59e0b" />
+        </view>
+        <view class="reminder-content">
+          <view class="reminder-title">课前提醒</view>
+          <view class="reminder-desc">上课前15分钟提醒</view>
+        </view>
+        <view class="reminder-toggle">
+          <van-switch checked="{{course.reminderEnabled}}" bind:change="onReminderToggle" />
+        </view>
       </view>
     </view>
 
     <!-- 操作按钮 -->
     <view class="action-buttons">
-      <van-button icon="delete-o" class="action-btn" plain type="danger" bind:tap="handleDelete">删除课程</van-button>
-      <van-button icon="edit" class="action-btn" type="primary" bind:tap="handleEdit">编辑课程</van-button>
+      <van-button icon="edit" class="action-btn edit-btn" bind:tap="handleEdit">
+        编辑课程
+      </van-button>
+      <van-button icon="delete-o" class="action-btn delete-btn" plain type="danger" bind:tap="handleDelete">
+        删除课程
+      </van-button>
     </view>
   </block>
 </view> 
