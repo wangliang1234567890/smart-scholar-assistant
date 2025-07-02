@@ -316,6 +316,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 8rpx 0;
 }
 
 .reminder-left {
@@ -352,6 +353,12 @@
   display: block;
   font-size: 26rpx;
   color: #666;
+}
+
+/* van-switch组件样式调整 */
+.reminder-section van-switch {
+  flex-shrink: 0;
+  transform: scale(1.2); /* 稍微放大开关 */
 }
 
 /* 底部操作按钮 */
