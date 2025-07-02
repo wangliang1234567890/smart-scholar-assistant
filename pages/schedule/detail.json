@@ -8,6 +8,7 @@
     "van-tag": "/miniprogram_npm/@vant/weapp/tag/index",
     "van-divider": "/miniprogram_npm/@vant/weapp/divider/index",
     "van-loading": "/miniprogram_npm/@vant/weapp/loading/index",
-    "van-empty": "/miniprogram_npm/@vant/weapp/empty/index"
+    "van-empty": "/miniprogram_npm/@vant/weapp/empty/index",
+    "van-switch": "/miniprogram_npm/@vant/weapp/switch/index"
   }
 } 
