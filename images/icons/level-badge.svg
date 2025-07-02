@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="badge-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F8D568;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F5A623;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <path fill="url(#badge-gradient)" d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.77 5.82 22 7 14.14 2 9.27l6.91-1.01L12 2z"/>
+  <text x="12" y="15" font-family="Arial, sans-serif" font-size="8" fill="white" text-anchor="middle" font-weight="bold">LV</text>
+</svg> 

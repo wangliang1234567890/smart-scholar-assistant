@@ -1,0 +1,148 @@
+/* pages/settings/settings.wxss */
+.page-container {
+  min-height: 100vh;
+  background: var(--bg-secondary);
+  padding: 32rpx;
+}
+
+/* 设置区块 */
+.section {
+  margin-bottom: 48rpx;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 24rpx;
+  padding: 0 8rpx;
+}
+
+.title-icon {
+  color: var(--primary-color) !important;
+  font-size: 32rpx;
+}
+
+/* 设置列表 */
+.setting-list {
+  background: var(--bg-primary);
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32rpx;
+  border-bottom: 2rpx solid var(--border-light);
+  transition: all 0.3s ease;
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+}
+
+.setting-item:active {
+  background: var(--bg-tertiary);
+}
+
+.setting-label {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  flex: 1;
+}
+
+.setting-label van-icon {
+  color: var(--text-secondary);
+  font-size: 32rpx;
+}
+
+.setting-label text {
+  font-size: 30rpx;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.setting-value {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.setting-value text {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  max-width: 200rpx;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.setting-value van-icon {
+  color: var(--text-tertiary);
+  font-size: 24rpx;
+}
+
+/* 开关样式 */
+.setting-value van-switch {
+  transform: scale(0.9);
+}
+
+/* 退出登录区域 */
+.logout-section {
+  margin-top: 64rpx;
+  padding: 0 16rpx;
+}
+
+.logout-btn {
+  border-radius: 24rpx !important;
+  height: 96rpx !important;
+  font-size: 32rpx !important;
+  font-weight: 600 !important;
+}
+
+/* 弹出层样式 */
+.van-popup {
+  border-radius: 24rpx 24rpx 0 0;
+}
+
+/* 响应式调整 */
+@media (max-width: 750rpx) {
+  .page-container {
+    padding: 24rpx;
+  }
+  
+  .setting-item {
+    padding: 24rpx;
+  }
+  
+  .section-title {
+    font-size: 28rpx;
+  }
+  
+  .setting-label text {
+    font-size: 28rpx;
+  }
+  
+  .setting-value text {
+    font-size: 26rpx;
+    max-width: 150rpx;
+  }
+}
+
+.settings-container {
+  padding: 24rpx 0;
+  background-color: var(--bg-secondary);
+  min-height: 100vh;
+}
+
+.van-cell-group--inset {
+  margin: 0 32rpx 32rpx !important;
+} 

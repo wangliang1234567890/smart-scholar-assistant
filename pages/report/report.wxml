@@ -1,0 +1,207 @@
+<!-- pages/report/report.wxml -->
+<view class="page-container">
+  <!-- 时间选择器 -->
+  <view class="time-selector">
+    <view class="selector-header">
+      <text class="period-title">{{currentPeriod.title}}</text>
+      <view class="period-actions">
+        <van-button size="small" plain bind:click="onPeriodChange">
+          切换周期
+        </van-button>
+      </view>
+    </view>
+    <view class="date-range">
+      <text>{{currentPeriod.startDate}} - {{currentPeriod.endDate}}</text>
+    </view>
+  </view>
+
+  <!-- 整体统计 -->
+  <view class="overall-stats">
+    <view class="stats-card">
+      <view class="stats-header">
+        <text class="stats-title">学习概览</text>
+        <van-tag type="success" size="small">{{reportData.trend}}</van-tag>
+      </view>
+      
+      <view class="stats-grid">
+        <view class="stat-item">
+          <text class="stat-value">{{reportData.totalMistakes}}</text>
+          <text class="stat-label">录入错题</text>
+          <text class="stat-change {{reportData.mistakeChange >= 0 ? 'up' : 'down'}}">
+            {{reportData.mistakeChange >= 0 ? '+' : ''}}{{reportData.mistakeChange}}
+          </text>
+        </view>
+        
+        <view class="stat-item">
+          <text class="stat-value">{{reportData.studyTime}}</text>
+          <text class="stat-label">学习时长(小时)</text>
+          <text class="stat-change {{reportData.timeChange >= 0 ? 'up' : 'down'}}">
+            {{reportData.timeChange >= 0 ? '+' : ''}}{{reportData.timeChange}}
+          </text>
+        </view>
+        
+        <view class="stat-item">
+          <text class="stat-value">{{reportData.masteryRate}}%</text>
+          <text class="stat-label">掌握率</text>
+          <text class="stat-change {{reportData.masteryChange >= 0 ? 'up' : 'down'}}">
+            {{reportData.masteryChange >= 0 ? '+' : ''}}{{reportData.masteryChange}}%
+          </text>
+        </view>
+        
+        <view class="stat-item">
+          <text class="stat-value">{{reportData.studyDays}}</text>
+          <text class="stat-label">学习天数</text>
+          <text class="stat-change {{reportData.daysChange >= 0 ? 'up' : 'down'}}">
+            {{reportData.daysChange >= 0 ? '+' : ''}}{{reportData.daysChange}}
+          </text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 学科分析 -->
+  <view class="subject-analysis">
+    <section-header title="学科表现">
+      <view slot="right" class="chart-toggle" bind:tap="onToggleChart">
+        <van-icon name="{{showChart ? 'list-o' : 'chart-trending-o'}}" size="16px" />
+        <text>{{showChart ? '列表' : '图表'}}</text>
+      </view>
+    </section-header>
+    
+    <!-- 图表视图 -->
+    <view class="chart-view" wx:if="{{showChart}}">
+      <canvas 
+        type="2d"
+        canvas-id="subjectChart" 
+        class="chart-canvas"
+        disable-scroll="true"
+      ></canvas>
+    </view>
+    
+    <!-- 列表视图 -->
+    <view class="subjects-list" wx:else>
+      <view 
+        wx:for="{{subjectStats}}" 
+        wx:key="name"
+        class="subject-item"
+        bind:tap="onSubjectDetail"
+        data-subject="{{item}}"
+      >
+        <view class="subject-header">
+          <view class="subject-icon {{item.name}}">
+            <van-icon name="{{item.icon}}" size="20px" color="white" />
+          </view>
+          <view class="subject-info">
+            <text class="subject-name">{{item.name}}</text>
+            <text class="subject-desc">{{item.mistakeCount}}道错题 · 掌握率{{item.masteryRate}}%</text>
+          </view>
+        </view>
+        
+        <view class="subject-progress">
+          <view class="progress-container">
+            <view class="progress-bar">
+              <view 
+                class="progress-fill" 
+                style="width: {{item.masteryRate}}%"
+              ></view>
+            </view>
+            <text class="progress-text">{{item.masteryRate}}%</text>
+          </view>
+          
+          <view class="trend-indicator">
+            <van-icon 
+              name="{{item.trend === 'up' ? 'arrow-up' : item.trend === 'down' ? 'arrow-down' : 'minus'}}" 
+              size="12px" 
+              color="{{item.trend === 'up' ? '#10B981' : item.trend === 'down' ? '#EF4444' : '#6B7280'}}"
+            />
+            <text class="trend-text {{item.trend}}">{{item.trendText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 学习建议 -->
+  <view class="study-suggestions">
+    <section-header title="智能建议">
+      <view slot="right">
+        <van-icon name="bulb-o" size="16px" color="#F59E0B" />
+      </view>
+    </section-header>
+    
+    <view class="suggestions-list">
+      <view 
+        wx:for="{{suggestions}}" 
+        wx:key="id"
+        class="suggestion-item {{item.type}}"
+      >
+        <view class="suggestion-icon">
+          <van-icon name="{{item.icon}}" size="20px" color="{{item.iconColor}}" />
+        </view>
+        <view class="suggestion-content">
+          <text class="suggestion-title">{{item.title}}</text>
+          <text class="suggestion-desc">{{item.description}}</text>
+        </view>
+        <view class="suggestion-action" wx:if="{{item.actionText}}">
+          <van-button 
+            size="small" 
+            type="{{item.actionType}}" 
+            plain
+            bind:click="onSuggestionAction"
+            data-suggestion="{{item}}"
+          >
+            {{item.actionText}}
+          </van-button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 成就展示 -->
+  <view class="achievements" wx:if="{{achievements.length > 0}}">
+    <section-header title="本周成就">
+      <view slot="right" class="more-action" bind:tap="onViewAllAchievements">
+        <text>查看全部</text>
+        <van-icon name="arrow" size="12px" />
+      </view>
+    </section-header>
+    
+    <view class="achievements-grid">
+      <view 
+        wx:for="{{achievements}}" 
+        wx:key="id"
+        class="achievement-item {{item.earned ? 'earned' : 'locked'}}"
+      >
+        <view class="achievement-icon">
+          <van-icon name="{{item.icon}}" size="24px" color="{{item.earned ? '#F59E0B' : '#D1D5DB'}}" />
+        </view>
+        <text class="achievement-name">{{item.name}}</text>
+        <text class="achievement-desc">{{item.description}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 导出分享 -->
+  <view class="export-actions">
+    <van-button 
+      type="primary" 
+      size="large" 
+      bind:click="onExportReport"
+      icon="share-o"
+    >
+      分享学习报告
+    </van-button>
+    
+    <van-button 
+      type="default" 
+      size="large" 
+      bind:click="onPrintReport"
+      icon="printer"
+    >
+      打印报告
+    </van-button>
+  </view>
+
+  <!-- 加载状态 -->
+  <van-loading wx:if="{{loading}}" type="spinner" text="生成报告中..." />
+</view> 

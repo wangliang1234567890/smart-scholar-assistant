@@ -1,0 +1,16 @@
+{
+  "navigationBarTitleText": "智能复习",
+  "navigationBarBackgroundColor": "#4F46E5",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#F8FAFC",
+  "enablePullDownRefresh": true,
+  "onReachBottomDistance": 50,
+  "usingComponents": {
+    "van-button": "@vant/weapp/button/index",
+    "van-tag": "@vant/weapp/tag/index",
+    "van-icon": "@vant/weapp/icon/index",
+    "van-empty": "@vant/weapp/empty/index",
+    "van-loading": "@vant/weapp/loading/index",
+    "stats-grid": "/components/stats-grid/index"
+  }
+} 

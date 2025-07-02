@@ -1,0 +1,11 @@
+{
+  "navigationBarTitleText": "智能练习",
+  "navigationBarBackgroundColor": "#4F46E5",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#F8FAFC",
+  "enablePullDownRefresh": true,
+  "onReachBottomDistance": 50,
+  "usingComponents": {
+    "van-circle": "@vant/weapp/circle/index"
+  }
+} 

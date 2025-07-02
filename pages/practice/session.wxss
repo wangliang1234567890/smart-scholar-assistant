@@ -1,0 +1,186 @@
+/* pages/practice/session.wxss */
+.session-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--bg-secondary);
+  padding: 32rpx;
+  box-sizing: border-box;
+}
+
+.loading-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 进度条 */
+.progress-section {
+  margin-bottom: 40rpx;
+}
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+  font-size: 28rpx;
+}
+.progress-count {
+  color: var(--text-primary);
+  font-weight: bold;
+}
+.progress-timer {
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+}
+.progress-timer .van-icon {
+  margin-right: 8rpx;
+}
+
+/* 题目区域 */
+.question-section {
+  flex: 0 0 auto;
+  background-color: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  margin-bottom: 40rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.05);
+  max-height: 480rpx;
+  overflow-y: auto;
+}
+.question-type-badge {
+  display: inline-block;
+  padding: 8rpx 16rpx;
+  background-color: var(--primary-light);
+  color: var(--primary-color);
+  font-size: 24rpx;
+  border-radius: 8rpx;
+  margin-bottom: 24rpx;
+}
+.question-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin-bottom: 16rpx;
+}
+.question-stem {
+  font-size: 32rpx;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+/* 选项区域 */
+.options-section {
+  margin-bottom: 60rpx;
+}
+.option-item {
+  width: 100%;
+  margin-bottom: 24rpx;
+  padding: 24rpx;
+  border: 1px solid #E5E7EB;
+  border-radius: 16rpx;
+  background-color: #FFFFFF;
+  display: flex;
+  align-items: center;
+}
+.option-item:nth-child(odd) {
+  margin-right: 24rpx;
+}
+.option-item .van-radio__label,
+.option-item .van-checkbox__label {
+  flex: 1;
+  margin-left: 24rpx;
+  font-size: 32rpx;
+  color: var(--text-primary);
+}
+
+/* 选中态背景高亮 */
+.option-item.van-radio--checked,
+.option-item.van-checkbox--checked {
+  background-color: #EEF2FF !important;
+  border-color: #4F46E5 !important;
+}
+.option-item.van-radio--checked .van-radio__label,
+.option-item.van-checkbox--checked .van-checkbox__label {
+  color: #4F46E5 !important;
+}
+
+/* 导航按钮 */
+.navigation-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24rpx;
+  margin-top: auto; /* Push to bottom */
+  padding: 24rpx 0;
+}
+.nav-btn {
+  width: 100% !important;
+  height: 96rpx !important;
+  border-radius: 48rpx !important;
+}
+.nav-btn .btn-icon {
+  font-size: 32rpx;
+}
+.nav-btn .van-icon {
+  vertical-align: middle;
+}
+.nav-btn[type="primary"] .btn-icon {
+  margin-left: 8rpx;
+}
+.nav-btn[type="default"] .btn-icon {
+  margin-right: 8rpx;
+}
+
+/* Custom option wrapper */
+.option-wrapper {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  border: 2rpx solid #E5E7EB;
+  border-radius: 16rpx;
+  background: #FFFFFF;
+  margin-bottom: 24rpx;
+  transition: 0.2s;
+}
+.option-wrapper.active {
+  background: #EEF2FF;
+  border-color: #4F46E5;
+}
+.radio-circle {
+  width: 36rpx;
+  height: 36rpx;
+  border: 2rpx solid #C0C4CC;
+  border-radius: 50%;
+  position: relative;
+}
+.radio-circle.checked {
+  border-color: #4F46E5;
+}
+.radio-circle.checked::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 20rpx; height: 20rpx;
+  background: #4F46E5;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.checkbox-square {
+  width: 36rpx;
+  height: 36rpx;
+  border: 2rpx solid #C0C4CC;
+  border-radius: 6rpx;
+  position: relative;
+}
+.checkbox-square.checked {
+  border-color: #4F46E5;
+  background: #4F46E5;
+}
+.option-text {
+  margin-left: 32rpx;
+  font-size: 32rpx;
+  color: var(--text-primary);
+} 

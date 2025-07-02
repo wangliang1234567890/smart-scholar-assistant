@@ -1,256 +1,214 @@
 <!--pages/mistakes/mistakes.wxml-->
 <view class="mistakes-container">
-  <!-- 统计卡片 -->
-  <view class="statistics-section">
-    <view class="statistics-card">
-      <van-grid column-num="4" border="{{false}}">
-        <van-grid-item>
-          <view class="stat-item">
-            <view class="stat-number total">{{statistics.total}}</view>
-            <view class="stat-label">总错题</view>
-          </view>
-        </van-grid-item>
-        <van-grid-item>
-          <view class="stat-item">
-            <view class="stat-number new">{{statistics.new}}</view>
-            <view class="stat-label">新错题</view>
-          </view>
-        </van-grid-item>
-        <van-grid-item>
-          <view class="stat-item">
-            <view class="stat-number reviewing">{{statistics.reviewing}}</view>
-            <view class="stat-label">复习中</view>
-          </view>
-        </van-grid-item>
-        <van-grid-item>
-          <view class="stat-item">
-            <view class="stat-number mastered">{{statistics.mastered}}</view>
-            <view class="stat-label">已掌握</view>
-          </view>
-        </van-grid-item>
-      </van-grid>
+  <!-- 顶部标题 -->
+  <view class="page-header">
+    <text class="page-title">错题本</text>
+  </view>
+
+  <!-- 统计数据区域 -->
+  <view class="stats-section">
+    <view class="stat-item" bindtap="filterByStatus" data-status="all">
+      <view class="stat-icon blue-bg">
+        <image src="/images/icons/white/homework.svg" class="stat-icon-img" />
+      </view>
+      <view class="stat-number">45</view>
+      <view class="stat-label">总错题</view>
+    </view>
+    <view class="stat-item" bindtap="filterByStatus" data-status="new">
+      <view class="stat-icon red-bg">
+        <text class="stat-icon-text">新</text>
+      </view>
+      <view class="stat-number">12</view>
+      <view class="stat-label">待复习</view>
+    </view>
+    <view class="stat-item" bindtap="filterByStatus" data-status="reviewing">
+      <view class="stat-icon orange-bg">
+        <image src="/images/icons/white/practice.svg" class="stat-icon-img" />
+      </view>
+      <view class="stat-number">18</view>
+      <view class="stat-label">复习中</view>
+    </view>
+    <view class="stat-item" bindtap="filterByStatus" data-status="mastered">
+      <view class="stat-icon green-bg">
+        <van-icon name="success" size="20" color="white" />
+      </view>
+      <view class="stat-number">15</view>
+      <view class="stat-label">已掌握</view>
     </view>
   </view>
 
-  <!-- 快捷操作 -->
-  <view class="quick-actions">
-    <van-button 
-      type="primary" 
-      round 
-      size="small"
-      bindtap="startPractice"
-      custom-class="action-btn practice-btn"
-    >
-      <van-icon name="play-circle" size="32rpx" />
-      开始练习
-    </van-button>
-    
-    <van-button 
-      type="info" 
-      round 
-      size="small"
-      bindtap="goToCamera"
-      custom-class="action-btn camera-btn"
-    >
-      <van-icon name="photograph" size="32rpx" />
-      拍照录题
-    </van-button>
-    
-    <van-button 
-      type="default" 
-      round 
-      size="small"
-      bindtap="goToAddManual"
-      custom-class="action-btn add-btn"
-    >
-      <van-icon name="plus" size="32rpx" />
-      手动添加
-    </van-button>
+  <!-- 查看详细分析 -->
+  <view class="analysis-section">
+    <view class="analysis-link" bindtap="viewAnalysis">
+      <van-icon name="bar-chart-o" size="16" color="#4285f4" />
+      <text class="analysis-text">查看详细分析</text>
+    </view>
   </view>
 
-  <!-- 搜索框 -->
-  <view class="search-section" wx:if="{{showSearch}}">
+  <!-- 搜索区域 -->
+  <view class="search-section">
     <van-search
       value="{{searchKeyword}}"
-      placeholder="搜索题目内容或知识点"
-      use-action-slot
-      bindinput="onSearchInput"
-      bindsearch="onSearchConfirm"
-      bindclear="onSearchClear"
-    >
-      <view slot="action" bindtap="toggleSearch">取消</view>
-    </van-search>
+      placeholder="搜索错题..."
+      bind:search="onSearchConfirm"
+      bind:input="onSearchInput"
+      bind:clear="onSearchClear"
+      custom-class="search-field"
+      input-class="search-input"
+    />
   </view>
 
-  <!-- 筛选器 -->
+  <!-- 筛选标签行 -->
   <view class="filter-section">
-    <view class="filter-header">
-      <van-dropdown-menu 
-        active-color="#4F46E5"
-        bind:change="onFilterMenuClick"
-        bind:close="onFilterMenuClose"
-      >
-        <van-dropdown-item 
-          value="{{filters.subject}}" 
-          options="{{subjects}}" 
-          bind:change="onSubjectFilterChange"
-        />
-        <van-dropdown-item 
-          value="{{filters.status}}" 
-          options="{{statuses}}" 
-          bind:change="onStatusFilterChange"
-        />
-        <van-dropdown-item 
-          value="{{filters.difficulty}}" 
-          options="{{difficulties}}" 
-          bind:change="onDifficultyFilterChange"
-        />
-      </van-dropdown-menu>
-      
-      <view class="search-btn" bindtap="toggleSearch">
-        <van-icon name="search" size="40rpx" color="#6B7280" />
+    <scroll-view class="filter-scroll" scroll-x="true" enhanced="true" show-scrollbar="false">
+      <view class="filter-content">
+        <view 
+          class="filter-chip {{filters.subject === 'all' ? 'filter-active' : ''}}"
+          bindtap="setFilter"
+          data-type="subject"
+          data-value="all"
+        >
+          全部 45
+        </view>
+        <view 
+          class="filter-chip {{filters.subject === '数学' ? 'filter-active' : ''}}"
+          bindtap="setFilter"
+          data-type="subject"
+          data-value="数学"
+        >
+          <view class="chip-icon math-chip">
+            <image src="/images/icons/white/brain.svg" class="chip-icon-img" />
+          </view>
+          数学 18
+        </view>
+        <view 
+          class="filter-chip {{filters.subject === '语文' ? 'filter-active' : ''}}"
+          bindtap="setFilter"
+          data-type="subject"
+          data-value="语文"
+        >
+          <view class="chip-icon chinese-chip">
+            <image src="/images/icons/white/chinese.svg" class="chip-icon-img" />
+          </view>
+          语文
+        </view>
+        <view 
+          class="filter-chip {{filters.subject === '英语' ? 'filter-active' : ''}}"
+          bindtap="setFilter"
+          data-type="subject"
+          data-value="英语"
+        >
+          <view class="chip-icon english-chip">
+            <image src="/images/icons/white/english.svg" class="chip-icon-img" />
+          </view>
+          英语
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 错题列表 -->
+  <view class="list-section">
+    <!-- 加载状态 -->
+    <view class="loading-state" wx:if="{{loading && filteredMistakes.length === 0}}">
+      <van-skeleton title row="2" />
+      <van-skeleton title row="2" />
+      <van-skeleton title row="2" />
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:elif="{{!loading && filteredMistakes.length === 0}}">
+      <image class="empty-image" src="/images/empty-state-home.svg" mode="widthFix" />
+      <view class="empty-title">暂无错题</view>
+      <view class="empty-desc">快去录入你的第一道错题吧！</view>
+      <van-button round type="primary" size="small" bind:tap="goToCamera" custom-class="empty-btn">
+        <van-icon name="photograph" /> 拍照录题
+      </van-button>
+    </view>
+
+    <!-- 错题列表 -->
+    <view class="mistake-list" wx:else>
+      <!-- 第一个错题 - 数学题 -->
+      <view class="mistake-item" bindtap="onMistakeClick" data-id="1">
+        <view class="mistake-icon">
+          <view class="subject-icon math-icon">
+            <image src="/images/icons/white/brain.svg" class="subject-icon-img" />
+          </view>
+        </view>
+        <view class="mistake-info">
+          <view class="mistake-title-row">
+            <text class="mistake-question">计算：25 × 4 = ?</text>
+            <view class="mistake-actions" bindtap="showMistakeActions" data-id="1" catchtap="true">
+              <van-icon name="ellipsis" size="16" color="#c8c9cc" />
+            </view>
+          </view>
+          <view class="mistake-meta-row">
+            <view class="difficulty-badge easy">简单</view>
+            <text class="mistake-date">2024-01-15</text>
+          </view>
+          <view class="mistake-review-row">
+            <text class="review-count">复习 2 次</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 第二个错题 - 语文题 -->
+      <view class="mistake-item" bindtap="onMistakeClick" data-id="2">
+        <view class="mistake-icon">
+          <view class="subject-icon chinese-icon">
+            <image src="/images/icons/white/chinese.svg" class="subject-icon-img" />
+          </view>
+        </view>
+        <view class="mistake-info">
+          <view class="mistake-title-row">
+            <text class="mistake-question">下列词语中，字音完全正确的一组是?</text>
+            <view class="mistake-actions" bindtap="showMistakeActions" data-id="2" catchtap="true">
+              <van-icon name="ellipsis" size="16" color="#c8c9cc" />
+            </view>
+          </view>
+          <view class="mistake-meta-row">
+            <view class="difficulty-badge medium">中等</view>
+            <text class="mistake-date">2024-01-14</text>
+          </view>
+          <view class="mistake-review-row">
+            <text class="review-count">复习 1 次</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 第三个错题 - 英语题 -->
+      <view class="mistake-item" bindtap="onMistakeClick" data-id="3">
+        <view class="mistake-icon">
+          <view class="subject-icon english-icon">
+            <image src="/images/icons/white/english.svg" class="subject-icon-img" />
+          </view>
+        </view>
+        <view class="mistake-info">
+          <view class="mistake-title-row">
+            <text class="mistake-question">Choose the correct answer: I ___ to school yesterday.</text>
+            <view class="mistake-actions" bindtap="showMistakeActions" data-id="3" catchtap="true">
+              <van-icon name="ellipsis" size="16" color="#c8c9cc" />
+            </view>
+          </view>
+          <view class="mistake-meta-row">
+            <view class="difficulty-badge medium">中等</view>
+            <text class="mistake-date">2024-01-13</text>
+          </view>
+          <view class="mistake-review-row">
+            <text class="review-count">复习 0 次</text>
+          </view>
+        </view>
       </view>
     </view>
   </view>
 
-  <!-- 错题列表 -->
-  <view class="mistakes-list">
-    <!-- 加载状态 -->
-    <van-loading 
-      wx:if="{{loading && mistakes.length === 0}}"
-      type="spinner" 
-      size="60rpx"
-      custom-class="loading-center"
-    >
-      加载中...
-    </van-loading>
-
-    <!-- 空状态 -->
-    <van-empty 
-      wx:elif="{{!loading && mistakes.length === 0}}"
-      image="search"
-      description="暂无错题记录"
-    >
-      <van-button 
-        round 
-        type="primary" 
-        size="small"
-        bindtap="goToCamera"
-        custom-class="empty-action-btn"
-      >
-        立即录题
-      </van-button>
-    </van-empty>
-
-    <!-- 错题卡片列表 -->
-    <view wx:else>
-      <van-swipe-cell 
-        wx:for="{{mistakes}}" 
-        wx:key="_id"
-        right-width="{{160}}"
-        custom-class="mistake-swipe-cell"
-      >
-        <!-- 错题卡片内容 -->
-        <view 
-          class="mistake-card" 
-          bindtap="onMistakeClick"
-          data-id="{{item._id}}"
-        >
-          <!-- 卡片头部 -->
-          <view class="mistake-header">
-            <view class="mistake-meta">
-              <van-tag 
-                type="primary" 
-                size="small"
-                custom-class="subject-tag"
-              >
-                {{item.subject}}
-              </van-tag>
-              <van-tag 
-                plain
-                size="small"
-                color="{{getStatusColor(item.status)}}"
-                custom-class="status-tag"
-              >
-                {{getStatusText(item.status)}}
-              </van-tag>
-              <text class="difficulty-text">{{getDifficultyText(item.difficulty)}}</text>
-            </view>
-            <text class="create-time">{{formatDate(item.createTime)}}</text>
-          </view>
-
-          <!-- 题目内容 -->
-          <view class="mistake-content">
-            <view class="question-preview">{{item.question}}</view>
-            <view class="answer-preview" wx:if="{{item.answer}}">
-              <text class="answer-label">答案：</text>
-              <text class="answer-text">{{item.answer}}</text>
-            </view>
-          </view>
-
-          <!-- 知识点标签 -->
-          <view class="knowledge-points" wx:if="{{item.knowledgePoints && item.knowledgePoints.length > 0}}">
-            <van-tag 
-              wx:for="{{item.knowledgePoints}}" 
-              wx:for-item="point"
-              wx:key="index"
-              type="default" 
-              size="small"
-              custom-class="knowledge-tag"
-            >
-              {{point}}
-            </van-tag>
-          </view>
-
-          <!-- 复习信息 -->
-          <view class="review-info" wx:if="{{item.reviewCount > 0}}">
-            <text class="review-count">已复习 {{item.reviewCount}} 次</text>
-            <text class="next-review" wx:if="{{item.nextReviewTime}}">
-              下次复习：{{formatDate(item.nextReviewTime)}}
-            </text>
-          </view>
-        </view>
-
-        <!-- 滑动操作按钮 -->
-        <view slot="right" class="swipe-actions">
-          <view 
-            class="swipe-btn mastered-btn"
-            bindtap="markAsMastered"
-            data-id="{{item._id}}"
-            wx:if="{{item.status !== 'mastered'}}"
-          >
-            <van-icon name="completed" size="40rpx" />
-            <text>掌握</text>
-          </view>
-          <view 
-            class="swipe-btn delete-btn"
-            bindtap="onDeleteMistake"
-            data-id="{{item._id}}"
-            data-question="{{item.question}}"
-          >
-            <van-icon name="delete" size="40rpx" />
-            <text>删除</text>
-          </view>
-        </view>
-      </van-swipe-cell>
-    </view>
-
-    <!-- 加载更多 -->
-    <view class="load-more" wx:if="{{!loading && mistakes.length > 0}}">
-      <van-loading 
-        wx:if="{{hasMore}}"
-        type="spinner" 
-        size="40rpx"
-        custom-class="load-more-loading"
-      >
-        加载更多...
-      </van-loading>
-      <text wx:else class="no-more-text">没有更多了</text>
-    </view>
-  </view>
-
-  <!-- 悬浮添加按钮 -->
-  <view class="floating-add-btn" bindtap="goToCamera">
-    <van-icon name="plus" size="48rpx" color="white" />
-  </view>
+  <!-- 操作弹窗 -->
+  <van-action-sheet
+    show="{{showActionSheet}}"
+    actions="{{actionSheetActions}}"
+    bind:select="onActionSelect"
+    bind:close="onActionSheetClose"
+    bind:cancel="onActionSheetClose"
+    cancel-text="取消"
+  />
 </view> 

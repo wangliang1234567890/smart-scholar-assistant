@@ -26,9 +26,9 @@
               <view wx:for="{{week.days}}" wx:key="fullDate" class="date-item {{item.fullDate === selectedFullDate ? 'active' : ''}}" bind:tap="onDateSelect" data-date="{{item.fullDate}}">
                 <view class="date-number">{{item.date}}</view>
                 <view wx:if="{{item.hasCourse}}" class="course-dot"></view>
-              </view>
-            </view>
-          </view>
+        </view>
+      </view>
+    </view>
         </swiper-item>
       </block>
     </swiper>
@@ -36,17 +36,17 @@
     <view class="all-courses-entry" bind:tap="showCalendar">
       <text>全部课程</text>
       <van-icon name="arrow" />
-    </view>
+  </view>
 
-    <!-- 今日课程 -->
+  <!-- 今日课程 -->
     <view class="today-schedule-section">
-      <view class="section-header">
+    <view class="section-header">
         <image class="section-icon" src="/images/icons/stats-icon.svg" />
         <view class="section-title">今日课程 ({{currentDayName}})</view>
-      </view>
-
+    </view>
+    
       <block wx:if="{{todayCourses.length > 0}}">
-        <!-- 课程列表 -->
+    <!-- 课程列表 -->
         <view class="course-list">
           <view wx:for="{{todayCourses}}" wx:key="id" class="course-card">
             <view class="course-time">
@@ -68,8 +68,8 @@
             <text class="empty-icon">+</text>
           </view>
           <view class="empty-text">今天还没有安排课程</view>
-          <van-button
-            type="primary"
+          <van-button 
+            type="primary" 
             round
             custom-class="add-course-btn"
             bind:tap="navigateToAddCourse"
@@ -83,7 +83,7 @@
       </block>
     </view>
   </view>
-  
+
   <!-- 全屏日历 -->
   <van-calendar
     show="{{ showCalendar }}"

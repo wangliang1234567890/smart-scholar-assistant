@@ -114,7 +114,7 @@ Page({
       }
     });
   },
-  
+
   // 生成单周的数据
   generateWeekData(baseDate) {
     const days = ['一', '二', '三', '四', '五', '六', '日'];
@@ -122,7 +122,7 @@ Page({
     const startOfWeek = new Date(baseDate);
     const dayOffset = startOfWeek.getDay() === 0 ? -6 : 1 - startOfWeek.getDay();
     startOfWeek.setDate(startOfWeek.getDate() + dayOffset);
-
+    
     for (let i = 0; i < 7; i++) {
       const date = new Date(startOfWeek);
       date.setDate(startOfWeek.getDate() + i);

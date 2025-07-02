@@ -3,18 +3,20 @@
     "pages/login/login",
     "pages/home/home",
     "pages/mistakes/mistakes",
-    "pages/camera/camera",
     "pages/practice/practice",
+    "pages/practice/session",
+    "pages/practice/result",
+    "pages/practice/config",
     "pages/schedule/schedule",
+    "pages/profile/profile",
+    "pages/settings/settings",
     "pages/review/review",
     "pages/report/report",
-    "pages/profile/profile",
+    "pages/camera/camera",
     "pages/mistakes/add",
     "pages/mistakes/detail",
-    "pages/camera-result/camera-result",
-    "pages/practice/config",
-    "pages/practice/result",
-    "pages/settings/settings"
+    "pages/schedule/add",
+    "pages/schedule/detail"
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -31,38 +33,29 @@
     "color": "#6B7280",
     "selectedColor": "#4F46E5",
     "backgroundColor": "#FFFFFF",
-    "borderStyle": "black",
+    "borderStyle": "white",
     "position": "bottom",
+    "custom": true,
     "list": [
       {
         "pagePath": "pages/home/home",
-        "text": "首页",
-        "iconPath": "images/tab/home.png",
-        "selectedIconPath": "images/tab/home-active.png"
+        "text": "首页"
       },
       {
         "pagePath": "pages/mistakes/mistakes",
-        "text": "错题本",
-        "iconPath": "images/tab/mistakes.png",
-        "selectedIconPath": "images/tab/mistakes-active.png"
+        "text": "错题本"
       },
       {
         "pagePath": "pages/practice/practice",
-        "text": "练习",
-        "iconPath": "images/tab/practice.png",
-        "selectedIconPath": "images/tab/practice-active.png"
+        "text": "练习"
       },
       {
         "pagePath": "pages/schedule/schedule",
-        "text": "课程表",
-        "iconPath": "images/tab/schedule.png",
-        "selectedIconPath": "images/tab/schedule-active.png"
+        "text": "课程表"
       },
       {
         "pagePath": "pages/profile/profile",
-        "text": "我的",
-        "iconPath": "images/tab/profile.png",
-        "selectedIconPath": "images/tab/profile-active.png"
+        "text": "我的"
       }
     ]
   },
@@ -71,43 +64,7 @@
     "downloadFile": 10000
   },
   "debug": false,
-  "cloud": true,
-  "permission": {
-    "scope.userLocation": {
-      "desc": "你的位置信息将用于小程序定位"
-    },
-    "scope.camera": {
-      "desc": "需要使用你的摄像头进行拍照录题"
-    },
-    "scope.album": {
-      "desc": "需要访问你的相册选择图片"
-    }
-  },
-  "requiredPrivateInfos": [
-    "chooseLocation",
-    "getLocation"
-  ],
   "lazyCodeLoading": "requiredComponents",
-  "usingComponents": {
-    "van-button": "@vant/weapp/button/index",
-    "van-card": "@vant/weapp/card/index",
-    "van-cell": "@vant/weapp/cell/index",
-    "van-cell-group": "@vant/weapp/cell-group/index",
-    "van-icon": "@vant/weapp/icon/index",
-    "van-image": "@vant/weapp/image/index",
-    "van-loading": "@vant/weapp/loading/index",
-    "van-empty": "@vant/weapp/empty/index",
-    "van-toast": "@vant/weapp/toast/index",
-    "van-dialog": "@vant/weapp/dialog/index",
-    "van-dropdown-menu": "@vant/weapp/dropdown-menu/index",
-    "van-dropdown-item": "@vant/weapp/dropdown-item/index",
-    "van-field": "@vant/weapp/field/index",
-    "van-picker": "@vant/weapp/picker/index",
-    "van-popup": "@vant/weapp/popup/index",
-    "van-tag": "@vant/weapp/tag/index",
-    "van-tabs": "@vant/weapp/tabs/index",
-    "van-tab": "@vant/weapp/tab/index"
-  },
   "style": "v2",
   "sitemapLocation": "sitemap.json"
 } 

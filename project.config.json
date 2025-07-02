@@ -1,24 +1,26 @@
 {
   "description": "智能学霸小助手 - 专为小学生设计的AI学习辅助工具",
+  "miniprogramRoot": "./",
   "packOptions": {
     "ignore": [
       {
-        "type": "file",
-        "value": ".eslintrc.js"
+        "value": ".eslintrc.js",
+        "type": "file"
       },
       {
-        "type": "file", 
-        "value": ".gitignore"
+        "value": ".gitignore",
+        "type": "file"
       },
       {
-        "type": "file",
-        "value": "README.md"
+        "value": "README.md",
+        "type": "file"
       },
       {
-        "type": "folder",
-        "value": "docs"
+        "value": "docs",
+        "type": "folder"
       }
-    ]
+    ],
+    "include": []
   },
   "setting": {
     "urlCheck": false,
@@ -56,20 +58,17 @@
     "disableUseStrict": false,
     "minifyWXML": true,
     "showES6CompileOption": false,
-    "useCompilerPlugins": false
+    "useCompilerPlugins": false,
+    "compileWorklet": false,
+    "localPlugins": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true
   },
   "compileType": "miniprogram",
-  "libVersion": "2.19.4",
-  "appid": "wx1234567890abcdef",
+  "libVersion": "3.8.10",
+  "appid": "wxa69518e6c8e2a20b",
   "projectname": "smart-study-assistant",
-  "debugOptions": {
-    "hidedInDevtools": []
-  },
-  "scripts": {},
-  "staticServerOptions": {
-    "baseURL": "",
-    "servePath": ""
-  },
   "isGameTourist": false,
   "condition": {
     "search": {
@@ -121,5 +120,7 @@
         }
       ]
     }
-  }
-} 
+  },
+  "simulatorPluginLibVersion": {},
+  "editorSetting": {}
+}

@@ -1,101 +1,118 @@
 /* pages/login/login.wxss */
 
 .login-container {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   position: relative;
+  height: 100vh;
+  background: linear-gradient(180deg, #6B73FF 0%, #4A90E2 100%);
   display: flex;
   flex-direction: column;
-  padding: var(--spacing-lg);
-  box-sizing: border-box;
-}
-
-/* 背景装饰 */
-.background-decoration {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-  pointer-events: none;
 }
 
-.decoration-circle {
+/* Decorative Shapes */
+.shape {
   position: absolute;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
-  animation: float 6s ease-in-out infinite;
+}
+.shape1 {
+  width: 400rpx;
+  height: 400rpx;
+  top: -100rpx;
+  left: -150rpx;
+}
+.shape2 {
+  width: 300rpx;
+  height: 300rpx;
+  bottom: 200rpx;
+  right: -100rpx;
+}
+.shape3 {
+  width: 150rpx;
+  height: 150rpx;
+  bottom: 50rpx;
+  left: 50rpx;
 }
 
-.circle-1 {
-  width: 120rpx;
-  height: 120rpx;
-  top: 10%;
-  right: 20%;
-  animation-delay: 0s;
-}
-
-.circle-2 {
-  width: 80rpx;
-  height: 80rpx;
-  top: 30%;
-  left: 10%;
-  animation-delay: 2s;
-}
-
-.circle-3 {
-  width: 60rpx;
-  height: 60rpx;
-  bottom: 20%;
-  right: 15%;
-  animation-delay: 4s;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-20px) rotate(180deg);
-  }
-}
-
-/* Logo区域 */
-.logo-section {
-  flex: 1;
+.content-wrapper {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  margin-top: var(--spacing-xl);
+  width: 100%;
+  padding: 0 80rpx;
+  box-sizing: border-box;
 }
 
-.logo-container {
-  width: 160rpx;
-  height: 160rpx;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 50%;
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 120rpx;
+}
+.logo {
+  width: 180rpx;
+  height: 180rpx;
+  margin-bottom: 32rpx;
+}
+.app-title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+}
+.app-subtitle {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 16rpx;
+}
+
+/* Actions */
+.actions {
+  width: 100%;
+}
+.login-btn {
+  width: 100%;
+  height: 96rpx;
+  line-height: 96rpx;
+  border-radius: 48rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  border: none;
+  margin-bottom: 32rpx;
+  color: var(--primary-color);
+  background-color: #FFFFFF;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+}
+.login-btn.wechat {
+  color: #FFFFFF;
+  background-color: #07C160;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: var(--spacing-lg);
-  box-shadow: var(--shadow-lg);
+}
+.btn-icon {
+  margin-right: 16rpx;
+  font-size: 40rpx !important;
+}
+.login-btn.guest {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
 }
 
-.app-name {
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
-  color: white;
-  margin-bottom: var(--spacing-sm);
-  text-align: center;
+/* Footer */
+.footer {
+  margin-top: 80rpx;
 }
-
-.app-slogan {
-  font-size: var(--font-size-base);
-  color: rgba(255, 255, 255, 0.8);
-  text-align: center;
-  margin-bottom: var(--spacing-xl);
+.agreement-text {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+.link {
+  color: #FFFFFF;
+  text-decoration: underline;
 }
 
 /* 功能介绍 */
@@ -138,49 +155,6 @@
   margin-bottom: var(--spacing-lg);
 }
 
-.agreement-text {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  line-height: 1.5;
-}
-
-.link-text {
-  color: var(--color-primary);
-  text-decoration: underline;
-}
-
-.login-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-/* 自定义按钮样式 */
-.wx-login-btn {
-  height: 96rpx !important;
-  background: var(--color-primary) !important;
-  border: none !important;
-}
-
-.login-btn-text {
-  margin-left: var(--spacing-sm);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-medium);
-}
-
-.guest-login-btn {
-  height: 80rpx !important;
-  background: var(--color-gray-50) !important;
-  border: 1px solid var(--color-gray-200) !important;
-}
-
-.guest-btn-text {
-  margin-left: var(--spacing-xs);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-}
-
-/* 底部说明 */
 .footer-section {
   margin-top: var(--spacing-lg);
   text-align: center;
@@ -235,7 +209,7 @@
     padding: var(--spacing-md);
   }
   
-  .app-name {
+  .app-title {
     font-size: var(--font-size-xl);
   }
   

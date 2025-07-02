@@ -1,0 +1,41 @@
+<!--pages/settings/settings.wxml-->
+<view class="settings-container">
+  <van-cell-group inset title="账号设置">
+    <van-cell title="编辑个人资料" is-link url="/pages/profile/edit" />
+    <van-cell title="账号与安全" is-link url="/pages/settings/account" />
+    <van-cell title="孩子管理" is-link url="/pages/child/management" />
+  </van-cell-group>
+  
+  <van-cell-group inset title="通用设置">
+    <van-cell title="学习偏好设置" is-link url="/pages/settings/preferences" />
+    <van-cell title="通知与提醒" is-link url="/pages/settings/notifications" />
+    <van-cell title="外观与主题" is-link url="/pages/settings/theme" />
+  </van-cell-group>
+  
+  <van-cell-group inset title="其他">
+    <van-cell title="数据与隐私" is-link url="/pages/settings/privacy" />
+    <van-cell title="帮助中心" is-link url="/pages/help/center" />
+    <van-cell title="关于我们" is-link url="/pages/about/about" />
+    <van-cell title="清除缓存" bind:click="clearCache" />
+  </van-cell-group>
+</view>
+
+<!-- 弹出层 -->
+<van-popup show="{{showTimePicker}}" position="bottom" bind:close="hideTimePicker">
+  <van-datetime-picker 
+    type="time" 
+    value="{{currentTime}}" 
+    bind:confirm="confirmTime"
+    bind:cancel="hideTimePicker"
+    title="设置提醒时间"
+  />
+</van-popup>
+
+<van-popup show="{{showGoalPicker}}" position="bottom" bind:close="hideGoalPicker">
+  <van-picker 
+    columns="{{goalColumns}}" 
+    bind:confirm="confirmGoal"
+    bind:cancel="hideGoalPicker"
+    title="设置每日目标"
+  />
+</van-popup> 

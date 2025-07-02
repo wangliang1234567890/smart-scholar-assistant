@@ -1,0 +1,67 @@
+<!--pages/mistakes/detail.wxml-->
+<view class="detail-container">
+  <block wx:if="{{isLoading}}">
+    <view class="loading-wrapper">
+      <van-loading type="spinner" size="32px">加载中...</van-loading>
+    </view>
+  </block>
+  <block wx:elif="{{!mistake}}">
+    <van-empty description="错题不存在或已被删除" />
+  </block>
+  <block wx:else>
+    <!-- 题目内容 -->
+    <view class="card question-card">
+      <view class="card-header">
+        <van-icon name="question-o" class="card-header-icon" />
+        <text>题目内容</text>
+      </view>
+      <view class="question-stem">{{mistake.question}}</view>
+      <image 
+        wx:if="{{mistake.imageUrl}}" 
+        class="question-image" 
+        src="{{mistake.imageUrl}}" 
+        mode="widthFix"
+        show-menu-by-longpress
+      />
+    </view>
+
+    <!-- 答案与解析 -->
+    <view class="card answer-card">
+      <view class="card-header">
+        <van-icon name="passed" class="card-header-icon" />
+        <text>答案与解析</text>
+      </view>
+      <view class="answer-content">
+        <view class="answer-label">正确答案：</view>
+        <view class="answer-text">{{mistake.answer}}</view>
+      </view>
+      <van-divider />
+      <view class="analysis-content">
+        <view class="analysis-label">题目解析：</view>
+        <view class="analysis-text">{{mistake.analysis || '暂无解析'}}</view>
+      </view>
+    </view>
+
+    <!-- 详细信息 -->
+    <van-cell-group title="详细信息" inset>
+      <van-cell title="所属学科" value="{{mistake.subject}}" />
+      <van-cell title="题目难度">
+        <van-tag type="primary" round>{{mistake.difficultyText}}</van-tag>
+      </van-cell>
+      <van-cell title="掌握状态">
+        <van-tag type="{{mistake.status === 'mastered' ? 'success' : 'warning'}}" round>{{mistake.statusText}}</van-tag>
+      </van-cell>
+      <van-cell title="录入时间" value="{{mistake.createTime}}" />
+      <van-cell title="复习次数" value="{{mistake.reviewCount}} 次" />
+      <van-cell title="上次复习" value="{{mistake.lastReviewTime || '暂无记录'}}" />
+      <van-cell title="下次复习" value="{{mistake.nextReviewTime || '未安排'}}" />
+    </van-cell-group>
+    
+    <!-- 操作按钮 -->
+    <view class="action-buttons">
+      <van-button icon="delete-o" class="action-btn" plain type="danger" bind:tap="handleDelete">删除</van-button>
+      <van-button icon="clock-o" class="action-btn" plain type="warning" bind:tap="handleAddToReview">加入复习计划</van-button>
+      <van-button icon="edit" class="action-btn" type="primary" bind:tap="handleEdit">编辑</van-button>
+    </view>
+  </block>
+</view>

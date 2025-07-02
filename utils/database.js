@@ -417,6 +417,29 @@ class DatabaseManager {
     handledError.code = error.code || 'UNKNOWN_ERROR';
     return handledError;
   }
+
+  /**
+   * 添加课程
+   * @param {Object} courseData - 课程数据
+   * @returns {Promise<Object>} 添加结果
+   */
+  async addCourse(courseData) {
+    try {
+      const result = await this.db.collection(this.collections.COURSES).add({
+        data: {
+          ...courseData,
+          createTime: new Date()
+        }
+      });
+      return {
+        success: true,
+        data: result
+      };
+    } catch (error) {
+      console.error('添加课程失败:', error);
+      throw this.handleError(error, '添加课程失败');
+    }
+  }
 }
 
 export default new DatabaseManager(); 

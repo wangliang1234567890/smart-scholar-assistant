@@ -1,0 +1,87 @@
+/* pages/practice/result.wxss */
+.result-container {
+  min-height: 100vh;
+  background-color: #F8F9FA;
+}
+
+.loading-container {
+  padding-top: 200rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 结果总览 */
+.summary-section {
+  background-color: #FFFFFF;
+  padding: 60rpx 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-bottom: 1px solid #EBEDF0;
+}
+.summary-text {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: var(--text-primary);
+  margin-top: 32rpx;
+}
+.summary-stats {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  margin-top: 40rpx;
+}
+.stat-item {
+  display: flex;
+  flex-direction: column;
+}
+.stat-value {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+.stat-label {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  margin-top: 8rpx;
+}
+
+/* 题目列表 */
+.list-section {
+  margin-top: 24rpx;
+}
+.van-cell-group__title {
+  background-color: #F8F9FA !important;
+}
+.van-tag {
+  margin-left: auto;
+}
+
+/* 操作按钮 */
+.action-section {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24rpx;
+  background-color: #FFFFFF;
+  padding: 24rpx 40rpx;
+  padding-bottom: calc(24rpx + constant(safe-area-inset-bottom));
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  border-top: 1px solid #EBEDF0;
+}
+.action-btn {
+  width: 100% !important;
+  height: 96rpx !important;
+  border-radius: 48rpx !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.action-btn .btn-icon {
+  margin-right: 8rpx;
+} 

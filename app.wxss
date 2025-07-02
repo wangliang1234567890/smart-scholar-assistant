@@ -1,29 +1,84 @@
-/* 智能学霸小助手 - 全局样式 */
+/* 智能学霸小助手 - 全局样式表 */
 
-/* 引入Vant样式 */
-@import '@vant/weapp/common/index.wxss';
+/* 1. 全新的色彩体系 (New Color Palette) */
+:root {
+  /* 主色调 (Primary Colors) */
+  --primary-color: #4A90E2;       /* 活力蓝 (Vibrant Blue) */
+  --primary-color-light: #E9F3FE; /* 浅天蓝 (Light Sky Blue) */
+  --primary-color-dark: #3A77C2;  /* 深邃蓝 (Deep Blue) */
+
+  /* 辅助色 (Accent Colors) */
+  --accent-color-yellow: #F8D568; /* 阳光黄 (Sunny Yellow) */
+  --accent-color-green: #50E3C2;  /* 薄荷绿 (Mint Green) */
+  --accent-color-red: #F76D6D;      /* 珊瑚红 (Coral Red) */
+  --accent-color-purple: #8B5CF6; /* 浅紫 (Soft Purple) */
+  --accent-color-orange: #F59E0B; /* 活力橙 (Vibrant Orange) */
+  --accent-color-indigo: #2563EB; /* 靛蓝 (Indigo) */
+  
+  /* 中性色 (Neutral Colors) */
+  --text-primary: #333333;      /* 主文字 - 深灰 (Dark Gray) */
+  --text-secondary: #888888;    /* 次要文字 - 中灰 (Medium Gray) */
+  --text-light: #FFFFFF;        /* 亮色文字 - 白色 (White) */
+  --divider-color: #F0F0F0;     /* 分割线 - 浅灰 (Light Gray) */
+  
+  /* 背景色 (Background Colors) */
+  --bg-primary: #FFFFFF;        /* 卡片/内容背景 - 白色 (White) */
+  --bg-secondary: #F7F8FA;      /* 页面背景 - 极浅灰 (Off-white) */
+}
+
+/* 2. 全局基础样式 (Global Base Styles) */
+page {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 28rpx;
+  line-height: 1.6;
+}
+
+view, text {
+  box-sizing: border-box;
+}
+
+/* 3. 通用布局与卡片样式 (Utility & Card Styles) */
+.card {
+  background-color: var(--bg-primary);
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+  margin: 24rpx;
+  padding: 32rpx;
+  overflow: hidden;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 4. 移除旧的原子化CSS (可根据需要逐步替换) */
+/* 旧的 .flex, .text-*, .m-*, .p-* 等可以暂时保留以兼容旧页面 */
+/* 但新页面和重构页面推荐使用BEM风格的组件化样式 */
 
 /* 全局变量定义 */
 page {
   /* 主题色彩 */
-  --primary-color: #4F46E5;
-  --primary-light: #6366F1;
-  --primary-dark: #3730A3;
   --success-color: #10B981;
   --warning-color: #F59E0B;
   --danger-color: #EF4444;
   --info-color: #3B82F6;
 
   /* 文字颜色 */
-  --text-primary: #1F2937;
-  --text-secondary: #6B7280;
   --text-tertiary: #9CA3AF;
   --text-white: #FFFFFF;
   --text-disabled: #D1D5DB;
 
   /* 背景颜色 */
-  --bg-primary: #FFFFFF;
-  --bg-secondary: #F8FAFC;
   --bg-tertiary: #F1F5F9;
   --bg-overlay: rgba(0, 0, 0, 0.5);
 
@@ -62,33 +117,21 @@ page {
 }
 
 /* 全局基础样式 */
-* {
-  box-sizing: border-box;
-}
-
 page {
-  background-color: var(--bg-secondary);
+  box-sizing: border-box;
   color: var(--text-primary);
   font-size: var(--font-md);
   line-height: 1.5;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
+view {
+  box-sizing: border-box;
+}
+
 /* 通用布局类 */
 .flex {
   display: flex;
-}
-
-.flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.flex-between {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
 }
 
 .flex-around {
@@ -321,14 +364,6 @@ page {
 }
 
 /* 卡片样式 */
-.card {
-  background: var(--bg-primary);
-  border-radius: var(--radius-large);
-  padding: var(--space-lg);
-  box-shadow: var(--shadow-light);
-  margin-bottom: var(--space-md);
-}
-
 .card-header {
   font-size: var(--font-lg);
   font-weight: bold;
@@ -364,8 +399,8 @@ page {
 }
 
 .van-button--primary:active {
-  background-color: var(--primary-dark);
-  border-color: var(--primary-dark);
+  background-color: var(--primary-color-dark);
+  border-color: var(--primary-color-dark);
 }
 
 /* 标签栏样式覆盖 */

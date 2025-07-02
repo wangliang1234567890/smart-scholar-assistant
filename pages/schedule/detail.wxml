@@ -1,0 +1,51 @@
+<!--pages/schedule/detail.wxml-->
+<view class="detail-container">
+  <block wx:if="{{isLoading}}">
+    <view class="loading-wrapper">
+      <van-loading type="spinner" size="32px">加载中...</van-loading>
+    </view>
+  </block>
+  <block wx:elif="{{!course}}">
+    <van-empty description="课程不存在或已被删除" />
+  </block>
+  <block wx:else>
+    <!-- 课程核心信息 -->
+    <view class="card header-card">
+      <view class="course-title">{{course.name}}</view>
+      <van-cell icon="manager-o" title="任课老师" value="{{course.teacher}}" />
+      <van-cell icon="location-o" title="上课地点" value="{{course.location}}" />
+      <van-cell icon="underway-o" title="上课时间" value="{{course.startTime}} - {{course.endTime}}" />
+      <van-cell icon="label-o" title="课程状态">
+        <van-tag type="primary">{{course.statusText}}</van-tag>
+      </van-cell>
+    </view>
+    
+    <!-- 课后笔记 -->
+    <view class="card notes-card">
+      <view class="card-header">
+        <text>课后笔记</text>
+        <van-button size="small" type="primary" plain bind:tap="editNotes">编辑笔记</van-button>
+      </view>
+      <view class="notes-content">
+        {{course.notes || '暂无笔记，点击右上角编辑。'}}
+      </view>
+    </view>
+    
+    <!-- 课程作业 -->
+    <view class="card homework-card">
+      <view class="card-header">
+        <text>课程作业</text>
+        <van-button size="small" type="primary" plain bind:tap="manageHomework">管理作业</van-button>
+      </view>
+      <view class="homework-content">
+        {{course.homework || '暂无作业信息。'}}
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-buttons">
+      <van-button icon="delete-o" class="action-btn" plain type="danger" bind:tap="handleDelete">删除课程</van-button>
+      <van-button icon="edit" class="action-btn" type="primary" bind:tap="handleEdit">编辑课程</van-button>
+    </view>
+  </block>
+</view> 

@@ -1,6 +1,9 @@
+import { store } from './store/index';
+
 // 智能学霸小助手 - 应用入口文件
 App({
   globalData: {
+    store: store, // 挂载store
     userInfo: null,
     systemInfo: null,
     theme: 'light',
@@ -9,6 +12,8 @@ App({
   
   onLaunch(options) {
     console.log('小程序启动:', options);
+    // 从缓存加载用户信息到store
+    this.globalData.store.loadUserFromCache();
     // 获取系统信息
     this.getSystemInfo();
     // 检查更新
@@ -17,6 +22,8 @@ App({
     this.initCloud();
     // 初始化主题
     this.initTheme();
+    
+    // 其他启动逻辑...
   },
 
   onShow(options) {

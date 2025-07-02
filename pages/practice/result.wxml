@@ -1,0 +1,64 @@
+<!--pages/practice/result.wxml-->
+<view class="result-container">
+  <block wx:if="{{isLoading}}">
+    <view class="loading-container">
+      <van-loading type="spinner" size="32px">报告生成中...</van-loading>
+    </view>
+  </block>
+  <block wx:else>
+    <!-- 结果总览 -->
+    <view class="summary-section">
+      <van-circle 
+        value="{{ report.accuracy }}" 
+        text="得分：{{report.score}}" 
+        size="150" 
+        stroke-width="10"
+        color="{{ gradientColor }}" />
+      <view class="summary-text">{{report.summaryText}}</view>
+      <view class="summary-stats">
+        <view class="stat-item">
+          <text class="stat-value">{{report.correctCount}}</text>
+          <text class="stat-label">答对</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-value">{{report.incorrectCount}}</text>
+          <text class="stat-label">答错</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-value">{{report.totalCount}}</text>
+          <text class="stat-label">总题数</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 题目列表 -->
+    <view class="list-section">
+      <van-cell-group title="答题详情">
+        <van-cell 
+          wx:for="{{report.questions}}" 
+          wx:key="id" 
+          title="第{{index + 1}}题: {{item.title}}"
+          is-link
+          data-id="{{item.id}}"
+          bind:click="viewQuestionDetail"
+        >
+          <van-tag type="{{item.isCorrect ? 'success' : 'danger'}}">
+            {{item.isCorrect ? '答对' : '答错'}}
+          </van-tag>
+        </van-cell>
+      </van-cell-group>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-section">
+      <van-button plain type="primary" class="action-btn" bind:tap="reviewMistakes">
+        <van-icon name="warning-o" class="btn-icon"/>
+        仅看错题
+      </van-button>
+      <van-button type="primary" class="action-btn" bind:tap="finish">
+        <van-icon name="wap-home-o" class="btn-icon"/>
+        完成
+      </van-button>
+    </view>
+  </block>
+</view>

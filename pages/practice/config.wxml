@@ -1,0 +1,78 @@
+<!--pages/practice/config.wxml-->
+<view class="config-container">
+  <view class="header">
+    <view class="header-title">{{pageTitle}}</view>
+    <view class="header-subtitle">请选择本次练习的参数</view>
+  </view>
+
+  <!-- 1. 选择学科 -->
+  <view class="config-section">
+    <view class="section-title">选择学科</view>
+    <view class="subjects-grid">
+      <view 
+        wx:for="{{subjects}}" 
+        wx:key="value" 
+        class="subject-item {{selectedSubject === item.value ? 'active' : ''}}"
+        style="--subject-color: {{item.color}}"
+        bind:tap="selectSubject"
+        data-value="{{item.value}}"
+      >
+        <image class="subject-icon" src="{{item.icon}}" />
+        <text>{{item.label}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 2. 题目数量 -->
+  <view class="config-section">
+    <view class="section-title">题目数量</view>
+    <view class="options-group">
+      <view 
+        wx:for="{{questionCounts}}" 
+        wx:key="*this"
+        class="option-item {{selectedCount === item ? 'active' : ''}}"
+        bind:tap="selectCount"
+        data-value="{{item}}"
+      >{{item}}题</view>
+    </view>
+  </view>
+
+  <!-- 3. 难度选择 -->
+  <view class="config-section">
+    <view class="section-title">难度选择</view>
+    <view class="options-group">
+      <view 
+        wx:for="{{difficulties}}" 
+        wx:key="value"
+        class="option-item {{selectedDifficulty === item.value ? 'active' : ''}}"
+        bind:tap="selectDifficulty"
+        data-value="{{item.value}}"
+      >{{item.label}}</view>
+    </view>
+  </view>
+
+  <!-- 4. 知识点选择 -->
+  <view class="config-section">
+    <view class="section-title">知识点选择 (可多选)</view>
+    <view class="options-group">
+      <view
+        wx:for="{{currentKnowledgePoints}}"
+        wx:key="value"
+        class="option-item {{item.active ? 'active' : ''}}"
+        bind:tap="selectKnowledgePoint"
+        data-value="{{item.value}}"
+      >{{item.label}}</view>
+    </view>
+    <view wx:if="{{currentKnowledgePoints.length === 0}}" class="empty-tip">
+      当前学科暂无知识点
+    </view>
+  </view>
+
+  <!-- 5. 开始按钮 -->
+  <view class="start-btn-wrapper">
+    <button class="start-btn" bind:tap="startPractice">
+      <van-icon name="play-circle-o" class="btn-icon"/>
+      开始练习
+    </button>
+  </view>
+</view>

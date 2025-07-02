@@ -1,0 +1,84 @@
+<!--pages/practice/session.wxml-->
+<view class="session-container">
+  <block wx:if="{{isLoading}}">
+    <view class="loading-container">
+      <van-loading type="spinner" size="32px">题目生成中...</van-loading>
+    </view>
+  </block>
+  <block wx:else>
+    <!-- 进度条和信息 -->
+    <view class="progress-section">
+      <view class="progress-info">
+        <text class="progress-count">{{currentQuestionIndex + 1}} / {{questions.length}}</text>
+        <view class="progress-timer" bind:tap="showExitConfirm">
+          <van-icon name="cross" />
+          <text>退出</text>
+        </view>
+      </view>
+      <van-progress percentage="{{progress}}" stroke-width="8" color="#4A90E2" track-color="#E5E7EB" pivot-text="" />
+    </view>
+
+    <!-- 题目区域 -->
+    <view class="question-section" wx:if="{{currentQuestion}}">
+      <view class="question-type-badge">{{questionTypeMap[currentQuestion.type]}}</view>
+      <view class="question-title">{{currentQuestion.title}}</view>
+      <view class="question-stem">{{currentQuestion.stem}}</view>
+    </view>
+    
+    <!-- 选项区域 -->
+    <view class="options-section">
+      <!-- 单选题 -->
+      <block wx:if="{{currentQuestion.type === 'single_choice'}}">
+        <view 
+          wx:for="{{currentQuestion.options}}" 
+          wx:key="value" 
+          class="option-wrapper {{item.active ? 'active' : ''}}" 
+          data-value="{{item.value}}" 
+          bind:tap="onSingleSelect"
+        >
+          <view class="radio-circle {{item.active ? 'checked' : ''}}"></view>
+          <text class="option-text">{{item.label}}</text>
+        </view>
+      </block>
+
+      <!-- 多选题 -->
+      <block wx:if="{{currentQuestion.type === 'multiple_choice'}}">
+        <view 
+          wx:for="{{currentQuestion.options}}" 
+          wx:key="value" 
+          class="option-wrapper {{item.active ? 'active' : ''}}" 
+          data-value="{{item.value}}" 
+          bind:tap="onMultiSelect"
+        >
+          <view class="checkbox-square {{item.active ? 'checked' : ''}}"></view>
+          <text class="option-text">{{item.label}}</text>
+        </view>
+      </block>
+    </view>
+
+    <!-- 导航按钮 -->
+    <view class="navigation-section">
+      <van-button 
+        plain 
+        type="default" 
+        class="nav-btn" 
+        bind:tap="prevQuestion" 
+        disabled="{{currentQuestionIndex === 0}}"
+      >
+        <van-icon name="arrow-left" class="btn-icon"/>
+        上一题
+      </van-button>
+      <van-button 
+        type="primary" 
+        class="nav-btn" 
+        bind:tap="nextQuestion"
+      >
+        {{isLastQuestion ? '完成' : '下一题'}}
+        <van-icon name="arrow" class="btn-icon"/>
+      </van-button>
+    </view>
+  </block>
+
+  <!-- 退出确认弹窗 -->
+  <van-dialog id="van-dialog" />
+</view> 

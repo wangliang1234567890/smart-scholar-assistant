@@ -1,0 +1,7 @@
+<!--components/stats-grid/index.wxml-->
+<view class="stats-grid">
+  <view wx:for="{{items}}" wx:key="index" class="stat-item">
+    <text class="stat-value">{{item.value}}</text>
+    <text class="stat-label">{{item.label}}</text>
+  </view>
+</view> 

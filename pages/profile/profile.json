@@ -1,0 +1,15 @@
+{
+  "navigationBarTitleText": "我的",
+  "navigationBarBackgroundColor": "#4F46E5",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#F8FAFC",
+  "enablePullDownRefresh": true,
+  "onReachBottomDistance": 50,
+  "usingComponents": {
+    "van-progress": "@vant/weapp/progress/index",
+    "van-cell": "@vant/weapp/cell/index",
+    "van-cell-group": "@vant/weapp/cell-group/index",
+    "van-button": "@vant/weapp/button/index",
+    "van-icon": "@vant/weapp/icon/index"
+  }
+} 

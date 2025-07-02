@@ -1,0 +1,24 @@
+/* pages/mistakes/add.wxss */
+.add-container {
+  padding-bottom: 180rpx; /* 为底部按钮留出空间 */
+}
+
+.van-cell-group--inset {
+  margin: 32rpx !important;
+}
+
+.radio-item {
+  margin-right: 32rpx;
+}
+
+.submit-wrapper {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24rpx 32rpx;
+  padding-bottom: calc(24rpx + constant(safe-area-inset-bottom));
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  background-color: #fff;
+  border-top: 1rpx solid #ebedf0;
+} 

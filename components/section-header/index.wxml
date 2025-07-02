@@ -1,0 +1,10 @@
+<!--components/section-header/index.wxml-->
+<view class="section-header">
+  <view class="header-left">
+    <view class="title-decorator"></view>
+    <text class="title">{{title}}</text>
+  </view>
+  <view class="header-right">
+    <slot name="right"></slot>
+  </view>
+</view> 

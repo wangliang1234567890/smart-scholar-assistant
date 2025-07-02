@@ -1,0 +1,34 @@
+/* components/section-header/index.wxss */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 0;
+  margin-bottom: 16rpx;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.title-decorator {
+  width: 8rpx;
+  height: 32rpx;
+  background-color: var(--primary-color);
+  border-radius: 4rpx;
+  margin-right: 16rpx;
+}
+
+.title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  font-size: 26rpx;
+  color: var(--text-secondary);
+} 

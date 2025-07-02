@@ -1,0 +1,56 @@
+<!-- pages/profile/profile.wxml -->
+<view class="page-container">
+  <!-- 顶部背景 -->
+    <view class="header-bg"></view>
+
+  <view class="content-container">
+    <!-- 用户信息卡片 -->
+    <view class="user-card">
+      <image class="avatar" src="{{userInfo.avatarUrl || '/images/default-avatar.png'}}" />
+      <view class="user-name">{{userInfo.nickName || '小星星'}}</view>
+      <view class="user-level">
+        <image class="level-icon" src="/images/icons/level-badge.svg" />
+        <text>Lv.{{userInfo.level || 5}}</text>
+      </view>
+    </view>
+
+    <!-- 经验与统计 -->
+    <view class="stats-card card">
+      <view class="exp-bar-wrapper">
+        <view class="exp-label">经验值</view>
+        <view class="exp-value">{{userInfo.exp || 450}} / 1000</view>
+      </view>
+      <view class="progress-bar">
+        <view class="progress" style="width: {{(userInfo.exp / 1000) * 100}}%;"></view>
+      </view>
+      <view class="stats-grid">
+        <view wx:for="{{stats}}" wx:key="label" class="stat-item">
+          <image class="stat-icon" src="{{item.icon}}" />
+          <view class="stat-value">{{item.value}}</view>
+          <view class="stat-label">{{item.label}}</view>
+    </view>
+  </view>
+    </view>
+
+    <!-- 功能列表 -->
+    <view class="menu-list card">
+      <view wx:for="{{menuItems}}" wx:key="title" class="menu-item" bind:tap="onMenuItemTap" data-url="{{item.url}}">
+        <view class="menu-item-left">
+          <view class="menu-icon-wrapper" style="background-color: {{item.bgColor}};">
+            <image class="menu-icon" src="{{item.icon}}" />
+          </view>
+          <text class="menu-title">{{item.title}}</text>
+        </view>
+        <van-icon name="arrow" color="#C7C7CC" />
+      </view>
+    </view>
+
+    <!-- 退出登录 -->
+    <view class="logout-wrapper">
+      <button class="logout-btn" bind:tap="logout">
+        <image class="logout-icon" src="/images/icons/logout.svg" />
+        <text>退出登录</text>
+      </button>
+    </view>
+  </view>
+</view> 

@@ -1,0 +1,11 @@
+{
+  "navigationBarTitleText": "练习报告",
+  "usingComponents": {
+    "van-circle": "/miniprogram_npm/@vant/weapp/circle/index",
+    "van-cell": "/miniprogram_npm/@vant/weapp/cell/index",
+    "van-cell-group": "/miniprogram_npm/@vant/weapp/cell-group/index",
+    "van-tag": "/miniprogram_npm/@vant/weapp/tag/index",
+    "van-button": "/miniprogram_npm/@vant/weapp/button/index",
+    "van-icon": "/miniprogram_npm/@vant/weapp/icon/index"
+  }
+} 

@@ -1,0 +1,73 @@
+<!--pages/mistakes/add.wxml-->
+<view class="add-container">
+  <van-cell-group inset>
+    <!-- 题目 -->
+    <van-field
+      value="{{ formData.question }}"
+      label="题目内容"
+      type="textarea"
+      placeholder="请输入或粘贴题目文字"
+      autosize
+      required
+      bind:change="onFieldChange"
+      data-field="question"
+    />
+    <!-- 图片上传 -->
+    <van-cell title="题目图片">
+      <van-uploader
+        file-list="{{ fileList }}"
+        bind:after-read="afterRead"
+        bind:delete="deleteImage"
+        max-count="1"
+        deletable
+        preview-size="80px"
+      />
+    </van-cell>
+  </van-cell-group>
+
+  <van-cell-group inset>
+    <!-- 答案 -->
+    <van-field
+      value="{{ formData.answer }}"
+      label="正确答案"
+      type="textarea"
+      placeholder="请输入正确答案"
+      autosize
+      required
+      bind:change="onFieldChange"
+      data-field="answer"
+    />
+    <!-- 解析 -->
+    <van-field
+      value="{{ formData.analysis }}"
+      label="题目解析"
+      type="textarea"
+      placeholder="请输入题目解析（选填）"
+      autosize
+      bind:change="onFieldChange"
+      data-field="analysis"
+    />
+  </van-cell-group>
+  
+  <van-cell-group inset>
+    <!-- 学科 -->
+    <van-cell title="选择学科" required>
+      <van-radio-group value="{{ formData.subject }}" bind:change="onFieldChange" data-field="subject" direction="horizontal">
+        <van-radio wx:for="{{subjects}}" wx:key="*this" name="{{item}}" class="radio-item">{{item}}</van-radio>
+      </van-radio-group>
+    </van-cell>
+    <!-- 难度 -->
+    <van-cell title="选择难度" required>
+      <van-radio-group value="{{ formData.difficulty }}" bind:change="onFieldChange" data-field="difficulty" direction="horizontal">
+        <van-radio wx:for="{{difficulties}}" wx:key="value" name="{{item.value}}" class="radio-item">{{item.label}}</van-radio>
+      </van-radio-group>
+    </van-cell>
+  </van-cell-group>
+
+  <!-- 提交按钮 -->
+  <view class="submit-wrapper">
+    <van-button type="primary" block round bind:tap="handleSubmit" loading="{{isSubmitting}}">
+      {{mode === 'edit' ? '保存修改' : '确认添加'}}
+    </van-button>
+  </view>
+</view>

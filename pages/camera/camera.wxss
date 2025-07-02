@@ -8,6 +8,32 @@
   overflow: hidden;
 }
 
+/* 开发模式提示 */
+.dev-notice {
+  position: absolute;
+  top: 140rpx;
+  left: 32rpx;
+  right: 32rpx;
+  z-index: 100;
+}
+
+.dev-notice-content {
+  background: rgba(16, 185, 129, 0.95);
+  border-radius: 20rpx;
+  padding: 20rpx 28rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6rpx 20rpx rgba(16, 185, 129, 0.2);
+}
+
+.dev-notice-text {
+  color: white;
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
 /* 相机预览区域 */
 .camera-section {
   width: 100%;
@@ -158,43 +184,456 @@
   backdrop-filter: blur(10px);
 }
 
-/* 图片预览区域 */
-.preview-section {
+/* ========== 确认题目页面样式 ========== */
+.confirm-section {
   width: 100%;
-  height: 100%;
-  background: #000;
+  height: 100vh;
+  background: #f5f5f5;
   display: flex;
   flex-direction: column;
 }
 
-.preview-container {
+/* 确认页面顶部导航栏 */
+.confirm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 60rpx 40rpx 24rpx;
+  background: white;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  min-width: 100rpx;
+}
+
+.header-center {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
   flex: 1;
+  justify-content: center;
+}
+
+.header-icon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-md);
+}
+
+.header-icon-img {
+  width: 28rpx;
+  height: 28rpx;
+  filter: brightness(0) invert(1);
+}
+
+.header-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  min-width: 100rpx;
+  justify-content: flex-end;
+}
+
+.retake-text {
+  font-size: 28rpx;
+  color: #333;
+}
+
+/* 图片预览容器 */
+.image-preview-container {
+  position: relative;
+  margin: 24rpx 40rpx;
+  height: 440rpx;
+  border-radius: 20rpx;
+  overflow: hidden;
+  background: #e8e8e8;
 }
 
 .preview-image {
   width: 100%;
   height: 100%;
-  border-radius: var(--border-radius-lg);
+  object-fit: cover;
 }
 
-/* 预览控制栏 */
-.preview-controls {
-  padding: var(--spacing-xl);
+/* 模拟图片占位符 */
+.mock-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
   display: flex;
-  gap: var(--spacing-md);
-  background: rgba(0, 0, 0, 0.8);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20rpx;
 }
 
-.preview-btn {
+.mock-image-text {
+  font-size: 28rpx;
+  color: #999;
+  font-weight: 500;
+}
+
+/* AI识别成功率标签 */
+.recognition-badge {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  background: #52C41A;
+  border-radius: 20rpx;
+  padding: 8rpx 16rpx;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.recognition-text {
+  color: white;
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+/* 确认科目区域 */
+.subject-section {
+  margin: 0 40rpx 24rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.subject-options {
+  display: flex;
+  gap: 16rpx;
+}
+
+.subject-item {
   flex: 1;
-  height: 88rpx !important;
+  background: white;
+  border-radius: 16rpx;
+  padding: 24rpx 12rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+  border: 2rpx solid #e8e8e8;
+  transition: all 0.3s ease;
 }
 
-/* 分析结果弹窗 */
+.subject-item.subject-active {
+  border-color: #1890ff;
+  background: #f0f8ff;
+}
+
+.subject-icon {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.math-icon {
+  background: #1890ff;
+}
+
+.chinese-icon {
+  background: #52C41A;
+}
+
+.english-icon {
+  background: #722ED1;
+}
+
+.subject-icon-img {
+  width: 28rpx;
+  height: 28rpx;
+  filter: brightness(0) invert(1);
+}
+
+.subject-name {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #333;
+}
+
+/* 识别的题目区域 */
+.question-section {
+  margin: 0 40rpx 24rpx;
+  background: white;
+  border-radius: 16rpx;
+  padding: 32rpx;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.question-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.question-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.question-status {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.status-text {
+  font-size: 24rpx;
+  color: #52C41A;
+  font-weight: 500;
+}
+
+.question-content {
+  background: #fafafa;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.question-text {
+  font-size: 28rpx;
+  line-height: 1.6;
+  color: #333;
+  white-space: pre-line;
+}
+
+/* 底部操作按钮 */
+.confirm-actions {
+  padding: 32rpx;
+  background: white;
+  margin: 24rpx 40rpx 32rpx;
+  border-radius: 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.confirm-btn {
+  height: 96rpx !important;
+  font-size: 32rpx !important;
+  font-weight: 600 !important;
+  background: linear-gradient(135deg, #52C41A 0%, #389e0d 100%) !important;
+  border-radius: 48rpx !important;
+  margin-bottom: 20rpx !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12rpx !important;
+}
+
+.manual-edit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 12rpx 0;
+}
+
+.manual-edit-text {
+  font-size: 28rpx;
+  color: #666;
+  font-weight: 500;
+}
+
+/* 科目选择项点击效果 */
+.subject-item:active {
+  transform: scale(0.95);
+}
+
+/* 手动编辑按钮点击效果 */
+.manual-edit:active {
+  opacity: 0.6;
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 375px) {
+  .camera-controls {
+    padding: 0 var(--spacing-md);
+  }
+  
+  .photo-btn {
+    width: 100rpx;
+    height: 100rpx;
+  }
+  
+  .photo-btn-inner {
+    width: 70rpx;
+    height: 70rpx;
+  }
+  
+  .result-content {
+    padding: 0 var(--spacing-md) var(--spacing-md);
+  }
+  
+  .confirm-actions {
+    padding: 24rpx;
+    margin: 20rpx 32rpx 24rpx;
+  }
+  
+  .subject-options {
+    gap: 16rpx;
+  }
+  
+  .dev-notice {
+    top: 100rpx;
+    left: 24rpx;
+    right: 24rpx;
+  }
+  
+  .image-preview-container {
+    margin: 24rpx;
+    height: 360rpx;
+  }
+  
+  .question-section {
+    margin: 0 24rpx 32rpx;
+  }
+}
+
+/* ========== AI识别中页面样式 ========== */
+.analyzing-section {
+  width: 100%;
+  height: 100vh;
+  background: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+}
+
+/* AI识别页面顶部导航栏 */
+.analyzing-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 60rpx 32rpx 32rpx;
+  background: white;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+/* AI状态容器 */
+.ai-status-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80rpx 32rpx;
+}
+
+.ai-icon-container {
+  margin-bottom: 48rpx;
+}
+
+.ai-icon {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+  box-shadow: 0 20rpx 40rpx rgba(102, 126, 234, 0.3);
+}
+
+.ai-icon-rotating {
+  animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.ai-icon-img {
+  width: 80rpx;
+  height: 80rpx;
+  filter: brightness(0) invert(1);
+}
+
+.ai-status-text {
+  text-align: center;
+  margin-bottom: 80rpx;
+}
+
+.status-title {
+  display: block;
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.status-subtitle {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+}
+
+/* 进度步骤 */
+.progress-steps {
+  width: 100%;
+  max-width: 480rpx;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.step-item:last-child {
+  border-bottom: none;
+}
+
+.step-icon {
+  width: 32rpx;
+  height: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-text {
+  font-size: 28rpx;
+  color: #666;
+  flex: 1;
+}
+
+.step-completed .step-text {
+  color: #10B981;
+  font-weight: 500;
+}
+
+/* ========== 原有分析结果弹窗样式保持不变 ========== */
 .result-popup {
   max-height: 80vh !important;
 }
@@ -312,22 +751,6 @@
   background: var(--color-primary) !important;
 }
 
-/* 加载遮罩 */
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  gap: var(--spacing-md);
-}
-
-.loading-text {
-  color: white;
-  font-size: var(--font-size-base);
-  margin-top: var(--spacing-md);
-}
-
 /* 暗黑模式适配 */
 @media (prefers-color-scheme: dark) {
   .result-container {
@@ -360,30 +783,5 @@
   
   .result-actions {
     border-top-color: var(--color-gray-700);
-  }
-}
-
-/* 响应式设计 */
-@media screen and (max-width: 375px) {
-  .camera-controls {
-    padding: 0 var(--spacing-md);
-  }
-  
-  .photo-btn {
-    width: 100rpx;
-    height: 100rpx;
-  }
-  
-  .photo-btn-inner {
-    width: 70rpx;
-    height: 70rpx;
-  }
-  
-  .preview-controls {
-    flex-direction: column;
-  }
-  
-  .result-content {
-    padding: 0 var(--spacing-md) var(--spacing-md);
   }
 } 

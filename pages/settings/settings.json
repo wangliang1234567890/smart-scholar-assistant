@@ -1,0 +1,11 @@
+{
+  "navigationBarTitleText": "设置中心",
+  "navigationBarBackgroundColor": "#4F46E5",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#F8FAFC",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "van-cell": "/miniprogram_npm/@vant/weapp/cell/index",
+    "van-cell-group": "/miniprogram_npm/@vant/weapp/cell-group/index"
+  }
+} 

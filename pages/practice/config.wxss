@@ -1,0 +1,136 @@
+/* pages/practice/config.wxss */
+.config-container {
+  padding: 40rpx;
+  background-color: var(--bg-secondary);
+  min-height: 100vh;
+  padding-bottom: 220rpx;
+}
+
+.header {
+  margin-bottom: 60rpx;
+}
+
+.header-title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.header-subtitle {
+  font-size: 32rpx;
+  color: var(--text-secondary);
+  margin-top: 16rpx;
+}
+
+.config-section {
+  margin-bottom: 60rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 24rpx;
+}
+
+/* 学科网格 */
+.subjects-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24rpx;
+}
+
+.subject-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 180rpx;
+  border-radius: 24rpx;
+  background-color: var(--bg-tertiary);
+  border: 4rpx solid transparent;
+  transition: all 0.2s ease-in-out;
+}
+
+.subject-item.active {
+  border-color: var(--subject-color);
+  transform: translateY(-8rpx);
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+  background-color: var(--subject-color);
+  color: #FFFFFF;
+}
+
+.subject-icon {
+  width: 64rpx;
+  height: 64rpx;
+  margin-bottom: 16rpx;
+}
+.subject-item.active .subject-icon {
+  filter: brightness(0) invert(1);
+}
+
+/* 选项组 */
+.options-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160rpx, 1fr));
+  gap: 24rpx;
+}
+
+.option-item {
+  padding: 20rpx 0;
+  text-align: center;
+  border-radius: 32rpx;
+  background-color: var(--bg-primary);
+  color: var(--text-secondary);
+  border: 2rpx solid var(--border-light);
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.option-item.active {
+  background-color: var(--bg-primary);
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  font-weight: bold;
+}
+
+/* 开始按钮 */
+.start-btn-wrapper {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24rpx 40rpx;
+  padding-bottom: calc(24rpx + constant(safe-area-inset-bottom));
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  background-color: var(--bg-secondary);
+  box-shadow: 0 -4rpx 16rpx rgba(0,0,0,0.04);
+  z-index: 998;
+}
+
+.start-btn {
+  width: 100%;
+  height: 96rpx;
+  line-height: 96rpx;
+  border-radius: 48rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  background-color: var(--primary-color);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon {
+  margin-right: 16rpx;
+}
+
+.empty-tip {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 40rpx;
+} 

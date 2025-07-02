@@ -1,0 +1,34 @@
+/* ... existing code ... */
+  transform: scale(1.1);
+  box-shadow: 0 4rpx 12rpx rgba(74, 144, 226, 0.4);
+}
+
+/* Vant Calendar Custom Style */
+.van-calendar__top-info {
+  position: absolute;
+  top: 8rpx;
+  right: 14rpx;
+  font-size: 18rpx;
+  line-height: 1;
+  color: var(--danger-color, #EF4444);
+}
+
+.van-calendar__bottom-info {
+  position: static;
+  transform: none;
+  margin-top: 4rpx;
+  padding: 4rpx 12rpx;
+  background-color: #e6f4ea;
+  color: #10b981;
+  font-size: 20rpx;
+  border-radius: 8rpx;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.all-courses-entry {
+  margin-top: 24rpx;
+  padding-top: 24rpx;
+/* ... existing code ... */
+
+</rewritten_file> 

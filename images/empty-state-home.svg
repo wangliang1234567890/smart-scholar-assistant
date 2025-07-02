@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200" width="300" height="200">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#A8BFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F2C2A0;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Character -->
+  <circle cx="150" cy="100" r="40" fill="#FFE0B2"/>
+  <path d="M135,115 a20,20 0 0,0 30,0" fill="none" stroke="#FF9800" stroke-width="3"/>
+  <circle cx="140" cy="95" r="4" fill="#333"/>
+  <circle cx="160" cy="95" r="4" fill="#333"/>
+  <!-- Book -->
+  <rect x="70" y="80" width="60" height="80" rx="5" fill="#4A90E2"/>
+  <rect x="75" y="85" width="50" height="70" fill="#FFFFFF"/>
+  <line x1="80" y1="95" x2="120" y2="95" stroke="#E0E0E0" stroke-width="2"/>
+  <line x1="80" y1="105" x2="120" y2="105" stroke="#E0E0E0" stroke-width="2"/>
+  <line x1="80" y1="115" x2="100" y2="115" stroke="#E0E0E0" stroke-width="2"/>
+  <!-- Pencil -->
+  <polygon points="200,120 230,90 240,100 210,130" fill="#F8D568"/>
+  <polygon points="230,90 240,100 235,105 225,95" fill="#333"/>
+</svg> 

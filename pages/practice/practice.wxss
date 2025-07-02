@@ -66,6 +66,7 @@
 .card-icon {
   width: 56rpx;
   height: 56rpx;
+  filter: brightness(0) invert(1);
 }
 
 .card-title {
@@ -195,7 +196,7 @@
 .record-icon {
   width: 48rpx;
   height: 48rpx;
-  filter: brightness(0) invert(1);
+  filter: brightness(0) invert(1) !important;
 }
 
 .record-details {
