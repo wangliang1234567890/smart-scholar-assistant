@@ -1,140 +1,161 @@
 <!-- pages/review/review.wxml -->
 <view class="page-container">
-  <!-- 复习统计 -->
-  <view class="review-stats">
-    <view class="stats-card">
-      <stats-grid items="{{reviewStats}}"></stats-grid>
-    </view>
-  </view>
-
-  <!-- 复习模式 -->
-  <view class="review-modes">
-    <view class="section-title">
-      <text>复习模式</text>
-    </view>
-    
-    <view class="modes-list">
-      <view class="mode-item" bind:tap="onQuickReview">
-        <view class="mode-icon quick">
-          <van-icon name="flash" size="24px" color="white" />
-        </view>
-        <view class="mode-content">
-          <text class="mode-name">快速复习</text>
-          <text class="mode-desc">5分钟快速复习</text>
-        </view>
-        <view class="mode-count">
-          <van-tag type="warning" size="small">{{reviewStats.urgent}}题</van-tag>
-        </view>
-        <van-icon name="arrow" size="16px" />
+  <!-- 自定义导航栏 -->
+  <view class="custom-navbar">
+    <view class="navbar-content" style="margin-top: {{statusBarHeight}}px;">
+      <view class="navbar-left" bind:tap="onBack">
+        <van-icon name="arrow-left" size="24px" color="#1F2937" />
       </view>
-
-      <view class="mode-item" bind:tap="onSubjectReview">
-        <view class="mode-icon subject">
-          <van-icon name="records" size="24px" color="white" />
-        </view>
-        <view class="mode-content">
-          <text class="mode-name">分科复习</text>
-          <text class="mode-desc">按学科分类复习</text>
-        </view>
-        <van-icon name="arrow" size="16px" />
+      <view class="navbar-center">
+        <text class="navbar-title">{{pageTitle}}</text>
+        <text class="navbar-subtitle">{{pageSubtitle}}</text>
       </view>
-
-      <view class="mode-item" bind:tap="onSystematicReview">
-        <view class="mode-icon systematic">
-          <van-icon name="bookmark-o" size="24px" color="white" />
-        </view>
-        <view class="mode-content">
-          <text class="mode-name">系统复习</text>
-          <text class="mode-desc">按遗忘曲线复习</text>
-        </view>
-        <van-icon name="arrow" size="16px" />
+      <view class="navbar-right" bind:tap="onMenu">
+        <van-icon name="more-o" size="24px" color="#1F2937" />
       </view>
     </view>
   </view>
 
-  <!-- 学科复习情况 -->
-  <view class="subject-review" wx:if="{{subjectReview.length > 0}}">
-    <view class="section-title">
-      <text>学科复习</text>
-      <view class="more-action" bind:tap="onViewAllSubjects">
-        <text>查看全部</text>
-        <van-icon name="arrow" size="12px" />
+  <!-- 页面内容 -->
+  <view class="page-content" style="margin-top: {{totalNavHeight}}px;">
+    <!-- 顶部统计区域 -->
+    <view class="stats-section">
+      <view class="stat-item">
+        <view class="stat-icon pending">
+          <text class="icon-text">📖</text>
+        </view>
+        <view class="stat-content">
+          <text class="stat-number">{{reviewStats.pending}}</text>
+          <text class="stat-label">待复习</text>
+        </view>
+      </view>
+
+      <view class="stat-item">
+        <view class="stat-icon completed">
+          <text class="icon-text">✅</text>
+        </view>
+        <view class="stat-content">
+          <text class="stat-number">{{reviewStats.completed}}</text>
+          <text class="stat-label">已复习</text>
+        </view>
+      </view>
+
+      <view class="stat-item">
+        <view class="stat-icon accuracy">
+          <text class="icon-text">📈</text>
+        </view>
+        <view class="stat-content">
+          <text class="stat-number">{{reviewStats.accuracy}}%</text>
+          <text class="stat-label">正确率</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 复习模式 -->
+    <view class="modes-section">
+      <view class="section-title">
+        <text>复习模式</text>
+  </view>
+
+      <view class="modes-list">
+        <view 
+          wx:for="{{reviewModes}}" 
+          wx:key="id"
+          class="mode-item"
+          bind:tap="onModeClick"
+          data-mode="{{item}}"
+        >
+          <view class="mode-icon" style="background-color: {{item.color}};">
+            <text class="mode-icon-text">{{item.iconText}}</text>
+          </view>
+          <view class="mode-content">
+            <text class="mode-name">{{item.name}}</text>
+            <text class="mode-desc">{{item.desc}}</text>
+          </view>
+          <van-icon name="arrow" size="16px" color="#9CA3AF" />
+        </view>
       </view>
     </view>
     
-    <view class="subjects-grid">
+    <!-- 学科进度 -->
+    <view class="progress-section">
+      <view class="section-title">
+        <text>学科进度</text>
+        <view class="more-action" bind:tap="onViewAllSubjects">
+          <text>查看全部</text>
+        </view>
+      </view>
+      
+      <view class="progress-list">
       <view 
-        wx:for="{{subjectReview}}" 
-        wx:key="name"
-        class="subject-card"
-        bind:tap="onSubjectReviewDetail"
+          wx:for="{{subjectProgress}}" 
+          wx:key="id"
+          class="progress-item"
+          bind:tap="onSubjectClick"
         data-subject="{{item}}"
       >
-        <view class="subject-header">
-          <view class="subject-icon {{item.name}}">
-            <van-icon name="{{item.icon}}" size="20px" color="white" />
+          <view class="progress-header">
+            <text class="subject-name">{{item.name}}</text>
+            <van-tag 
+              color="{{item.urgencyColor}}"
+              size="small"
+              plain
+            >
+              {{item.urgencyText}}
+            </van-tag>
           </view>
-          <text class="subject-name">{{item.name}}</text>
+          
+          <view class="progress-info">
+            <text class="progress-label">进度</text>
+            <text class="progress-number">{{item.progress}}/{{item.total}}</text>
         </view>
         
-        <view class="review-progress">
           <view class="progress-bar">
             <view 
-              class="progress-fill" 
-              style="width: {{item.reviewedRate}}%"
+              class="progress-fill {{item.urgency}}" 
+              style="width: {{item.percentage}}%"
             ></view>
-          </view>
-          <text class="progress-text">{{item.reviewed}}/{{item.total}}</text>
-        </view>
-        
-        <view class="urgency-level">
-          <van-tag 
-            type="{{item.urgency === 'high' ? 'danger' : item.urgency === 'medium' ? 'warning' : 'default'}}"
-            size="small"
-          >
-            {{item.urgencyText}}
-          </van-tag>
         </view>
       </view>
     </view>
   </view>
 
   <!-- 最近复习记录 -->
-  <view class="recent-reviews" wx:if="{{recentReviews.length > 0}}">
+    <view class="recent-section" wx:if="{{recentReviews.length > 0}}">
     <view class="section-title">
       <text>最近复习</text>
       <view class="more-action" bind:tap="onViewAllReviews">
         <text>查看全部</text>
-        <van-icon name="arrow" size="12px" />
       </view>
     </view>
     
-    <view class="reviews-list">
+      <view class="recent-list">
       <view 
         wx:for="{{recentReviews}}" 
         wx:key="id"
-        class="review-item"
-        bind:tap="onReviewDetail"
+          class="recent-item"
+          bind:tap="onReviewClick"
         data-review="{{item}}"
       >
-        <view class="review-icon">
-          <van-icon name="completed" size="20px" color="#10B981" />
+          <view class="recent-icon">
+            <text class="recent-icon-text">✅</text>
         </view>
-        <view class="review-info">
-          <text class="review-title">{{item.title}}</text>
-          <text class="review-meta">{{item.date}} · {{item.count}}题 · {{item.accuracy}}%正确</text>
+          <view class="recent-content">
+            <text class="recent-title">{{item.title}}</text>
+            <text class="recent-meta">{{item.date}} · {{item.count}}题</text>
         </view>
-        <view class="review-result">
-          <text class="result-score {{item.accuracy >= 80 ? 'good' : item.accuracy >= 60 ? 'normal' : 'poor'}}">
+          <view class="recent-result">
+            <text class="accuracy-rate {{item.accuracy >= 80 ? 'high' : item.accuracy >= 60 ? 'medium' : 'low'}}">
             {{item.accuracy}}%
           </text>
+            <text class="accuracy-label">正确率</text>
         </view>
       </view>
     </view>
   </view>
 
   <!-- 空状态 -->
-  <view class="empty-section" wx:if="{{reviewStats.total === 0}}">
+    <view class="empty-section" wx:if="{{reviewStats.pending === 0}}">
     <van-empty description="暂无需要复习的错题">
       <van-button round type="primary" bind:click="onAddMistakes">
         去录题
@@ -144,4 +165,5 @@
 
   <!-- 加载状态 -->
   <van-loading wx:if="{{loading}}" type="spinner" text="加载中..." />
+  </view>
 </view> 

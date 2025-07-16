@@ -1,28 +1,179 @@
 <!--pages/practice/session.wxml-->
 <view class="session-container">
-  <block wx:if="{{isLoading}}">
-    <view class="loading-container">
-      <van-loading type="spinner" size="32px">题目生成中...</van-loading>
+  <!-- AI题目生成中页面 -->
+  <view wx:if="{{generatingQuestions}}" class="generating-container">
+    <!-- 顶部信息 -->
+    <view class="generating-header">
+      <view class="generating-title">AI智能出题中</view>
+      <view class="generating-subtitle">正在根据您的需求生成专属练习题目</view>
     </view>
-  </block>
-  <block wx:else>
-    <!-- 进度条和信息 -->
-    <view class="progress-section">
-      <view class="progress-info">
-        <text class="progress-count">{{currentQuestionIndex + 1}} / {{questions.length}}</text>
-        <view class="progress-timer" bind:tap="showExitConfirm">
-          <van-icon name="cross" />
-          <text>退出</text>
+
+    <!-- AI生成动画 -->
+    <view class="ai-animation-container">
+      <view class="ai-brain-icon">
+        <view class="brain-wave wave-1"></view>
+        <view class="brain-wave wave-2"></view>
+        <view class="brain-wave wave-3"></view>
+        <view class="brain-core">
+          <van-icon name="star" size="48rpx" color="white" />
         </view>
       </view>
-      <van-progress percentage="{{progress}}" stroke-width="8" color="#4A90E2" track-color="#E5E7EB" pivot-text="" />
+    </view>
+
+    <!-- 生成进度 -->
+    <view class="generation-progress">
+      <view class="progress-circle-container">
+        <view class="progress-circle">
+          <view class="progress-ring">
+            <view class="progress-fill" style="transform: rotate({{progressRotation}}deg);"></view>
+          </view>
+          <view class="progress-center">
+            <view class="progress-percentage">{{generationProgress}}%</view>
+          </view>
+        </view>
+      </view>
+      
+      <view class="generation-status">
+        <view class="status-text">{{generationStatus}}</view>
+        <view class="status-details">
+          <text class="detail-item">学科：{{practiceOptions.subject || '数学'}}</text>
+          <text class="detail-item">题目数量：{{practiceOptions.count || 5}}道</text>
+          <text class="detail-item">难度：{{practiceOptions.difficulty || '中等'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 取消按钮 -->
+    <view class="generating-actions">
+      <van-button round type="default" size="large" bind:click="cancelGeneration">
+        取消生成
+      </van-button>
+    </view>
+  </view>
+
+  <!-- 正在批改页面 -->
+  <view wx:elif="{{isGrading}}" class="grading-container">
+    <!-- 顶部信息 -->
+    <view class="grading-header">
+      <view class="grading-title">AI智能批改中</view>
+      <view class="grading-subtitle">正在分析您的答案并给出详细反馈</view>
+    </view>
+
+    <!-- 批改动画 -->
+    <view class="grading-animation">
+      <view class="grading-icon">
+        <van-icon name="edit" size="80rpx" color="#4F46E5" />
+        <view class="grading-sparkles">
+          <view class="sparkle sparkle-1"></view>
+          <view class="sparkle sparkle-2"></view>
+          <view class="sparkle sparkle-3"></view>
+          <view class="sparkle sparkle-4"></view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 批改进度 -->
+    <view class="grading-progress">
+      <view class="grading-steps">
+        <view class="step-item {{gradingStep >= 1 ? 'active' : ''}} {{gradingStep > 1 ? 'completed' : ''}}">
+          <view class="step-icon">
+            <van-icon wx:if="{{gradingStep > 1}}" name="success" size="16px" color="#10B981" />
+            <van-icon wx:elif="{{gradingStep === 1}}" name="loading" size="16px" color="#4F46E5" />
+            <text wx:else class="step-number">1</text>
+          </view>
+          <view class="step-content">
+            <view class="step-title">分析答案</view>
+          </view>
+        </view>
+
+        <view class="step-item {{gradingStep >= 2 ? 'active' : ''}} {{gradingStep > 2 ? 'completed' : ''}}">
+          <view class="step-icon">
+            <van-icon wx:if="{{gradingStep > 2}}" name="success" size="16px" color="#10B981" />
+            <van-icon wx:elif="{{gradingStep === 2}}" name="loading" size="16px" color="#4F46E5" />
+            <text wx:else class="step-number">2</text>
+          </view>
+          <view class="step-content">
+            <view class="step-title">智能评分</view>
+          </view>
+        </view>
+
+        <view class="step-item {{gradingStep >= 3 ? 'active' : ''}} {{gradingStep > 3 ? 'completed' : ''}}">
+          <view class="step-icon">
+            <van-icon wx:if="{{gradingStep > 3}}" name="success" size="16px" color="#10B981" />
+            <van-icon wx:elif="{{gradingStep === 3}}" name="loading" size="16px" color="#4F46E5" />
+            <text wx:else class="step-number">3</text>
+          </view>
+          <view class="step-content">
+            <view class="step-title">生成报告</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="grading-status">
+        <view class="status-text">{{gradingStatus || '正在批改答案...'}}</view>
+        <view class="grading-details">
+          <text class="detail-item">已完成：{{gradedCount || 0}}/{{questions.length}}题</text>
+          <text class="detail-item">预计剩余：{{remainingQuestions}}题</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 正常答题页面 -->
+  <view wx:elif="{{!isLoading}}" class="practice-container">
+    <!-- 顶部进度条和信息 -->
+    <view class="progress-section">
+      <view class="progress-header">
+      <view class="progress-info">
+          <view class="question-number">
+            <text class="current-number">{{currentQuestionIndex + 1}}</text>
+            <text class="total-number">/{{questions.length}}</text>
+          </view>
+          <view class="subject-badge">{{practiceOptions.subject || '数学'}}</view>
+        </view>
+        <view class="header-actions">
+          <view class="exit-button" bind:tap="showExitConfirm">
+            <van-icon name="cross" size="20px" color="#6B7280" />
+          </view>
+        </view>
+      </view>
+      
+      <view class="progress-bar-container">
+        <van-progress 
+          percentage="{{progress}}" 
+          stroke-width="8" 
+          color="#4F46E5" 
+          track-color="#E5E7EB" 
+          pivot-text="" 
+          show-pivot="{{false}}"
+        />
+        <view class="progress-label">
+          完成度 {{progressPercent}}%
+        </view>
+      </view>
     </view>
 
     <!-- 题目区域 -->
     <view class="question-section" wx:if="{{currentQuestion}}">
-      <view class="question-type-badge">{{questionTypeMap[currentQuestion.type]}}</view>
+      <view class="question-header">
+        <view class="question-type-badge {{currentQuestion.type}}">
+          {{questionTypeMap[currentQuestion.type]}}
+        </view>
+        <view wx:if="{{currentQuestion.difficulty}}" class="difficulty-badge">
+          难度：{{currentQuestion.difficultyText}}
+        </view>
+      </view>
+      
+      <view class="question-content">
       <view class="question-title">{{currentQuestion.title}}</view>
-      <view class="question-stem">{{currentQuestion.stem}}</view>
+        <view wx:if="{{currentQuestion.stem}}" class="question-stem">{{currentQuestion.stem}}</view>
+      </view>
+      
+      <!-- 题目提示 -->
+      <view wx:if="{{currentQuestion.type === 'multiple_choice'}}" class="question-tip">
+        <van-icon name="info-o" size="16px" color="#6B7280" />
+        <text class="tip-text">可选择多个答案</text>
+      </view>
     </view>
     
     <!-- 选项区域 -->
@@ -32,12 +183,19 @@
         <view 
           wx:for="{{currentQuestion.options}}" 
           wx:key="value" 
-          class="option-wrapper {{item.active ? 'active' : ''}}" 
+          class="option-wrapper single-choice {{item.active ? 'active' : ''}}" 
           data-value="{{item.value}}" 
           bind:tap="onSingleSelect"
         >
-          <view class="radio-circle {{item.active ? 'checked' : ''}}"></view>
-          <text class="option-text">{{item.label}}</text>
+          <view class="option-indicator">
+            <view class="radio-circle {{item.active ? 'checked' : ''}}">
+              <view wx:if="{{item.active}}" class="radio-dot"></view>
+            </view>
+          </view>
+          <view class="option-content">
+            <view class="option-label">{{item.value}}.</view>
+            <view class="option-text">{{item.label}}</view>
+          </view>
         </view>
       </block>
 
@@ -46,39 +204,129 @@
         <view 
           wx:for="{{currentQuestion.options}}" 
           wx:key="value" 
-          class="option-wrapper {{item.active ? 'active' : ''}}" 
+          class="option-wrapper multiple-choice {{item.active ? 'active' : ''}}" 
           data-value="{{item.value}}" 
           bind:tap="onMultiSelect"
         >
-          <view class="checkbox-square {{item.active ? 'checked' : ''}}"></view>
-          <text class="option-text">{{item.label}}</text>
+          <view class="option-indicator">
+            <view class="checkbox-square {{item.active ? 'checked' : ''}}">
+              <van-icon wx:if="{{item.active}}" name="success" size="12px" color="white" />
+            </view>
+          </view>
+          <view class="option-content">
+            <view class="option-label">{{item.value}}.</view>
+            <view class="option-text">{{item.label}}</view>
+          </view>
         </view>
       </block>
+
+      <!-- 填空题 -->
+      <block wx:if="{{currentQuestion.type === 'fill_blank'}}">
+        <view class="fill-blank-container">
+          <textarea
+            class="fill-blank-input"
+            placeholder="请在此输入您的答案..."
+            value="{{userAnswers[currentQuestion.id] || ''}}"
+            bind:input="onFillBlankInput"
+            auto-height
+            maxlength="200"
+          />
+          <view class="input-footer">
+            <text class="char-count">{{fillBlankCharCount}}/200</text>
+          </view>
+        </view>
+      </block>
+
+      <!-- 解答题 -->
+      <block wx:if="{{currentQuestion.type === 'solve'}}">
+        <view class="solve-container">
+          <textarea
+            class="solve-input"
+            placeholder="请写出详细的解题过程和答案..."
+            value="{{userAnswers[currentQuestion.id] || ''}}"
+            bind:input="onSolveInput"
+            auto-height
+            maxlength="500"
+          />
+          <view class="input-footer">
+            <text class="char-count">{{solveCharCount}}/500</text>
+          </view>
+        </view>
+      </block>
+    </view>
+
+    <!-- 知识点提示 -->
+    <view wx:if="{{currentQuestion.knowledgePoints && currentQuestion.knowledgePoints.length > 0}}" class="knowledge-points">
+      <view class="knowledge-header">
+        <van-icon name="star-o" size="16px" color="#F59E0B" />
+        <text class="knowledge-title">涉及知识点</text>
+      </view>
+      <view class="knowledge-tags">
+        <view 
+          wx:for="{{currentQuestion.knowledgePoints}}" 
+          wx:key="*this"
+          class="knowledge-tag"
+        >
+          {{item}}
+        </view>
+      </view>
     </view>
 
     <!-- 导航按钮 -->
     <view class="navigation-section">
       <van-button 
-        plain 
+        round 
         type="default" 
-        class="nav-btn" 
+        size="large"
+        class="nav-btn prev-btn" 
         bind:tap="prevQuestion" 
         disabled="{{currentQuestionIndex === 0}}"
       >
-        <van-icon name="arrow-left" class="btn-icon"/>
+        <van-icon name="arrow-left" size="16px" />
         上一题
       </van-button>
+      
       <van-button 
+        round 
         type="primary" 
-        class="nav-btn" 
+        size="large"
+        class="nav-btn next-btn" 
         bind:tap="nextQuestion"
       >
-        {{isLastQuestion ? '完成' : '下一题'}}
-        <van-icon name="arrow" class="btn-icon"/>
+        {{isLastQuestion ? '提交答案' : '下一题'}}
+        <van-icon name="{{isLastQuestion ? 'completed' : 'arrow'}}" size="16px" />
       </van-button>
     </view>
-  </block>
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:else class="loading-container">
+    <van-loading type="spinner" size="32px" color="#4F46E5">
+      正在加载题目...
+    </van-loading>
+  </view>
 
   <!-- 退出确认弹窗 -->
-  <van-dialog id="van-dialog" />
+  <van-dialog
+    show="{{showExitDialog}}"
+    title="确认退出"
+    message="退出后将不会保存本次练习记录，确定要退出吗？"
+    show-cancel-button
+    confirm-button-text="确认退出"
+    cancel-button-text="继续练习"
+    bind:confirm="confirmExit"
+    bind:cancel="cancelExit"
+  />
+
+  <!-- 提交确认弹窗 -->
+  <van-dialog
+    show="{{showSubmitDialog}}"
+    title="提交答案"
+    message="{{submitMessage}}"
+    show-cancel-button
+    confirm-button-text="确认提交"
+    cancel-button-text="继续答题"
+    bind:confirm="confirmSubmit"
+    bind:cancel="cancelSubmit"
+  />
 </view> 

@@ -67,7 +67,10 @@ Page({
       total: 50
     },
     studyDays: 88,
-    loading: false
+    loading: false,
+    
+    // 计算属性
+    expProgressPercent: 0
   },
 
   onLoad(options) {
@@ -324,8 +327,10 @@ Page({
   calculateExpRate() {
     if (this.data.nextLevelExp > 0) {
       const rate = (this.data.userInfo.exp / this.data.nextLevelExp) * 100;
+      const expProgressPercent = Math.min(rate, 100);
       this.setData({
-        expRate: Math.min(rate, 100)
+        expRate: expProgressPercent,
+        expProgressPercent
       })
     }
   },

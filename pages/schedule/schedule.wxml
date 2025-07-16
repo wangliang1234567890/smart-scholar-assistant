@@ -11,13 +11,13 @@
     <view class="tab-item {{viewMode === 'week' ? 'active' : ''}}" bind:tap="switchViewMode" data-mode="week">
       周视图
     </view>
-    <view class="tab-item {{viewMode === 'day' ? 'active' : ''}}" bind:tap="switchViewMode" data-mode="day">
-      日视图
+    <view class="tab-item {{viewMode === 'full' ? 'active' : ''}}" bind:tap="switchViewMode" data-mode="full">
+      全视图
     </view>
   </view>
 
   <!-- 周历 -->
-  <view class="week-calendar-container">
+  <view wx:if="{{viewMode==='week'}}" class="week-calendar-container">
     <!-- 星期标题 -->
     <view class="weekday-headers">
       <view wx:for="{{weekDays}}" wx:key="index" class="weekday-header">{{item}}</view>
@@ -36,6 +36,20 @@
         </view>
       </view>
     </view>
+  </view>
+
+  <!-- 全日历视图 -->
+  <view wx:if="{{viewMode==='full'}}" class="full-calendar-container">
+    <van-calendar
+      poppable="{{false}}"
+      show="{{true}}"
+      show-title="true"
+      show-subtitle="false"
+      custom-class="custom-calendar"
+      bind:select="onConfirmCalendar"
+      bind:confirm="onConfirmCalendar"
+      formatter="{{calendarFormatter}}"
+    />
   </view>
 
   <!-- 今日课程标题 -->
@@ -101,6 +115,7 @@
 
   <!-- 全屏日历弹窗 -->
   <van-calendar
+    custom-class="custom-calendar"
     show="{{ showCalendar }}"
     bind:close="onCloseCalendar"
     bind:confirm="onConfirmCalendar"

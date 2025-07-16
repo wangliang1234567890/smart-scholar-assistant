@@ -28,10 +28,11 @@ Page({
     
     // 选项
     subjects: SUBJECTS,
-    difficulties: Object.entries(DIFFICULTY_LABELS).map(([value, label]) => ({
-      label,
-      value: parseInt(value)
-    })),
+    difficulties: [
+      { value: 1, label: '简单' },
+      { value: 3, label: '中等' },
+      { value: 5, label: '困难' }
+    ],
     
     isSubmitting: false,
   },

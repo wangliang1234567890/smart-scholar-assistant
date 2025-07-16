@@ -71,15 +71,20 @@ Page({
       const dateStr = this.formatDate(date);
       const courses = this.getCoursesByDate(dateStr);
       
-      week.push({
+      const dayData = {
         date: date.getDate(),
         fullDate: dateStr,
         isToday: dateStr === todayStr,
         isSelected: dateStr === this.data.selectedDate,
         hasCourse: courses.length > 0,
         courses: courses
-      });
+      };
+      
+      console.log(`日期生成: ${i}`, dayData); // 调试日志
+      week.push(dayData);
     }
+    
+    console.log('完整周数据:', week); // 调试日志
     
     this.setData({
       currentWeekDates: week,

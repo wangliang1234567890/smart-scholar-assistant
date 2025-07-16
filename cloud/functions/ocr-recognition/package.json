@@ -1,0 +1,21 @@
+{
+  "name": "ocr-recognition",
+  "version": "1.0.0",
+  "description": "OCR文字识别云函数，支持腾讯云和百度OCR服务",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  },
+  "keywords": [
+    "ocr",
+    "recognition",
+    "tencent",
+    "baidu",
+    "cloud-function"
+  ],
+  "author": "Smart Study Assistant",
+  "license": "MIT"
+} 

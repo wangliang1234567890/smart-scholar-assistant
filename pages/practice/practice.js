@@ -183,11 +183,13 @@ Page({
   onRecordTap(e) {
     const record = e.currentTarget.dataset.record;
     console.log("Tapped record:", record);
-    // Navigate to a result page, e.g.
-    // wx.navigateTo({ url: `/pages/practice/result?id=${record.id}` })
-    wx.showToast({
-      title: `查看 ${record.type} 记录`,
-      icon: 'none'
-    })
+    // 根据记录类型跳转到相应页面
+    if (record && record.type && record.type.indexOf('错题') !== -1) {
+      // 跳转到复习配置
+      wx.navigateTo({ url: '/pages/review/review' });
+    } else {
+      // 默认跳转到练习结果示例
+      wx.navigateTo({ url: '/pages/practice/result' });
+    }
   }
 }) 

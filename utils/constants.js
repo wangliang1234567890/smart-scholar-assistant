@@ -64,6 +64,71 @@ export const QUESTION_TYPE_LABELS = {
   [QUESTION_TYPES.JUDGE]: '判断题'
 };
 
+// AI服务配置
+export const AI_CONFIG = {
+  // OCR服务配置
+  OCR: {
+    // 腾讯云OCR配置
+    TENCENT: {
+      SECRET_ID: '', // 在云函数中配置
+      SECRET_KEY: '', // 在云函数中配置
+      REGION: 'ap-beijing',
+      ENDPOINT: 'ocr.tencentcloudapi.com',
+      VERSION: '2018-11-19',
+      ACTION: 'GeneralBasicOCR'
+    },
+    // 百度OCR配置
+    BAIDU: {
+      API_KEY: '', // 在云函数中配置
+      SECRET_KEY: '', // 在云函数中配置
+      ACCESS_TOKEN_URL: 'https://aip.baidubce.com/oauth/2.0/token',
+      OCR_URL: 'https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic'
+    },
+    // 配置选项
+    OPTIONS: {
+      MAX_IMAGE_SIZE: 4 * 1024 * 1024, // 4MB
+      SUPPORTED_FORMATS: ['jpg', 'jpeg', 'png', 'bmp'],
+      CONFIDENCE_THRESHOLD: 0.7,
+      RETRY_COUNT: 2,
+      TIMEOUT: 15000
+    }
+  },
+  
+  // AI题目生成配置
+  QUESTION_GENERATION: {
+    // GPT配置
+    OPENAI: {
+      API_KEY: '', // 在云函数中配置
+      BASE_URL: 'https://api.openai.com/v1',
+      MODEL: 'gpt-3.5-turbo',
+      MAX_TOKENS: 2000,
+      TEMPERATURE: 0.7
+    },
+    // 百度文心一言配置
+    WENXIN: {
+      API_KEY: '', // 在云函数中配置
+      SECRET_KEY: '', // 在云函数中配置
+      ACCESS_TOKEN_URL: 'https://aip.baidubce.com/oauth/2.0/token',
+      CHAT_URL: 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions'
+    },
+    // 配置选项
+    OPTIONS: {
+      MAX_QUESTIONS: 20,
+      TIMEOUT: 30000,
+      RETRY_COUNT: 3,
+      RESPONSE_FORMAT: 'json'
+    }
+  },
+  
+  // AI智能批改配置
+  AUTO_GRADING: {
+    ACCURACY_THRESHOLD: 0.85,
+    FUZZY_MATCH_ENABLED: true,
+    CHINESE_MATCH_ENABLED: true,
+    MATH_FORMULA_ENABLED: true
+  }
+};
+
 // 用户等级配置
 export const USER_LEVELS = {
   1: { name: '学习新手', exp: 0, color: '#909399' },

@@ -1,0 +1,22 @@
+{
+  "name": "ai-question-generator",
+  "version": "1.0.0",
+  "description": "AI题目生成云函数，支持OpenAI GPT和百度文心一言",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  },
+  "keywords": [
+    "ai",
+    "question-generation",
+    "openai",
+    "wenxin",
+    "education",
+    "cloud-function"
+  ],
+  "author": "Smart Study Assistant",
+  "license": "MIT"
+} 

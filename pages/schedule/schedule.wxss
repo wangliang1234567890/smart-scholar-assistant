@@ -101,14 +101,25 @@
 }
 
 .date-cell.today .date-number {
-  color: #6366f1;
+  color: #6366f1 !important;
+  font-weight: bold;
+}
+
+.date-cell.selected .date-number {
+  color: #ffffff !important;
+  font-weight: bold;
 }
 
 .date-number {
   font-size: 32rpx;
   font-weight: 600;
-  color: #333;
+  color: #333333 !important;
   margin-bottom: 8rpx;
+  line-height: 1.2;
+  z-index: 10;
+  position: relative;
+  display: block;
+  text-align: center;
 }
 
 /* 课程圆点 */
@@ -331,4 +342,42 @@
 
 .empty-courses van-button {
   min-width: 200rpx;
+} 
+
+/* calendar custom style */
+.custom-calendar .van-calendar__day {
+  width: 88rpx;
+  height: 88rpx;
+  line-height: 88rpx;
+  border-radius: 12rpx;
+  margin: 8rpx;
+  background:#F9FAFB;
+  border:1rpx solid #E5E7EB;
+}
+.custom-calendar .van-calendar__day--selected{
+  background:#4F46E5 !important;
+  color:#fff !important;
+}
+.custom-calendar .van-calendar__day--selected::after{
+  display:none;
+}
+.custom-calendar .van-calendar__day--current{
+  border:1rpx solid #4F46E5;
+}
+.custom-calendar .van-calendar__bottom-info {
+  font-size: 20rpx;
+}
+.custom-calendar .van-calendar__top-info {
+  font-size: 20rpx;
+  color: #4F46E5;
+} 
+
+/* full calendar container */
+.full-calendar-container{
+  margin:24rpx;
+} 
+
+.custom-calendar .van-calendar__selected-day{
+  background:#4F46E5 !important;
+  color:#fff !important;
 } 

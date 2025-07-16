@@ -1,594 +1,586 @@
-import DatabaseManager from '../../utils/database';
-import { SUBJECTS, GRADE_LEVELS, DIFFICULTY_LEVELS } from '../../utils/constants';
+// pages/camera/camera.js
+import AIService from '../../utils/ai-service';
+import { formatTime } from '../../utils/util';
 
 Page({
   data: {
-    cameraFrameSize: {},
-    devicePosition: 'back', // back | front
-    flash: 'off', // off | on | auto
+    // 界面状态
     showPreview: false,
     showAnalyzing: false,
-    previewImagePath: '',
-    analyzing: false,
-    analysisResult: null,
     showResultModal: false,
     
-    // 识别相关数据
-    recognizedQuestion: '计算下列各题：\n(1) 25 × 4 = ?\n(2) 48 ÷ 6 = ?\n(3) 15 + 27 = ?',
-    progressStep: 0,
+    // 选择器状态
+    showSubjectPicker: false,
+    showGradePicker: false,
+    showDifficultyPicker: false,
     
-    // 开发模式标志
-    isDevelopment: true,
+    // 相机设置
+    devicePosition: 'back',
+    flash: 'off',
+    cameraFrameSize: { width: 300, height: 200 },
+    
+    // 识别进度
+    progressStep: 0,
+    processingStatus: '准备开始识别...',
+    
+    // 识别结果
+    previewImagePath: '',
+    recognizedQuestion: '',
+    ocrResult: null,
+    analysisResult: null,
     
     // 表单数据
     formData: {
       subject: '数学',
       grade: 1,
-      difficulty: 1,
-      description: '',
-      tags: [],
       gradeLabel: '一年级',
-      difficultyLabel: '很简单'
+      difficulty: 3,
+      difficultyLabel: '中等',
+      description: ''
     },
     
-    // 界面控制
-    showSubjectPicker: false,
-    showGradePicker: false,
-    showDifficultyPicker: false,
+    // 选择器数据
+    subjects: ['数学', '语文', '英语', '物理', '化学', '生物', '历史', '地理', '政治'],
+    grades: [
+      { value: 1, label: '一年级' },
+      { value: 2, label: '二年级' },
+      { value: 3, label: '三年级' },
+      { value: 4, label: '四年级' },
+      { value: 5, label: '五年级' },
+      { value: 6, label: '六年级' },
+      { value: 7, label: '七年级' },
+      { value: 8, label: '八年级' },
+      { value: 9, label: '九年级' },
+      { value: 10, label: '高一' },
+      { value: 11, label: '高二' },
+      { value: 12, label: '高三' }
+    ],
+    difficulties: [
+      { value: 1, label: '很简单' },
+      { value: 2, label: '简单' },
+      { value: 3, label: '中等' },
+      { value: 4, label: '较难' },
+      { value: 5, label: '很难' }
+    ],
     
-    // 数据列表
-    subjects: SUBJECTS,
-    grades: GRADE_LEVELS,
-    difficulties: DIFFICULTY_LEVELS,
+    // 开发模式
+    isDevelopment: true,
     
-    // 用户信息
-    userInfo: null
+    // 错误处理
+    hasError: false,
+    errorMessage: '',
+    
+    // 计算属性
+    progressRotation: 0,
+    progressPercent: 0,
+    confidencePercent: 0,
+    hasValidQuestion: false
   },
 
   onLoad() {
-    console.log('拍照页面加载');
-    this.initCamera();
-    this.getUserInfo();
-
-    // 初始化显示的文本
-    this.setData({
-      'formData.gradeLabel': this.getGradeText(this.data.formData.grade),
-      'formData.difficultyLabel': this.getDifficultyText(this.data.formData.difficulty)
-    });
-
-    // 开发模式：自动显示测试数据
-    if (this.data.isDevelopment) {
-      this.loadDevelopmentData();
-    }
-  },
-
-  // 开发模式：加载测试数据
-  loadDevelopmentData() {
-    // 延迟2秒后自动进入AI识别页面，方便开发测试
-    setTimeout(() => {
-      this.simulateTakePhoto();
-    }, 2000);
-  },
-
-  // 模拟拍照（开发模式）
-  simulateTakePhoto() {
-    const mockImagePath = '/images/mock-question.jpg'; // 模拟图片路径
-    
-    console.log('模拟拍照成功');
-    
-    // 先显示AI识别中页面
-    this.setData({
-      showPreview: false,
-      showAnalyzing: true,
-      previewImagePath: mockImagePath,
-      analyzing: true,
-      progressStep: 0
-    });
-    
-    // 开始AI识别流程
-    this.startAIRecognition();
+    this.initPage();
   },
 
   onShow() {
-    // 每次显示时重新初始化相机
-    this.initCamera();
+    this.resetPageState();
   },
 
   onHide() {
-    // 页面隐藏时释放相机资源
-    this.releaseCamera();
+    this.cleanupResources();
   },
 
   onUnload() {
-    // 页面卸载时释放资源
-    this.releaseCamera();
+    this.cleanupResources();
   },
 
+  /**
+   * 初始化页面
+   */
+  initPage() {
+    // 获取系统信息
+    this.getSystemInfo();
+
   // 初始化相机
-  initCamera() {
-    try {
-      // 获取系统信息
+    this.initCamera();
+    
+    // 检查权限
+    this.checkPermissions();
+    
+    // 设置AI服务模式
+    AIService.setProductionMode(false);
+    
+    console.log('Camera page initialized');
+  },
+
+  /**
+   * 获取系统信息
+   */
+  getSystemInfo() {
       const systemInfo = wx.getSystemInfoSync();
-      const { windowWidth, windowHeight } = systemInfo;
+    const screenWidth = systemInfo.screenWidth;
+    const screenHeight = systemInfo.screenHeight;
       
-      // 计算相机框大小（保持4:3比例）
-      const frameWidth = windowWidth - 40; // 左右各20rpx边距
-      const frameHeight = frameWidth * 0.75;
+    // 计算相机框尺寸
+    const frameWidth = Math.min(screenWidth * 0.8, 350);
+    const frameHeight = frameWidth * 0.6;
       
       this.setData({
         cameraFrameSize: {
           width: frameWidth,
-          height: frameHeight,
-          top: (windowHeight - frameHeight) / 2 - 100
+        height: frameHeight
         }
       });
-
-      console.log('相机初始化完成');
-    } catch (error) {
-      console.error('相机初始化失败:', error);
-      this.showError('相机初始化失败');
-    }
   },
 
-  // 获取用户信息
-  getUserInfo() {
-    const app = getApp();
-    const userInfo = app.getUserInfo();
-    
-    if (userInfo) {
-      this.setData({ 
-        userInfo,
-        'formData.grade': userInfo.grade || 1
-      });
-    }
-  },
-
-  // 拍照
-  takePhoto() {
-    if (this.data.analyzing) return;
-
-    // 开发模式：直接使用模拟数据
-    if (this.data.isDevelopment) {
-      this.simulateTakePhoto();
-      return;
-    }
-
+  /**
+   * 初始化相机
+   */
+  initCamera() {
     const cameraContext = wx.createCameraContext();
-    
-    wx.showLoading({
-      title: '拍照中...',
-      mask: true
-    });
+    this.cameraContext = cameraContext;
+  },
 
-    cameraContext.takePhoto({
-      quality: 'high',
+  /**
+   * 检查权限
+   */
+  checkPermissions() {
+    wx.getSetting({
       success: (res) => {
-        wx.hideLoading();
-        console.log('拍照成功:', res.tempImagePath);
-        
-        // 先显示AI识别中页面
-        this.setData({
-          showPreview: false,
-          showAnalyzing: true,
-          previewImagePath: res.tempImagePath,
-          analyzing: true,
-          progressStep: 0
-        });
-        
-        // 开始AI识别流程
-        this.startAIRecognition();
+        if (!res.authSetting['scope.camera']) {
+          wx.authorize({
+            scope: 'scope.camera',
+            success: () => {
+              console.log('相机权限获取成功');
       },
-      fail: (error) => {
-        wx.hideLoading();
-        console.error('拍照失败:', error);
-        // 开发模式：拍照失败时也使用模拟数据
-        if (this.data.isDevelopment) {
-          this.simulateTakePhoto();
-        } else {
-          this.showError('拍照失败，请重试');
+            fail: () => {
+              wx.showModal({
+                title: '需要相机权限',
+                content: '请在设置中开启相机权限以使用拍照功能',
+                showCancel: false
+              });
+            }
+          });
         }
       }
     });
   },
 
-  // 开始AI识别流程
-  startAIRecognition() {
-    // 开始进度动画
-    this.startProgressAnimation();
-  },
-
-  // 开始进度动画
-  startProgressAnimation() {
-    // 步骤1：图像预处理
-    setTimeout(() => {
-      this.setData({ progressStep: 1 });
-    }, 800);
-    
-    // 步骤2：文字识别
-    setTimeout(() => {
-      this.setData({ progressStep: 2 });
-    }, 1800);
-    
-    // 步骤3：题目解析
-    setTimeout(() => {
-      this.setData({ progressStep: 3 });
-    }, 2800);
-    
-    // 完成AI识别，跳转到确认题目页面
-    setTimeout(() => {
-      this.completeAIRecognition();
-    }, 4000);
-  },
-
-  // 完成AI识别，进入确认题目页面
-  completeAIRecognition() {
-    // 生成识别结果
-    this.simulateQuickRecognition();
-    
-    // 显示确认题目页面
+  /**
+   * 重置页面状态
+   */
+  resetPageState() {
     this.setData({
+      showPreview: false,
       showAnalyzing: false,
-      showPreview: true,
-      analyzing: false
+      showResultModal: false,
+      hasError: false,
+      errorMessage: '',
+      progressStep: 0,
+      processingStatus: '准备开始识别...'
     });
   },
 
-  // 模拟快速识别（生成题目内容）
-  simulateQuickRecognition() {
-    const mockQuestions = [
-      '计算下列各题：\n(1) 25 × 4 = ?\n(2) 48 ÷ 6 = ?\n(3) 15 + 27 = ?',
-      '解方程：2x + 5 = 13',
-      '填空题：\n长方形的面积公式是_____ × _____',
-      '选择题：下面哪个是质数？\nA. 4  B. 6  C. 7  D. 8',
-      '应用题：\n小明有15个苹果，吃了3个，又买了8个，现在有多少个苹果？',
-      '计算题：\n(1) 126 + 89 = ?\n(2) 200 - 97 = ?\n(3) 45 × 6 = ?'
-    ];
+  /**
+   * 清理资源
+   */
+  cleanupResources() {
+    if (this.progressTimer) {
+      clearInterval(this.progressTimer);
+      this.progressTimer = null;
+    }
     
-    const randomQuestion = mockQuestions[Math.floor(Math.random() * mockQuestions.length)];
-    
-    this.setData({
-      recognizedQuestion: randomQuestion
-    });
-  },
-
-  // 确认并开始分析（从确认题目页面点击确认保存错题）
-  confirmAndAnalyze() {
-    // 直接进行最终分析并显示结果弹窗
-    this.analyzeAndShowResult();
-  },
-
-  // 分析并显示结果
-  async analyzeAndShowResult() {
-    try {
-      wx.showLoading({
-        title: '分析中...',
-        mask: true
-      });
-
-      // 模拟AI分析结果
-      const mockAnalysis = await this.mockImageAnalysis(this.data.previewImagePath);
-      
-      wx.hideLoading();
-      
-      this.setData({
-        analysisResult: mockAnalysis,
-        showResultModal: true
-      });
-
-    } catch (error) {
-      wx.hideLoading();
-      console.error('分析失败:', error);
-      this.showError('分析失败，请重试');
+    if (this.statusTimer) {
+      clearTimeout(this.statusTimer);
+      this.statusTimer = null;
     }
   },
 
-  // 取消AI识别
-  cancelAnalyzing() {
-    this.setData({
-      showAnalyzing: false,
-      showPreview: false,
-      analyzing: false,
-      progressStep: 0,
-      previewImagePath: ''
+  /**
+   * 返回上一页
+   */
+  onBack() {
+    wx.navigateBack();
+  },
+
+  /**
+   * 拍照
+   */
+  async takePhoto() {
+    if (!this.cameraContext) {
+      this.showError('相机未初始化');
+      return;
+    }
+
+    wx.vibrateShort();
+    
+    try {
+      // 显示加载状态
+      wx.showLoading({
+        title: '正在拍照...',
+        mask: true
+      });
+
+      const result = await this.capturePhoto();
+      
+      wx.hideLoading();
+      
+      if (result.tempImagePath) {
+      this.setData({
+          previewImagePath: result.tempImagePath,
+          showPreview: false,
+          showAnalyzing: true
+      });
+        
+        // 开始AI识别
+        this.startAnalyzing(result.tempImagePath);
+      } else {
+        this.showError('拍照失败，请重试');
+      }
+
+    } catch (error) {
+      wx.hideLoading();
+      console.error('拍照失败:', error);
+      this.showError('拍照失败: ' + error.message);
+    }
+  },
+
+  /**
+   * 捕获照片
+   */
+  capturePhoto() {
+    return new Promise((resolve, reject) => {
+      this.cameraContext.takePhoto({
+        quality: 'high',
+        success: (res) => {
+          resolve(res);
+        },
+        fail: (error) => {
+          reject(new Error('拍照失败: ' + error.errMsg));
+        }
+      });
     });
   },
 
-  // 重新拍照
+  /**
+   * 开始AI识别
+   */
+  async startAnalyzing(imagePath) {
+    try {
+      // 重置进度
+    this.setData({
+        progressStep: 0,
+        processingStatus: '正在预处理图像...'
+      });
+      
+      // 开始进度更新
+      this.startProgressUpdate();
+      
+      // 调用AI服务进行OCR识别
+      const ocrResult = await AIService.recognizeText(imagePath);
+      
+      // 更新进度
+      this.updateProgress(4, '识别完成！');
+      
+      // 保存识别结果
+      const confidencePercent = ocrResult.confidence ? Math.round(ocrResult.confidence * 100) : 0;
+      const recognizedText = ocrResult.text || '';
+      this.setData({
+        ocrResult,
+        recognizedQuestion: recognizedText,
+        confidencePercent,
+        hasValidQuestion: recognizedText.trim().length > 0
+      });
+      
+      // 延迟后显示确认页面
+      setTimeout(() => {
+        this.setData({
+          showAnalyzing: false,
+          showPreview: true
+        });
+      }, 1000);
+      
+    } catch (error) {
+      console.error('AI识别失败:', error);
+      
+      // 停止进度更新
+      this.stopProgressUpdate();
+      
+      // 显示错误并降级到手动输入
+      this.handleAnalyzingError(error);
+    }
+  },
+
+  /**
+   * 开始进度更新
+   */
+  startProgressUpdate() {
+    let step = 0;
+    const steps = [
+      { step: 1, status: '正在预处理图像...', delay: 800 },
+      { step: 2, status: 'AI正在识别文字...', delay: 1500 },
+      { step: 3, status: '正在解析题目结构...', delay: 1200 },
+      { step: 4, status: '正在生成识别结果...', delay: 800 }
+    ];
+    
+    const updateNextStep = () => {
+      if (step < steps.length) {
+        const currentStep = steps[step];
+        this.updateProgress(currentStep.step, currentStep.status);
+        step++;
+        
+        this.statusTimer = setTimeout(updateNextStep, currentStep.delay);
+      }
+    };
+    
+    // 开始第一步
+    updateNextStep();
+  },
+
+  /**
+   * 更新进度
+   */
+  updateProgress(step, status) {
+    const progressPercent = Math.round((step / 4) * 100);
+    const progressRotation = (step / 4) * 360;
+    
+    this.setData({
+      progressStep: step,
+      processingStatus: status,
+      progressPercent,
+      progressRotation
+    });
+  },
+
+  /**
+   * 停止进度更新
+   */
+  stopProgressUpdate() {
+    if (this.statusTimer) {
+      clearTimeout(this.statusTimer);
+      this.statusTimer = null;
+    }
+  },
+
+  /**
+   * 处理识别错误
+   */
+  handleAnalyzingError(error) {
+    let errorMessage = '识别失败，请重试';
+    
+    if (error.code === 'IMAGE_TOO_LARGE') {
+      errorMessage = '图片文件过大，请重新拍照';
+    } else if (error.code === 'NETWORK_ERROR') {
+      errorMessage = '网络连接失败，已切换到离线模式';
+    } else if (error.code === 'OCR_SERVICE_ERROR') {
+      errorMessage = 'AI服务暂时不可用，请手动输入题目';
+    }
+    
+    wx.showModal({
+      title: '识别失败',
+      content: errorMessage,
+      showCancel: true,
+      cancelText: '重新拍照',
+      confirmText: '手动输入',
+      success: (res) => {
+        if (res.confirm) {
+          // 手动输入
+          this.setData({
+            showAnalyzing: false,
+            showPreview: true,
+            recognizedQuestion: ''
+          });
+        } else {
+          // 重新拍照
+          this.setData({
+            showAnalyzing: false,
+            showPreview: false
+            });
+        }
+      }
+    });
+  },
+
+  /**
+   * 取消识别
+   */
+  cancelAnalyzing() {
+    this.stopProgressUpdate();
+    
+    wx.showModal({
+      title: '取消识别',
+      content: '确定要取消当前识别吗？',
+      success: (res) => {
+        if (res.confirm) {
+          this.setData({
+            showAnalyzing: false,
+            showPreview: false
+          });
+    }
+      }
+    });
+  },
+
+  /**
+   * 从相册选择图片
+   */
+  async chooseFromAlbum() {
+    try {
+      const res = await wx.chooseImage({
+      count: 1,
+      sizeType: ['compressed'],
+        sourceType: ['album']
+      });
+      
+      if (res.tempFilePaths && res.tempFilePaths.length > 0) {
+        const imagePath = res.tempFilePaths[0];
+        this.setData({
+          previewImagePath: imagePath,
+          showPreview: false,
+          showAnalyzing: true
+        });
+        
+        // 开始AI识别
+        this.startAnalyzing(imagePath);
+      }
+    } catch (error) {
+        console.error('选择图片失败:', error);
+          this.showError('选择图片失败');
+        }
+  },
+
+  /**
+   * 切换闪光灯
+   */
+  switchFlash() {
+    const flashModes = ['off', 'on', 'auto'];
+    const currentIndex = flashModes.indexOf(this.data.flash);
+    const nextIndex = (currentIndex + 1) % flashModes.length;
+    
+    this.setData({
+      flash: flashModes[nextIndex]
+    });
+    
+    wx.vibrateShort();
+  },
+
+  /**
+   * 切换摄像头
+   */
+  switchCamera() {
+    const newPosition = this.data.devicePosition === 'back' ? 'front' : 'back';
+    this.setData({
+      devicePosition: newPosition
+    });
+    
+    wx.vibrateShort();
+  },
+
+  /**
+   * 相机错误处理
+   */
+  onCameraError(error) {
+    console.error('相机错误:', error);
+    this.showError('相机启动失败，请检查权限设置');
+  },
+
+  /**
+   * 重新拍照
+   */
   retakePhoto() {
     this.setData({
       showPreview: false,
       showAnalyzing: false,
       previewImagePath: '',
-      analysisResult: null,
-      showResultModal: false,
-      progressStep: 0
+      recognizedQuestion: '',
+      ocrResult: null
     });
   },
 
-  // 选择科目
-  selectSubject(e) {
-    const subject = e.currentTarget.dataset.subject;
+  /**
+   * 题目内容输入
+   */
+  onQuestionInput(e) {
+    const value = e.detail.value;
     this.setData({
-      'formData.subject': subject
+      recognizedQuestion: value,
+      hasValidQuestion: value.trim().length > 0
     });
   },
 
-  // 手动编辑
-  manualEdit() {
-    wx.showModal({
-      title: '手动编辑',
-      content: '此功能正在开发中，敬请期待！',
-      showCancel: false
-    });
-  },
-
-  // 确认使用照片（原有方法，保持兼容）
-  confirmPhoto() {
-    this.confirmAndAnalyze();
-  },
-
-  // 分析图片（原有方法，现在通过确认页面触发）
-  async analyzeImage() {
-    return this.completeAIRecognition();
-  },
-
-  // 模拟图片分析（实际项目中替换为真实AI接口）
-  mockImageAnalysis(imagePath) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const mockResults = [
-          {
-            question: this.data.recognizedQuestion,
-            answer: this.generateMockAnswer(this.data.recognizedQuestion),
-            explanation: this.generateMockExplanation(this.data.recognizedQuestion),
-            confidence: 0.92 + Math.random() * 0.06, // 0.92-0.98
-            subject: this.data.formData.subject,
-            difficulty: Math.floor(Math.random() * 5) + 1, // 1-5
-            knowledge_points: this.generateMockKnowledgePoints(this.data.recognizedQuestion)
-          }
-        ];
-        
-        resolve(mockResults[0]);
-      }, 1000);
-    });
-  },
-
-  // 生成模拟答案
-  generateMockAnswer(question) {
-    if (question.includes('25 × 4')) {
-      return '(1) 100  (2) 8  (3) 42';
-    } else if (question.includes('方程')) {
-      return 'x = 4';
-    } else if (question.includes('面积公式')) {
-      return '长 × 宽';
-    } else if (question.includes('质数')) {
-      return 'C. 7';
-    } else if (question.includes('小明')) {
-      return '20个苹果';
-    } else if (question.includes('126 + 89')) {
-      return '(1) 215  (2) 103  (3) 270';
-    } else {
-      return '答案示例';
-    }
-  },
-
-  // 生成模拟解析
-  generateMockExplanation(question) {
-    if (question.includes('25 × 4')) {
-      return '(1) 25 × 4 = 100\n(2) 48 ÷ 6 = 8\n(3) 15 + 27 = 42\n\n解题思路：按照四则运算的法则进行计算。';
-    } else if (question.includes('方程')) {
-      return '2x + 5 = 13\n移项得：2x = 13 - 5 = 8\n两边同除以2：x = 4\n\n验证：2×4 + 5 = 13 ✓';
-    } else if (question.includes('面积公式')) {
-      return '长方形面积 = 长 × 宽\n这是长方形面积计算的基本公式。';
-    } else if (question.includes('质数')) {
-      return '质数是只能被1和自身整除的自然数。\nA. 4 = 2×2 (合数)\nB. 6 = 2×3 (合数)\nC. 7 只能被1和7整除 (质数)\nD. 8 = 2×4 (合数)';
-    } else if (question.includes('小明')) {
-      return '原有：15个\n吃了：-3个\n又买了：+8个\n现在有：15 - 3 + 8 = 20个';
-    } else if (question.includes('126 + 89')) {
-      return '(1) 126 + 89 = 215\n(2) 200 - 97 = 103\n(3) 45 × 6 = 270\n\n解题要点：注意运算符号，按步骤计算。';
-    } else {
-      return '这是一道典型的数学题目，需要根据题目要求进行分析和计算。';
-    }
-  },
-
-  // 生成模拟知识点
-  generateMockKnowledgePoints(question) {
-    if (question.includes('×') || question.includes('÷') || question.includes('+') || question.includes('-')) {
-      return ['四则运算', '加法', '减法', '乘法', '除法'];
-    } else if (question.includes('方程')) {
-      return ['一元一次方程', '方程求解', '移项法则'];
-    } else if (question.includes('面积')) {
-      return ['几何图形', '长方形', '面积计算'];
-    } else if (question.includes('质数')) {
-      return ['数论', '质数与合数', '因数分解'];
-    } else if (question.includes('应用题')) {
-      return ['应用题', '数量关系', '生活数学'];
-    } else {
-      return ['基础数学', '计算能力'];
-    }
-  },
-
-  // 保存错题
-  async saveMistake() {
-    if (!this.data.analysisResult) return;
-
-    try {
-      wx.showLoading({
-        title: '保存中...',
-        mask: true
-      });
-
-      const { analysisResult, formData, previewImagePath, userInfo } = this.data;
-
-      // 准备错题数据
-      const mistakeData = {
-        userId: userInfo?._id || 'test_user_001',
-        subject: formData.subject,
-        grade: formData.grade,
-        difficulty: formData.difficulty,
-        question: analysisResult.question,
-        answer: analysisResult.answer,
-        explanation: analysisResult.explanation,
-        imagePath: previewImagePath,
-        userDescription: formData.description,
-        tags: formData.tags,
-        knowledgePoints: analysisResult.knowledge_points || [],
-        confidence: analysisResult.confidence || 0.9,
-        status: 'new', // new | reviewing | mastered
-        createTime: new Date(),
-        reviewCount: 0,
-        masteredTime: null
-      };
-
-      // 开发模式：模拟保存成功
-      if (this.data.isDevelopment) {
-        setTimeout(() => {
-          wx.hideLoading();
-          wx.showToast({
-            title: '保存成功！',
-            icon: 'success'
-          });
-
-          // 返回首页
-          setTimeout(() => {
-            wx.switchTab({
-              url: '/pages/home/home'
-            });
-          }, 1500);
-        }, 1000);
-        return;
-      }
-
-      // 保存到数据库
-      const result = await DatabaseManager.addMistake(mistakeData);
-
-      wx.hideLoading();
-
-      if (result.success) {
-        wx.showToast({
-          title: '保存成功！',
-          icon: 'success'
-        });
-
-        // 返回首页
-        setTimeout(() => {
-          wx.switchTab({
-            url: '/pages/home/home'
-          });
-        }, 1500);
-      } else {
-        throw new Error('保存失败');
-      }
-
-    } catch (error) {
-      wx.hideLoading();
-      console.error('保存错题失败:', error);
-      this.showError('保存失败，请重试');
-    }
-  },
-
-  // 从相册选择
-  chooseFromAlbum() {
-    // 开发模式：直接使用模拟数据
-    if (this.data.isDevelopment) {
-      this.simulateTakePhoto();
-      return;
-    }
-
-    wx.chooseImage({
-      count: 1,
-      sizeType: ['compressed'],
-      sourceType: ['album'],
-      success: (res) => {
-        const imagePath = res.tempFilePaths[0];
-        
-        // 先显示AI识别中页面
-        this.setData({
-          showPreview: false,
-          showAnalyzing: true,
-          previewImagePath: imagePath,
-          analyzing: true,
-          progressStep: 0
-        });
-        
-        // 开始AI识别流程
-        this.startAIRecognition();
-      },
-      fail: (error) => {
-        console.error('选择图片失败:', error);
-        // 开发模式：失败时也使用模拟数据
-        if (this.data.isDevelopment) {
-          this.simulateTakePhoto();
-        } else {
-          this.showError('选择图片失败');
-        }
-      }
-    });
-  },
-
-  // 切换摄像头
-  switchCamera() {
-    const newPosition = this.data.devicePosition === 'back' ? 'front' : 'back';
-    this.setData({ devicePosition: newPosition });
-  },
-
-  // 切换闪光灯
-  switchFlash() {
-    const flashModes = ['off', 'on', 'auto'];
-    const currentIndex = flashModes.indexOf(this.data.flash);
-    const nextIndex = (currentIndex + 1) % flashModes.length;
-    this.setData({ flash: flashModes[nextIndex] });
-  },
-
-  // 表单相关方法
-  onSubjectChange(e) {
-    const index = e.detail.value;
-    this.setData({
-      'formData.subject': this.data.subjects[index],
-      showSubjectPicker: false
-    });
-  },
-
-  onGradeChange(e) {
-    const index = e.detail.value;
-    const grade = this.data.grades[index].value;
-    this.setData({
-      'formData.grade': grade,
-      'formData.gradeLabel': this.data.grades[index].label,
-      showGradePicker: false
-    });
-  },
-
-  onDifficultyChange(e) {
-    const index = e.detail.value;
-    const difficulty = this.data.difficulties[index].value;
-    this.setData({
-      'formData.difficulty': difficulty,
-      'formData.difficultyLabel': this.data.difficulties[index].label,
-      showDifficultyPicker: false
-    });
-  },
-
+  /**
+   * 备注输入
+   */
   onDescriptionInput(e) {
     this.setData({
       'formData.description': e.detail.value
     });
   },
 
-  // 显示选择器
+  /**
+   * 显示学科选择器
+   */
   showSubjectPicker() {
-    this.setData({ showSubjectPicker: true });
+    this.setData({
+      showSubjectPicker: true
+    });
   },
 
+  /**
+   * 显示年级选择器
+   */
   showGradePicker() {
-    this.setData({ showGradePicker: true });
+    this.setData({
+      showGradePicker: true
+    });
   },
 
+  /**
+   * 显示难度选择器
+   */
   showDifficultyPicker() {
-    this.setData({ showDifficultyPicker: true });
+    this.setData({
+      showDifficultyPicker: true
+    });
   },
 
-  // 关闭选择器
+  /**
+   * 选择学科
+   */
+  selectSubject(e) {
+    const subject = e.currentTarget.dataset.subject;
+    this.setData({
+      'formData.subject': subject,
+      showSubjectPicker: false
+    });
+  },
+
+  /**
+   * 选择年级
+   */
+  selectGrade(e) {
+    const grade = e.currentTarget.dataset.grade;
+    this.setData({
+      'formData.grade': grade.value,
+      'formData.gradeLabel': grade.label,
+      showGradePicker: false
+    });
+  },
+
+  /**
+   * 选择难度
+   */
+  selectDifficulty(e) {
+    const difficulty = e.currentTarget.dataset.difficulty;
+    this.setData({
+      'formData.difficulty': difficulty.value,
+      'formData.difficultyLabel': difficulty.label,
+      showDifficultyPicker: false
+    });
+  },
+
+  /**
+   * 取消选择器
+   */
   onPickerCancel() {
     this.setData({
       showSubjectPicker: false,
@@ -597,46 +589,237 @@ Page({
     });
   },
 
-  // 关闭结果弹窗
-  closeResultModal() {
-    this.setData({ showResultModal: false });
-  },
+  /**
+   * 确认并分析
+   */
+  async confirmAndAnalyze() {
+    if (!this.data.recognizedQuestion.trim()) {
+      wx.showToast({
+        title: '请输入题目内容',
+        icon: 'none'
+      });
+      return;
+    }
 
-  // 释放相机资源
-  releaseCamera() {
-    // 相机资源会在页面销毁时自动释放
-    console.log('释放相机资源');
-  },
+    try {
+      wx.showLoading({
+        title: '正在分析...',
+        mask: true
+      });
 
-  // 错误处理
-  showError(message) {
-    wx.showModal({
-      title: '提示',
-      content: message,
-      showCancel: false,
-      confirmText: '知道了'
-    });
-  },
-
-  // 相机错误处理
-  onCameraError(e) {
-    console.error('相机错误:', e.detail);
-    // 开发模式：相机错误时自动使用模拟数据
-    if (this.data.isDevelopment) {
-      this.simulateTakePhoto();
-    } else {
-      this.showError('相机启动失败，请检查权限设置');
+      // 模拟AI分析过程
+      await this.simulateAnalysis();
+      
+      wx.hideLoading();
+      
+      // 显示结果
+      this.setData({
+        showResultModal: true
+      });
+      
+    } catch (error) {
+      wx.hideLoading();
+      console.error('分析失败:', error);
+      this.showError('分析失败: ' + error.message);
     }
   },
 
-  // 获取格式化的难度文本
-  getDifficultyText(difficulty) {
-    const item = this.data.difficulties.find(d => d.value === difficulty);
-    return item ? item.label : '';
+  /**
+   * 模拟AI分析
+   */
+  async simulateAnalysis() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const mockResult = {
+          question: this.data.recognizedQuestion,
+          answer: this.generateMockAnswer(),
+          explanation: this.generateMockExplanation(),
+          knowledge_points: this.generateMockKnowledgePoints(),
+          difficulty: this.data.formData.difficulty,
+          subject: this.data.formData.subject
+        };
+        
+        this.setData({
+          analysisResult: mockResult
+        });
+        
+        resolve(mockResult);
+      }, 2000);
+    });
   },
 
-  // 获取格式化的年级文本
-  getGradeText(grade) {
-    return this.data.grades.find(g => g.value === grade)?.label || '';
+  /**
+   * 生成模拟答案
+   */
+  generateMockAnswer() {
+    const answers = [
+      '42',
+      '正确答案是C',
+      '解：x = 5',
+      '因为...所以...',
+      '答：小明现在有20个苹果'
+    ];
+    
+    return answers[Math.floor(Math.random() * answers.length)];
+  },
+
+  /**
+   * 生成模拟解析
+   */
+  generateMockExplanation() {
+    return '这道题主要考查的是基础运算能力。首先需要理解题目的含义，然后按照运算法则进行计算。具体解题步骤如下：\n\n1. 分析题目给出的条件\n2. 确定解题思路\n3. 按步骤计算\n4. 检查答案的合理性\n\n通过这种方法可以确保计算准确，避免出错。';
+  },
+
+  /**
+   * 生成模拟知识点
+   */
+  generateMockKnowledgePoints() {
+    const knowledgePoints = {
+      '数学': ['基础运算', '代数', '几何', '函数'],
+      '语文': ['阅读理解', '古诗词', '文言文', '作文'],
+      '英语': ['语法', '词汇', '阅读', '写作'],
+      '物理': ['力学', '电学', '光学', '热学'],
+      '化学': ['化学反应', '元素周期表', '有机化学', '无机化学']
+    };
+    
+    const subject = this.data.formData.subject;
+    const points = knowledgePoints[subject] || knowledgePoints['数学'];
+    
+    // 随机选择1-3个知识点
+    const count = Math.floor(Math.random() * 3) + 1;
+    const selectedPoints = [];
+    
+    for (let i = 0; i < count && i < points.length; i++) {
+      const randomIndex = Math.floor(Math.random() * points.length);
+      if (!selectedPoints.includes(points[randomIndex])) {
+        selectedPoints.push(points[randomIndex]);
+      }
+    }
+    
+    return selectedPoints;
+  },
+
+  /**
+   * 保存错题
+   */
+  async saveMistake() {
+    try {
+      wx.showLoading({
+        title: '保存中...',
+        mask: true
+      });
+
+      const mistakeData = {
+        id: Date.now().toString(),
+        question: this.data.analysisResult.question,
+        answer: this.data.analysisResult.answer,
+        explanation: this.data.analysisResult.explanation,
+        knowledge_points: this.data.analysisResult.knowledge_points,
+        subject: this.data.formData.subject,
+        grade: this.data.formData.grade,
+        difficulty: this.data.formData.difficulty,
+        description: this.data.formData.description,
+        image_path: this.data.previewImagePath,
+        created_at: formatTime(new Date()),
+        updated_at: formatTime(new Date()),
+        review_count: 0,
+        mastery_level: 0
+      };
+
+      // 保存到本地存储
+      await this.saveToLocalStorage(mistakeData);
+      
+      wx.hideLoading();
+      
+      wx.showToast({
+        title: '保存成功',
+        icon: 'success',
+        duration: 2000
+      });
+      
+      // 关闭弹窗并返回
+      this.setData({
+        showResultModal: false
+      });
+      
+      setTimeout(() => {
+        wx.navigateBack();
+      }, 2000);
+      
+    } catch (error) {
+      wx.hideLoading();
+      console.error('保存错题失败:', error);
+      this.showError('保存失败: ' + error.message);
+    }
+  },
+
+  /**
+   * 保存到本地存储
+   */
+  async saveToLocalStorage(mistakeData) {
+    return new Promise((resolve, reject) => {
+      try {
+        // 获取现有数据
+        const existingData = wx.getStorageSync('mistakes') || [];
+        
+        // 添加新数据
+        existingData.unshift(mistakeData);
+        
+        // 保存数据
+        wx.setStorageSync('mistakes', existingData);
+        
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+
+  /**
+   * 关闭结果弹窗
+   */
+  closeResultModal() {
+    this.setData({
+      showResultModal: false
+    });
+  },
+
+  /**
+   * 显示错误信息
+   */
+  showError(message) {
+    wx.showModal({
+      title: '错误',
+      content: message,
+      showCancel: false
+    });
+  },
+
+  /**
+   * 开发模式：自动模拟拍照
+   */
+  startDevelopmentMode() {
+    if (this.data.isDevelopment) {
+      setTimeout(() => {
+        this.mockTakePhoto();
+      }, 2000);
+    }
+  },
+
+  /**
+   * 模拟拍照
+   */
+  mockTakePhoto() {
+    const mockImagePath = '/images/mock-question.jpg';
+    
+    this.setData({
+      previewImagePath: mockImagePath,
+      showPreview: false,
+      showAnalyzing: true
+    });
+    
+    // 模拟AI识别
+    this.startAnalyzing(mockImagePath);
   }
+  // 已移除对全局 Math 对象的直接引用，避免只读属性报错
 }); 

@@ -107,7 +107,7 @@
   padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
   background-color: var(--bg-secondary);
   box-shadow: 0 -4rpx 16rpx rgba(0,0,0,0.04);
-  z-index: 998;
+  z-index: 1000;
 }
 
 .start-btn {
@@ -117,11 +117,23 @@
   border-radius: 48rpx;
   font-size: 32rpx;
   font-weight: bold;
-  background-color: var(--primary-color);
+  background-color: #4A90E2;
   color: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: none;
+  box-shadow: 0 4rpx 12rpx rgba(74, 144, 226, 0.3);
+  transition: all 0.3s ease;
+}
+
+.start-btn:hover {
+  background-color: #3A77C2;
+  transform: translateY(-2rpx);
+}
+
+.start-btn::after {
+  border: none;
 }
 
 .btn-icon {

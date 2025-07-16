@@ -93,7 +93,9 @@ Page({
 
   handleActionTap(e) {
     const path = e.currentTarget.dataset.path;
-    if (path.includes('practice') || path.includes('mistakes')) {
+    // 仅当目标是底部 tabBar 页面时使用 switchTab，其余使用 navigateTo
+    const tabPages = ['/pages/home/home', '/pages/mistakes/mistakes', '/pages/practice/practice', '/pages/schedule/schedule', '/pages/profile/profile'];
+    if (tabPages.includes(path)) {
       wx.switchTab({ url: path });
     } else {
       wx.navigateTo({ url: path });

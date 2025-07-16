@@ -1,0 +1,22 @@
+{
+  "name": "ai-grading",
+  "version": "1.0.0",
+  "description": "AI智能批改云函数，支持多种题目类型的智能批改和分析",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  },
+  "keywords": [
+    "ai",
+    "grading",
+    "intelligent",
+    "education",
+    "assessment",
+    "cloud-function"
+  ],
+  "author": "Smart Study Assistant",
+  "license": "MIT"
+} 

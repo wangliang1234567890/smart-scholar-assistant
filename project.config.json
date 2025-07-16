@@ -18,6 +18,54 @@
       {
         "value": "docs",
         "type": "folder"
+      },
+      {
+        "value": "node_modules",
+        "type": "folder"
+      },
+      {
+        "value": "设计稿",
+        "type": "folder"
+      },
+      {
+        "value": "*.md",
+        "type": "file"
+      },
+      {
+        "value": "*.msi",
+        "type": "file"
+      },
+      {
+        "value": "package-lock.json",
+        "type": "file"
+      },
+      {
+        "value": "DEPLOY.md",
+        "type": "file"
+      },
+      {
+        "value": "DEVELOPMENT_PROGRESS.md",
+        "type": "file"
+      },
+      {
+        "value": "GETTING_STARTED.md",
+        "type": "file"
+      },
+      {
+        "value": "LICENSE",
+        "type": "file"
+      },
+      {
+        "value": "代码规范.md",
+        "type": "file"
+      },
+      {
+        "value": "开发周期计划.md",
+        "type": "file"
+      },
+      {
+        "value": "详细开发指南.md",
+        "type": "file"
       }
     ],
     "include": []

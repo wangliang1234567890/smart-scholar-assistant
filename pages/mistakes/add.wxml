@@ -1,7 +1,19 @@
-<!--pages/mistakes/add.wxml-->
-<view class="add-container">
-  <van-cell-group inset>
-    <!-- 题目 -->
+<!-- 新版 add.wxml -->
+<view class="page-container">
+  <!-- 自定义导航栏 -->
+  <view class="nav-bar">
+    <view class="nav-left" bind:tap="onBack">
+      <van-icon name="arrow-left" size="24px" color="#ffffff" />
+    </view>
+    <view class="nav-title">录入新错题</view>
+    <view class="nav-right"></view>
+  </view>
+
+  <!-- 表单滚动区 -->
+  <scroll-view class="form-scroll" scroll-y>
+    <!-- 题目信息卡片 -->
+    <view class="card">
+      <view class="card-title">题目信息</view>
     <van-field
       value="{{ formData.question }}"
       label="题目内容"
@@ -9,24 +21,28 @@
       placeholder="请输入或粘贴题目文字"
       autosize
       required
+        border
+        custom-class="input-field"
+        label-width="160rpx"
       bind:change="onFieldChange"
       data-field="question"
     />
-    <!-- 图片上传 -->
-    <van-cell title="题目图片">
+      <view class="uploader-wrapper">
+        <view class="uploader-label">题目图片</view>
       <van-uploader
         file-list="{{ fileList }}"
         bind:after-read="afterRead"
         bind:delete="deleteImage"
         max-count="1"
         deletable
-        preview-size="80px"
+          preview-size="160rpx"
       />
-    </van-cell>
-  </van-cell-group>
+      </view>
+    </view>
 
-  <van-cell-group inset>
-    <!-- 答案 -->
+    <!-- 答案解析卡片 -->
+    <view class="card">
+      <view class="card-title">答案与解析</view>
     <van-field
       value="{{ formData.answer }}"
       label="正确答案"
@@ -34,37 +50,48 @@
       placeholder="请输入正确答案"
       autosize
       required
+        border
+        custom-class="input-field"
+        label-width="160rpx"
       bind:change="onFieldChange"
       data-field="answer"
     />
-    <!-- 解析 -->
     <van-field
       value="{{ formData.analysis }}"
       label="题目解析"
       type="textarea"
       placeholder="请输入题目解析（选填）"
       autosize
+        border
+        custom-class="input-field"
+        label-width="160rpx"
       bind:change="onFieldChange"
       data-field="analysis"
     />
-  </van-cell-group>
+    </view>
   
-  <van-cell-group inset>
-    <!-- 学科 -->
-    <van-cell title="选择学科" required>
+    <!-- 分类卡片 -->
+    <view class="card">
+      <view class="card-title">分类信息</view>
+      <view class="picker-row">
+        <view class="picker-label">选择学科</view>
       <van-radio-group value="{{ formData.subject }}" bind:change="onFieldChange" data-field="subject" direction="horizontal">
-        <van-radio wx:for="{{subjects}}" wx:key="*this" name="{{item}}" class="radio-item">{{item}}</van-radio>
+          <van-radio wx:for="{{subjects}}" wx:key="*this" name="{{item}}" class="chip-radio">{{item}}</van-radio>
       </van-radio-group>
-    </van-cell>
-    <!-- 难度 -->
-    <van-cell title="选择难度" required>
+      </view>
+      <view class="picker-row">
+        <view class="picker-label">选择难度</view>
       <van-radio-group value="{{ formData.difficulty }}" bind:change="onFieldChange" data-field="difficulty" direction="horizontal">
-        <van-radio wx:for="{{difficulties}}" wx:key="value" name="{{item.value}}" class="radio-item">{{item.label}}</van-radio>
+          <van-radio wx:for="{{difficulties}}" wx:key="value" name="{{item.value}}" class="chip-radio">{{item.label}}</van-radio>
       </van-radio-group>
-    </van-cell>
-  </van-cell-group>
+      </view>
+    </view>
 
-  <!-- 提交按钮 -->
+    <!-- 底部间距占位 -->
+    <view style="height:160rpx"></view>
+  </scroll-view>
+
+  <!-- 底部提交按钮 -->
   <view class="submit-wrapper">
     <van-button type="primary" block round bind:tap="handleSubmit" loading="{{isSubmitting}}">
       {{mode === 'edit' ? '保存修改' : '确认添加'}}

@@ -1,56 +1,145 @@
 /* pages/review/review.wxss */
 .page-container {
   min-height: 100vh;
-  background: var(--bg-secondary);
-  padding: 32rpx;
+  background: #F8FAFC;
 }
 
-/* 复习统计 */
-.review-stats {
-  margin-bottom: 32rpx;
+/* 自定义导航栏 */
+.custom-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: #F8FAFC;
+  border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
 }
 
-.stats-card {
-  background: linear-gradient(135deg, var(--danger-color) 0%, #DC2626 100%);
-  border-radius: 32rpx;
-  padding: 48rpx 32rpx;
-  box-shadow: 0 8rpx 32rpx rgba(239, 68, 68, 0.3);
+.navbar-content {
+  display: flex;
+  align-items: center;
+  height: 88rpx;
+  padding: 0 24rpx;
 }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 32rpx;
+.navbar-left,
+.navbar-right {
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16rpx;
+  transition: background-color 0.3s ease;
+}
+
+.navbar-left:active,
+.navbar-right:active {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.navbar-center {
+  flex: 1;
+  text-align: center;
+  padding: 0 20rpx;
+}
+
+.navbar-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1F2937;
+  display: block;
+  line-height: 1.2;
+}
+
+.navbar-subtitle {
+  font-size: 24rpx;
+  color: #6B7280;
+  display: block;
+  margin-top: 2rpx;
+}
+
+/* 页面内容 */
+.page-content {
+  padding: 40rpx 24rpx 32rpx;
+}
+
+/* 顶部统计区域 */
+.stats-section {
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+  margin-bottom: 40rpx;
 }
 
 .stat-item {
+  flex: 1;
+  background: white;
+  border-radius: 24rpx;
+  padding: 32rpx 20rpx;
   text-align: center;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+  transition: transform 0.3s ease;
+}
+
+.stat-item:active {
+  transform: translateY(-2rpx);
+}
+
+.stat-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  margin: 0 auto 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+.stat-icon.pending {
+  background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+}
+
+.stat-icon.completed {
+  background: linear-gradient(135deg, #10B981 0%, #34D399 100%);
+}
+
+.stat-icon.accuracy {
+  background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+}
+
+.icon-text {
+  font-size: 36rpx;
+  line-height: 1;
 }
 
 .stat-number {
-  font-size: 56rpx;
-  font-weight: bold;
-  color: var(--text-light);
+  font-size: 52rpx;
+  font-weight: 700;
+  color: #1F2937;
   display: block;
   margin-bottom: 8rpx;
+  line-height: 1;
 }
 
 .stat-label {
-  font-size: 28rpx;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: 26rpx;
+  color: #6B7280;
   display: block;
+  font-weight: 500;
 }
 
 /* 复习模式 */
-.review-modes {
-  margin-bottom: 48rpx;
+.modes-section {
+  margin-bottom: 40rpx;
 }
 
 .section-title {
-  font-size: 36rpx;
+  font-size: 34rpx;
   font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 32rpx;
+  color: #1F2937;
+  margin-bottom: 28rpx;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -60,44 +149,48 @@
   display: flex;
   align-items: center;
   gap: 8rpx;
-  font-size: 28rpx;
-  color: var(--text-secondary);
+  font-size: 26rpx;
+  color: #4F46E5;
+  font-weight: 500;
 }
 
 .modes-list {
   display: flex;
   flex-direction: column;
-  gap: 24rpx;
+  gap: 20rpx;
 }
 
 .mode-item {
-  background: var(--bg-primary);
+  background: white;
   border-radius: 24rpx;
-  padding: 32rpx;
+  padding: 28rpx 24rpx;
   display: flex;
   align-items: center;
   gap: 24rpx;
-  box-shadow: var(--shadow-light);
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
 }
 
 .mode-item:active {
   transform: translateY(-2rpx);
-  box-shadow: var(--shadow-medium);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.12);
 }
 
 .mode-icon {
-  width: 80rpx;
-  height: 80rpx;
+  width: 72rpx;
+  height: 72rpx;
   border-radius: 20rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
 }
 
-.mode-icon.quick { background: var(--warning-color); }
-.mode-icon.subject { background: var(--primary-color); }
-.mode-icon.systematic { background: var(--accent-color-purple); }
+.mode-icon-text {
+  font-size: 36rpx;
+  line-height: 1;
+}
 
 .mode-content {
   flex: 1;
@@ -106,169 +199,192 @@
 .mode-name {
   font-size: 32rpx;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #1F2937;
   display: block;
-  margin-bottom: 8rpx;
+  margin-bottom: 6rpx;
 }
 
 .mode-desc {
-  font-size: 28rpx;
-  color: var(--text-secondary);
+  font-size: 26rpx;
+  color: #6B7280;
   display: block;
 }
 
-.mode-count {
-  margin-right: 16rpx;
+/* 学科进度 */
+.progress-section {
+  margin-bottom: 40rpx;
 }
 
-/* 学科复习 */
-.subject-review {
-  margin-bottom: 48rpx;
+.progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
 }
 
-.subjects-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24rpx;
-}
-
-.subject-card {
-  background: var(--bg-primary);
+.progress-item {
+  background: white;
   border-radius: 24rpx;
-  padding: 32rpx;
-  box-shadow: var(--shadow-light);
+  padding: 28rpx 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
 }
 
-.subject-card:active {
+.progress-item:active {
   transform: translateY(-2rpx);
-  box-shadow: var(--shadow-medium);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.12);
 }
 
-.subject-header {
+.progress-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 16rpx;
-  margin-bottom: 24rpx;
+  margin-bottom: 20rpx;
 }
-
-.subject-icon {
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: 16rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.subject-icon.math { background: var(--primary-color); }
-.subject-icon.chinese { background: var(--danger-color); }
-.subject-icon.english { background: var(--success-color); }
-.subject-icon.science { background: var(--accent-color-purple); }
 
 .subject-name {
-  font-size: 30rpx;
+  font-size: 34rpx;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #1F2937;
 }
 
-.review-progress {
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 16rpx;
+}
+
+.progress-label {
+  font-size: 26rpx;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+.progress-number {
+  font-size: 26rpx;
+  color: #1F2937;
+  font-weight: 600;
 }
 
 .progress-bar {
   width: 100%;
   height: 12rpx;
-  background: var(--border-light);
+  background: #E5E7EB;
   border-radius: 12rpx;
   overflow: hidden;
-  margin-bottom: 8rpx;
 }
 
 .progress-fill {
   height: 100%;
-  background: var(--danger-color);
   border-radius: 12rpx;
-  transition: width 0.3s ease;
+  transition: width 0.5s ease;
 }
 
-.progress-text {
-  font-size: 24rpx;
-  color: var(--text-secondary);
+.progress-fill.urgent {
+  background: linear-gradient(90deg, #4F46E5 0%, #6366F1 100%);
 }
 
-.urgency-level {
-  text-align: right;
+.progress-fill.medium {
+  background: linear-gradient(90deg, #F59E0B 0%, #FBBF24 100%);
 }
 
-/* 最近复习 */
-.recent-reviews {
-  margin-bottom: 48rpx;
+.progress-fill.completed {
+  background: linear-gradient(90deg, #10B981 0%, #34D399 100%);
 }
 
-.reviews-list {
+/* 最近复习记录 */
+.recent-section {
+  margin-bottom: 40rpx;
+}
+
+.recent-list {
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
+  gap: 20rpx;
 }
 
-.review-item {
-  background: var(--bg-primary);
-  border-radius: 20rpx;
-  padding: 24rpx;
+.recent-item {
+  background: white;
+  border-radius: 24rpx;
+  padding: 28rpx 24rpx;
   display: flex;
   align-items: center;
-  gap: 20rpx;
-  box-shadow: var(--shadow-light);
+  gap: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
 }
 
-.review-item:active {
-  transform: translateY(-1rpx);
-  box-shadow: var(--shadow-medium);
+.recent-item:active {
+  transform: translateY(-2rpx);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.12);
 }
 
-.review-icon {
+.recent-icon {
   width: 64rpx;
   height: 64rpx;
-  border-radius: 16rpx;
-  background: var(--bg-tertiary);
+  border-radius: 20rpx;
+  background: linear-gradient(135deg, #10B981 0%, #34D399 100%);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4rpx 12rpx rgba(16, 185, 129, 0.3);
 }
 
-.review-info {
+.recent-icon-text {
+  font-size: 32rpx;
+  line-height: 1;
+}
+
+.recent-content {
   flex: 1;
 }
 
-.review-title {
-  font-size: 30rpx;
-  font-weight: 500;
-  color: var(--text-primary);
+.recent-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1F2937;
+  display: block;
+  margin-bottom: 6rpx;
+}
+
+.recent-meta {
+  font-size: 26rpx;
+  color: #6B7280;
+  display: block;
+}
+
+.recent-result {
+  text-align: right;
+  min-width: 100rpx;
+}
+
+.accuracy-rate {
+  font-size: 36rpx;
+  font-weight: 700;
   display: block;
   margin-bottom: 4rpx;
+  line-height: 1;
 }
 
-.review-meta {
+.accuracy-rate.high {
+  color: #10B981;
+}
+
+.accuracy-rate.medium {
+  color: #F59E0B;
+}
+
+.accuracy-rate.low {
+  color: #EF4444;
+}
+
+.accuracy-label {
   font-size: 24rpx;
-  color: var(--text-secondary);
+  color: #6B7280;
   display: block;
+  font-weight: 500;
 }
-
-.review-result {
-  text-align: right;
-}
-
-.result-score {
-  font-size: 28rpx;
-  font-weight: 600;
-  display: block;
-}
-
-.result-score.good { color: var(--success-color); }
-.result-score.normal { color: var(--warning-color); }
-.result-score.poor { color: var(--danger-color); }
 
 /* 空状态 */
 .empty-section {
@@ -276,16 +392,28 @@
   justify-content: center;
   align-items: center;
   min-height: 400rpx;
+  background: white;
+  border-radius: 24rpx;
+  margin-top: 40rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
 }
 
 /* 响应式调整 */
 @media (max-width: 750rpx) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 24rpx;
+  .stats-section {
+    flex-direction: column;
+    gap: 20rpx;
   }
   
-  .subjects-grid {
-    grid-template-columns: 1fr;
+  .stat-item {
+    padding: 28rpx 20rpx;
+  }
+  
+  .stat-number {
+    font-size: 48rpx;
+  }
+  
+  .page-content {
+    padding: 32rpx 20rpx;
   }
 } 

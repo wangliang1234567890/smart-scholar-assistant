@@ -66,3 +66,19 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd 
+
+# 微信小程序专用
+miniprogram_npm/
+设计稿/
+node-v*.msi
+*.msi
+
+# 文档文件（小程序不需要）
+*.md
+LICENSE
+DEPLOY.md
+DEVELOPMENT_PROGRESS.md
+GETTING_STARTED.md
+代码规范.md
+开发周期计划.md
+详细开发指南.md 

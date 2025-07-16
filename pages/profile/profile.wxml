@@ -21,7 +21,7 @@
         <view class="exp-value">{{userInfo.exp || 450}} / 1000</view>
       </view>
       <view class="progress-bar">
-        <view class="progress" style="width: {{(userInfo.exp / 1000) * 100}}%;"></view>
+        <view class="progress" style="width: {{expProgressPercent}}%;"></view>
       </view>
       <view class="stats-grid">
         <view wx:for="{{stats}}" wx:key="label" class="stat-item">

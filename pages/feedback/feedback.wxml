@@ -1,0 +1,240 @@
+<!-- pages/feedback/feedback.wxml -->
+<view class="feedback-container">
+  <!-- 顶部导航 -->
+  <view class="header">
+    <view class="header-title">用户反馈</view>
+    <view class="header-subtitle">您的意见对我们很重要</view>
+  </view>
+
+  <!-- 反馈类型选择 -->
+  <view class="section">
+    <view class="section-title">
+      <view class="title-icon">📝</view>
+      <text class="title-text">选择反馈类型</text>
+    </view>
+    
+    <view class="feedback-types">
+      <view 
+        wx:for="{{feedbackTypes}}" 
+        wx:key="id" 
+        class="type-card {{selectedType === item.id ? 'selected' : ''}}"
+        style="border-color: {{selectedType === item.id ? item.color : '#E5E7EB'}}"
+        data-type="{{item.id}}"
+        bind:tap="selectFeedbackType"
+      >
+        <view class="type-icon" style="background-color: {{item.color}}">
+          <van-icon name="{{item.icon}}" size="24rpx" color="white" />
+        </view>
+        <view class="type-name">{{item.name}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快速反馈模板 -->
+  <view wx:if="{{selectedType}}" class="section">
+    <view class="section-title">
+      <view class="title-icon">⚡</view>
+      <text class="title-text">快速反馈</text>
+    </view>
+    
+    <view class="quick-feedback">
+      <button 
+        class="quick-btn" 
+        data-type="performance" 
+        bind:tap="quickFeedback"
+      >
+        性能问题
+      </button>
+      <button 
+        class="quick-btn" 
+        data-type="accuracy" 
+        bind:tap="quickFeedback"
+      >
+        识别准确度
+      </button>
+      <button 
+        class="quick-btn" 
+        data-type="feature_request" 
+        bind:tap="quickFeedback"
+      >
+        功能建议
+      </button>
+      <button 
+        class="quick-btn" 
+        data-type="ui_suggestion" 
+        bind:tap="quickFeedback"
+      >
+        界面优化
+      </button>
+    </view>
+  </view>
+
+  <!-- 反馈表单 -->
+  <view wx:if="{{selectedType}}" class="section">
+    <view class="section-title">
+      <view class="title-icon">✍️</view>
+      <text class="title-text">详细信息</text>
+    </view>
+    
+    <!-- 标题输入 -->
+    <view class="form-group">
+      <view class="label">反馈标题 *</view>
+      <input 
+        class="input" 
+        placeholder="请简洁描述您的问题或建议"
+        value="{{formData.title}}"
+        bind:input="onTitleInput"
+        maxlength="50"
+      />
+      <view class="char-count">{{formData.title.length}}/50</view>
+    </view>
+
+    <!-- 详细描述 -->
+    <view class="form-group">
+      <view class="label">详细描述 *</view>
+      <textarea 
+        class="textarea" 
+        placeholder="请详细描述您遇到的问题或建议，包括操作步骤、期望结果等"
+        value="{{formData.description}}"
+        bind:input="onDescriptionInput"
+        maxlength="500"
+        auto-height
+      />
+      <view class="char-count">{{formData.description.length}}/500</view>
+    </view>
+
+    <!-- 评分（仅体验评价类型显示） -->
+    <view wx:if="{{selectedType === 'experience'}}" class="form-group">
+      <view class="label">整体评分</view>
+      <view class="rating-container">
+        <view 
+          wx:for="{{ratingStars}}" 
+          wx:key="*this"
+          class="star {{formData.rating >= item ? 'active' : ''}}"
+          data-rating="{{item}}"
+          bind:tap="onRatingTap"
+        >
+          <van-icon name="star" size="36rpx" color="{{formData.rating >= item ? '#FFD700' : '#E5E7EB'}}" />
+        </view>
+        <text wx:if="{{formData.rating > 0}}" class="rating-label">
+          {{ratingLabels[formData.rating - 1]}}
+        </text>
+      </view>
+    </view>
+
+    <!-- 联系方式 -->
+    <view class="form-group">
+      <view class="label">联系方式（可选）</view>
+      <input 
+        class="input" 
+        placeholder="便于我们回复您（微信号、邮箱等）"
+        value="{{formData.contactInfo}}"
+        bind:input="onContactInput"
+        maxlength="50"
+      />
+    </view>
+  </view>
+
+  <!-- 图片附件 -->
+  <view wx:if="{{selectedType}}" class="section">
+    <view class="section-title">
+      <view class="title-icon">📷</view>
+      <text class="title-text">图片附件（可选）</text>
+    </view>
+    
+    <view class="images-container">
+      <!-- 已选择的图片 -->
+      <view 
+        wx:for="{{attachedImages}}" 
+        wx:key="*this"
+        class="image-item"
+        data-index="{{index}}"
+        bind:tap="previewImage"
+      >
+        <image class="image" src="{{item}}" mode="aspectFill" />
+        <view 
+          class="remove-btn"
+          data-index="{{index}}"
+          bind:tap="removeImage"
+          catch:tap="removeImage"
+        >
+          <van-icon name="close" size="16rpx" color="white" />
+        </view>
+      </view>
+      
+      <!-- 添加图片按钮 -->
+      <view 
+        wx:if="{{attachedImages.length < maxImages}}"
+        class="add-image-btn"
+        bind:tap="addImage"
+      >
+        <van-icon name="plus" size="32rpx" color="#999" />
+        <text class="add-text">添加图片</text>
+      </view>
+    </view>
+    
+    <view class="image-tip">
+      最多上传{{maxImages}}张图片，支持问题截图或相关照片
+    </view>
+  </view>
+
+  <!-- 设备信息预览 -->
+  <view wx:if="{{selectedType === 'bug'}}" class="section">
+    <view class="section-title">
+      <view class="title-icon">📱</view>
+      <text class="title-text">设备信息</text>
+    </view>
+    
+    <view class="device-info">
+      <view class="info-row">
+        <text class="info-label">设备型号：</text>
+        <text class="info-value">{{formData.deviceInfo.model}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">系统版本：</text>
+        <text class="info-value">{{formData.deviceInfo.system}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">微信版本：</text>
+        <text class="info-value">{{formData.deviceInfo.wechatVersion}}</text>
+      </view>
+    </view>
+    
+    <view class="info-note">
+      设备信息将帮助我们更好地定位和解决问题
+    </view>
+  </view>
+
+  <!-- 提交按钮 -->
+  <view wx:if="{{selectedType}}" class="submit-section">
+    <button 
+      class="submit-btn {{isSubmitting ? 'submitting' : ''}}"
+      bind:tap="submitFeedback"
+      disabled="{{isSubmitting}}"
+    >
+      <van-loading wx:if="{{isSubmitting}}" size="20rpx" color="white" />
+      <text class="submit-text">{{isSubmitting ? '提交中...' : '提交反馈'}}</text>
+    </button>
+  </view>
+
+  <!-- 底部操作 -->
+  <view class="footer-actions">
+    <button class="footer-btn" bind:tap="viewFeedbackHistory">
+      <van-icon name="clock-o" size="20rpx" />
+      <text>历史反馈</text>
+    </button>
+    
+    <button class="footer-btn" bind:tap="contactSupport">
+      <van-icon name="service" size="20rpx" />
+      <text>联系客服</text>
+    </button>
+  </view>
+
+  <!-- 隐私说明 -->
+  <view class="privacy-notice">
+    <van-icon name="info-o" size="16rpx" color="#999" />
+    <text class="notice-text">
+      您的反馈将帮助我们改进产品，我们承诺保护您的隐私信息
+    </text>
+  </view>
+</view> 
