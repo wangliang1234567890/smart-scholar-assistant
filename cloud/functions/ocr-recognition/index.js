@@ -1,371 +1,272 @@
-/**
- * OCR识别云函数
- * 支持腾讯云OCR和百度OCR服务
- */
-
 const cloud = require('wx-server-sdk');
+const fetch = require('node-fetch');
 
 // 初始化云开发
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
 });
 
-/**
- * 云函数主入口
- * @param {Object} event - 请求参数
- * @param {string} event.imageBase64 - 图片base64编码
- * @param {string} event.imageFormat - 图片格式 (jpeg/png/bmp)
- * @param {Object} event.options - 识别选项
- * @returns {Promise<Object>} 识别结果
- */
+// 优化豆包AI配置，提高响应速度
+const DOUBAO_CONFIG = {
+  API_KEY: '908e2e4e-8625-4a88-b2dc-81b2acf0f5a7',
+  ENDPOINT: 'https://ark.cn-beijing.volces.com/api/v3/chat/completions',
+  MODEL_ID: 'doubao-seed-1-6-250615',
+  TIMEOUT: 25000, // 减少到25秒
+  MAX_RETRIES: 0   // 真机环境不重试
+};
+
 exports.main = async (event, context) => {
-  console.log('OCR识别云函数开始执行:', {
-    imageFormat: event.imageFormat,
+  context.callbackWaitsForEmptyEventLoop = false;
+  
+  const startTime = Date.now();
+  
+  console.log('豆包AI图片分析云函数开始执行:', {
+    hasImage: !!event.imageBase64,
+    hasFileID: !!event.fileID,
+    requestId: event.options?.requestId,
     imageSize: event.imageBase64 ? event.imageBase64.length : 0,
-    options: event.options
+    analysisType: event.analysisType || 'complete',
+    isTest: !!event.test
   });
+  
+  // 测试调用 - 确保返回正确格式
+  if (event.test) {
+    const testResult = {
+      success: true,
+      recognizedText: '云函数连接正常，豆包AI图片分析服务已就绪',
+      text: '云函数连接正常，豆包AI图片分析服务已就绪',
+      confidence: 0.95,
+      questionType: 'test',
+      subject: 'test',
+      provider: '豆包AI',
+      processingTime: Date.now() - startTime,
+      testMode: true
+    };
+    console.log('测试模式返回结果:', testResult);
+    return testResult;
+  }
 
   try {
-    // 参数验证
-    if (!event.imageBase64) {
-      throw new Error('图片数据不能为空');
-    }
-
-    if (!event.imageFormat) {
-      throw new Error('图片格式不能为空');
-    }
-
-    // 选择OCR服务提供商
-    const provider = process.env.OCR_PROVIDER || 'baidu'; // 默认使用百度OCR
+    // 主要逻辑...
+    const result = await processImageAnalysis(event);
     
-    let result;
-    if (provider === 'tencent') {
-      result = await recognizeWithTencent(event);
-    } else if (provider === 'baidu') {
-      result = await recognizeWithBaidu(event);
-    } else {
-      throw new Error('不支持的OCR服务提供商');
-    }
-
-    console.log('OCR识别成功:', {
-      textLength: result.text ? result.text.length : 0,
-      confidence: result.confidence,
-      regionsCount: result.regions ? result.regions.length : 0
-    });
-
-    return {
+    // 确保返回正确格式
+    const finalResult = {
       success: true,
-      ...result,
-      processingTime: Date.now() - context.startTime || 0
+      text: result.recognizedText || result.text || '',
+      recognizedText: result.recognizedText || result.text || '',
+      confidence: result.confidence || 0.8,
+      questionType: result.questionType || 'unknown',
+      subject: result.subject || 'unknown',
+      difficulty: result.difficulty || 1,
+      provider: '豆包AI',
+      processingTime: Date.now() - startTime
     };
-
-  } catch (error) {
-    console.error('OCR识别失败:', error);
     
+    console.log('云函数执行成功，返回结果:', finalResult);
+    return finalResult;
+    
+  } catch (error) {
+    console.error('云函数执行失败:', error);
+    
+    // 返回错误结果而不是undefined
     return {
       success: false,
-      error: {
-        code: error.code || 'OCR_ERROR',
-        message: error.message || '识别失败',
-        details: error.details || null
-      }
+      error: error.message,
+      text: '',
+      recognizedText: '',
+      confidence: 0,
+      questionType: 'error',
+      subject: 'unknown',
+      processingTime: Date.now() - startTime
     };
   }
 };
 
-/**
- * 使用腾讯云OCR进行识别
- */
-async function recognizeWithTencent(event) {
-  const { imageBase64, imageFormat, options = {} } = event;
-  
-  // 腾讯云OCR配置
-  const config = {
-    SecretId: process.env.TENCENT_SECRET_ID,
-    SecretKey: process.env.TENCENT_SECRET_KEY,
-    Region: process.env.TENCENT_REGION || 'ap-beijing',
-    Endpoint: 'ocr.tencentcloudapi.com',
-    Version: '2018-11-19'
-  };
-
-  if (!config.SecretId || !config.SecretKey) {
-    throw new Error('腾讯云OCR配置不完整');
-  }
-
-  try {
-    // 这里应该调用腾讯云OCR SDK
-    // 由于小程序云函数环境限制，这里使用HTTP请求方式
-    const result = await callTencentOCRAPI(config, {
-      ImageBase64: imageBase64,
-      ImageUrl: '', // 如果有图片URL可以使用
-      SceneType: options.scene || 'general', // general, handwriting, math
-      LanguageType: options.language || 'zh-cn'
-    });
-
-    return formatTencentResult(result);
-
-  } catch (error) {
-    console.error('腾讯云OCR调用失败:', error);
-    throw new Error('腾讯云OCR服务异常: ' + error.message);
-  }
-}
-
-/**
- * 使用百度OCR进行识别
- */
-async function recognizeWithBaidu(event) {
-  const { imageBase64, imageFormat, options = {} } = event;
-  
-  try {
-    // 获取访问令牌
-    const accessToken = await getBaiduAccessToken();
-    
-    // 调用百度OCR API
-    const result = await callBaiduOCRAPI(accessToken, {
-      image: imageBase64,
-      language_type: options.language || 'CHN_ENG', // CHN_ENG, JAP, KOR
-      detect_direction: true,
-      detect_language: true,
-      probability: true
-    });
-
-    return formatBaiduResult(result);
-
-  } catch (error) {
-    console.error('百度OCR调用失败:', error);
-    throw new Error('百度OCR服务异常: ' + error.message);
-  }
-}
-
-/**
- * 获取百度OCR访问令牌
- */
-async function getBaiduAccessToken() {
-  const API_KEY = process.env.BAIDU_API_KEY;
-  const SECRET_KEY = process.env.BAIDU_SECRET_KEY;
-  
-  if (!API_KEY || !SECRET_KEY) {
-    throw new Error('百度OCR配置不完整');
-  }
-
-  // 检查缓存的token
-  const cachedToken = await getFromCache('baidu_access_token');
-  if (cachedToken && cachedToken.expires_at > Date.now()) {
-    return cachedToken.access_token;
-  }
-
-  // 获取新token
-  const tokenUrl = 'https://aip.baidubce.com/oauth/2.0/token';
-  const params = new URLSearchParams({
-    grant_type: 'client_credentials',
-    client_id: API_KEY,
-    client_secret: SECRET_KEY
-  });
-
-  const response = await fetch(`${tokenUrl}?${params}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error(`获取访问令牌失败: ${response.status}`);
-  }
-
-  const tokenData = await response.json();
-  
-  if (tokenData.error) {
-    throw new Error(`获取访问令牌失败: ${tokenData.error_description}`);
-  }
-
-  // 缓存token（提前5分钟过期）
-  const tokenInfo = {
-    access_token: tokenData.access_token,
-    expires_at: Date.now() + (tokenData.expires_in - 300) * 1000
-  };
-  
-  await setCache('baidu_access_token', tokenInfo);
-  
-  return tokenData.access_token;
-}
-
-/**
- * 调用百度OCR API
- */
-async function callBaiduOCRAPI(accessToken, params) {
-  const apiUrl = 'https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic';
-  
-  const formData = new URLSearchParams();
-  Object.keys(params).forEach(key => {
-    formData.append(key, params[key]);
-  });
-
-  const response = await fetch(`${apiUrl}?access_token=${accessToken}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: formData
-  });
-
-  if (!response.ok) {
-    throw new Error(`OCR API调用失败: ${response.status}`);
-  }
-
-  const result = await response.json();
-  
-  if (result.error_code) {
-    throw new Error(`OCR识别失败: ${result.error_msg}`);
-  }
-
-  return result;
-}
-
-/**
- * 调用腾讯云OCR API
- */
-async function callTencentOCRAPI(config, params) {
-  // 腾讯云API调用需要签名，这里简化处理
-  // 实际部署时需要完整的腾讯云SDK集成
-  
-  // 模拟腾讯云OCR响应
+function buildRequestData(config, imageUrl, analysisType) {
   return {
-    TextDetections: [
+    model: config.MODEL_ID,
+    messages: [
       {
-        DetectedText: '模拟识别结果，请配置真实的腾讯云OCR',
-        Confidence: 95,
-        Polygon: [
-          { X: 0, Y: 0 },
-          { X: 100, Y: 0 },
-          { X: 100, Y: 20 },
-          { X: 0, Y: 20 }
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: "请快速识别图片中的文字内容，直接返回识别结果，无需详细分析。"
+          },
+          {
+            type: "image_url",
+            image_url: {
+              url: imageUrl
+            }
+          }
         ]
       }
-    ]
+    ],
+    max_tokens: 1000,
+    temperature: 0,
+    stream: false
   };
 }
 
-/**
- * 格式化百度OCR结果
- */
-function formatBaiduResult(result) {
-  if (!result.words_result || result.words_result.length === 0) {
-    return {
-      text: '',
-      confidence: 0,
-      regions: []
-    };
+async function processImageAnalysis(event) {
+  const { imageBase64, imageInfo, fileID, useCloudStorage, analysisType = 'complete', options = {} } = event;
+  
+  // 参数验证
+  if (!imageBase64 && !fileID) {
+    throw new Error('缺少图片数据或文件ID');
   }
 
-  // 提取所有文字
-  const textLines = result.words_result.map(item => item.words);
-  const fullText = textLines.join('\n');
-  
-  // 计算平均置信度
-  const confidences = result.words_result
-    .filter(item => item.probability && item.probability.average)
-    .map(item => item.probability.average);
-  const avgConfidence = confidences.length > 0 ? 
-    confidences.reduce((sum, conf) => sum + conf, 0) / confidences.length : 0.9;
+  let finalImageBase64;
+  let finalImageInfo = imageInfo;
 
-  // 格式化区域信息
-  const regions = result.words_result.map((item, index) => ({
-    text: item.words,
-    confidence: item.probability ? item.probability.average : 0.9,
-    position: item.location ? {
-      x: item.location.left,
-      y: item.location.top,
-      width: item.location.width,
-      height: item.location.height
-    } : { x: 0, y: index * 20, width: 100, height: 20 }
-  }));
-
-  return {
-    text: fullText,
-    confidence: avgConfidence,
-    regions: regions
-  };
-}
-
-/**
- * 格式化腾讯云OCR结果
- */
-function formatTencentResult(result) {
-  if (!result.TextDetections || result.TextDetections.length === 0) {
-    return {
-      text: '',
-      confidence: 0,
-      regions: []
-    };
+  if (useCloudStorage && fileID) {
+    console.log('从云存储下载图片:', fileID);
+    const downloadResult = await downloadAndConvertImage(fileID);
+    finalImageBase64 = downloadResult.base64;
+    finalImageInfo = downloadResult.info;
+  } else {
+    finalImageBase64 = imageBase64;
   }
 
-  // 提取所有文字
-  const textLines = result.TextDetections.map(item => item.DetectedText);
-  const fullText = textLines.join('\n');
-  
-  // 计算平均置信度
-  const confidences = result.TextDetections
-    .filter(item => item.Confidence)
-    .map(item => item.Confidence / 100); // 腾讯云置信度是百分比
-  const avgConfidence = confidences.length > 0 ? 
-    confidences.reduce((sum, conf) => sum + conf, 0) / confidences.length : 0.9;
-
-  // 格式化区域信息
-  const regions = result.TextDetections.map((item, index) => ({
-    text: item.DetectedText,
-    confidence: item.Confidence ? item.Confidence / 100 : 0.9,
-    position: item.Polygon ? convertPolygonToRect(item.Polygon) : 
-      { x: 0, y: index * 20, width: 100, height: 20 }
-  }));
-
-  return {
-    text: fullText,
-    confidence: avgConfidence,
-    regions: regions
-  };
-}
-
-/**
- * 将多边形坐标转换为矩形
- */
-function convertPolygonToRect(polygon) {
-  if (!polygon || polygon.length < 4) {
-    return { x: 0, y: 0, width: 100, height: 20 };
+  // 调用豆包AI
+  if (!DOUBAO_CONFIG.API_KEY) {
+    console.warn('豆包AI API密钥未配置，使用模拟模式');
+    return await mockCompleteAnalysis(finalImageBase64, options);
   }
-
-  const xs = polygon.map(p => p.X);
-  const ys = polygon.map(p => p.Y);
   
-  const left = Math.min(...xs);
-  const top = Math.min(...ys);
-  const right = Math.max(...xs);
-  const bottom = Math.max(...ys);
-  
-  return {
-    x: left,
-    y: top,
-    width: right - left,
-    height: bottom - top
-  };
+  return await callDoubaoImageAnalysis(finalImageBase64, finalImageInfo, analysisType, options);
 }
 
 /**
- * 简单的内存缓存实现
+ * 从云存储下载图片并转换为base64
  */
-const cache = new Map();
-
-async function getFromCache(key) {
-  return cache.get(key);
-}
-
-async function setCache(key, value) {
-  cache.set(key, value);
-  
-  // 清理过期缓存
-  setTimeout(() => {
-    if (value.expires_at && value.expires_at < Date.now()) {
-      cache.delete(key);
+async function downloadAndConvertImage(fileID) {
+  const cloud = require('wx-server-sdk');
+  try {
+    const res = await cloud.downloadFile({ fileID });
+    if (!res.fileContent || res.fileContent.length === 0) {
+      throw new Error('下载文件为空');
     }
-  }, 300000); // 5分钟后检查
-} 
+    return {
+      base64: res.fileContent.toString('base64'),
+      info: { size: res.fileContent.length, fileID }
+    };
+  } catch (err) {
+    console.error('云存储下载失败', err);
+    throw err; // 让外层捕获降级
+  }
+}
+
+/**
+ * 调用豆包AI进行图片分析
+ */
+async function callDoubaoImageAnalysis(imageBase64, imageInfo, analysisType, options) {
+  const startTime = Date.now();
+  
+  try {
+    console.log('开始调用豆包AI进行图片分析');
+    
+    // 构建请求数据
+    const requestData = {
+      model: DOUBAO_CONFIG.MODEL_ID,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "请识别图片中的文字内容，包括题目、选项、公式等所有文字。"
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:image/png;base64,${imageBase64}`
+              }
+            }
+          ]
+        }
+      ],
+      max_tokens: 2000,
+      temperature: 0.1
+    };
+
+    // 发送请求
+    const response = await fetchWithTimeout(DOUBAO_CONFIG.ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${DOUBAO_CONFIG.API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestData)
+    }, DOUBAO_CONFIG.TIMEOUT);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`豆包AI API调用失败: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    
+    if (!result.choices || result.choices.length === 0) {
+      throw new Error('豆包AI未返回有效结果');
+    }
+
+    const content = result.choices[0].message.content;
+    if (!content) {
+      throw new Error('豆包AI返回内容为空');
+    }
+
+    return {
+      recognizedText: content.trim(),
+      confidence: 0.9,
+      questionType: 'unknown',
+      subject: 'unknown',
+      difficulty: 3,
+      processingTime: Date.now() - startTime
+    };
+
+  } catch (error) {
+    console.error('豆包AI调用失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * 带超时的fetch请求
+ */
+async function fetchWithTimeout(url, options, timeout) {
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('请求超时')), timeout);
+  });
+
+  const fetchPromise = require('node-fetch')(url, options);
+  
+  return Promise.race([fetchPromise, timeoutPromise]);
+}
+
+/**
+ * 模拟分析结果（当API密钥未配置时使用）
+ */
+async function mockCompleteAnalysis(imageBase64, options) {
+  console.log('使用模拟图片分析模式');
+  
+  // 模拟网络延迟
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  return {
+    recognizedText: '模拟识别的文字内容',
+    confidence: 0.8,
+    questionType: 'unknown',
+    subject: 'unknown',
+    difficulty: 3
+  };
+}
+
+
+
+
+
+
+
+

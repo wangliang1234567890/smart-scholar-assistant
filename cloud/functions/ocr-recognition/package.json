@@ -1,21 +1,22 @@
 {
   "name": "ocr-recognition",
   "version": "1.0.0",
-  "description": "OCR文字识别云函数，支持腾讯云和百度OCR服务",
+  "description": "豆包AI图片分析云函数",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "node-fetch": "^2.7.0",
     "wx-server-sdk": "~2.6.3"
   },
   "keywords": [
+    "doubao",
+    "ai",
+    "image-analysis",
     "ocr",
-    "recognition",
-    "tencent",
-    "baidu",
     "cloud-function"
   ],
   "author": "Smart Study Assistant",
   "license": "MIT"
-} 
+}
