@@ -7,191 +7,113 @@
   overflow: hidden;
 }
 
-/* AI识别中页面 */
+/* AI分析界面 */
 .analyzing-container {
-  padding: 60rpx 32rpx 40rpx;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
   height: 100vh;
+  background: #F8FAFC;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
 }
 
-.analyzing-header {
+.analyzing-content {
+  width: 100%;
+  max-width: 600rpx;
   text-align: center;
+}
+
+.analyzing-preview {
   margin-bottom: 60rpx;
 }
 
-.analyzing-title {
-  font-size: 48rpx;
+.preview-image {
+  width: 100%;
+  max-height: 400rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.analyzing-progress {
+  margin-bottom: 40rpx;
+}
+
+.progress-title {
+  font-size: 36rpx;
   font-weight: 600;
+  color: #1F2937;
   margin-bottom: 16rpx;
 }
 
-.analyzing-subtitle {
+.progress-desc {
   font-size: 28rpx;
-  opacity: 0.8;
+  color: #6B7280;
+  margin-bottom: 32rpx;
 }
 
-.analyzing-image-container {
-  position: relative;
-  flex: 1;
-  min-height: 400rpx;
-  max-height: 500rpx;
-  margin-bottom: 60rpx;
-  border-radius: 20rpx;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.analyzing-image {
+.progress-bar {
   width: 100%;
-  height: 100%;
-  border-radius: 20rpx;
-}
-
-.analyzing-overlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 10;
-}
-
-.progress-circle {
-  position: relative;
-  width: 120rpx;
-  height: 120rpx;
-}
-
-.progress-ring {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border: 6rpx solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
+  height: 8rpx;
+  background: #E5E7EB;
+  border-radius: 4rpx;
   overflow: hidden;
 }
 
 .progress-fill {
-  position: absolute;
-  width: 50%;
   height: 100%;
-  background: linear-gradient(90deg, transparent 50%, #10B981 50%);
-  transform-origin: right center;
-  transition: transform 0.3s ease;
+  background: linear-gradient(90deg, #4F46E5 0%, #7C3AED 100%);
+  border-radius: 4rpx;
+  transition: width 0.3s ease;
 }
 
-.progress-center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(255, 255, 255, 0.9);
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.progress-percentage {
+.progress-percent {
   font-size: 24rpx;
-  font-weight: 600;
-  color: #4F46E5;
+  color: #9CA3AF;
+  margin-top: 16rpx;
 }
 
-.progress-steps {
-  margin-bottom: 60rpx;
+.error-container {
+  margin-top: 40rpx;
+  text-align: center;
 }
 
-.step-item {
-  display: flex;
-  align-items: center;
+.error-icon {
+  font-size: 48rpx;
+  margin-bottom: 16rpx;
+}
+
+.error-message {
+  font-size: 28rpx;
+  color: #EF4444;
   margin-bottom: 32rpx;
-  opacity: 0.5;
-  transition: opacity 0.3s ease;
 }
 
-.step-item.active {
-  opacity: 1;
-}
-
-.step-item.completed {
-  opacity: 0.8;
-}
-
-.step-icon {
-  width: 48rpx;
-  height: 48rpx;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+.error-actions {
   display: flex;
-  align-items: center;
+  gap: 20rpx;
   justify-content: center;
-  margin-right: 24rpx;
 }
 
-.step-icon.active {
-  background: rgba(79, 70, 229, 0.8);
+.error-btn {
+  padding: 16rpx 32rpx;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  border: none;
 }
 
-.step-icon.completed {
-  background: rgba(16, 185, 129, 0.8);
-}
-
-.step-number {
-  font-size: 24rpx;
-  font-weight: 600;
+.retry-btn {
+  background: #4F46E5;
   color: white;
 }
 
-.step-content {
-  flex: 1;
-}
-
-.step-title {
-  font-size: 32rpx;
-  font-weight: 500;
-  margin-bottom: 8rpx;
-}
-
-.step-desc {
-  font-size: 24rpx;
-  opacity: 0.7;
-}
-
-.analyzing-status {
-  text-align: center;
-  margin-bottom: 60rpx;
-}
-
-.status-text {
-  font-size: 28rpx;
-  margin-bottom: 16rpx;
-  opacity: 0.9;
-}
-
-.confidence-info {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24rpx;
-  opacity: 0.8;
-}
-
-.confidence-label {
-  margin-right: 8rpx;
-}
-
-.confidence-value {
-  font-weight: 600;
-  color: #10B981;
-}
-
-.analyzing-actions {
-  padding: 0 40rpx;
+.reset-btn {
+  background: #6B7280;
+  color: white;
 }
 
 /* 确认题目页面 */
@@ -404,6 +326,18 @@
 .camera-container {
   position: relative;
   height: 100vh;
+  background: #000;
+}
+
+/* 相机页面锁定容器 - 防止滑动 */
+.camera-lock-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  z-index: 1000;
   background: #000;
 }
 
@@ -712,4 +646,866 @@
   
 .step-item.active {
   animation: fadeIn 0.3s ease-out;
-} 
+}
+
+/* 调试按钮样式 */
+.debug-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20rpx;
+}
+
+.debug-btn {
+  font-size: 24rpx !important;
+  padding: 10rpx 20rpx !important;
+  border-radius: 10rpx !important;
+}
+
+/* AI分析结果样式 */
+.analysis-result {
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  padding: 32rpx;
+  margin: 32rpx 0;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+
+.analysis-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 24rpx;
+  display: flex;
+  align-items: center;
+}
+
+.analysis-title::before {
+  content: '🤖';
+  margin-right: 12rpx;
+  font-size: 28rpx;
+}
+
+/* 基础信息 */
+.analysis-basic-info {
+  margin-bottom: 32rpx;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #F3F4F6;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-size: 28rpx;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+.info-value {
+  font-size: 28rpx;
+  color: #1F2937;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+/* 难度星级 */
+.difficulty-stars {
+  display: flex;
+  margin-right: 12rpx;
+}
+
+.star {
+  font-size: 24rpx;
+  color: #E5E7EB;
+  margin-right: 4rpx;
+}
+
+.star.filled {
+  color: #F59E0B;
+}
+
+.difficulty-text {
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+/* 分析段落 */
+.analysis-section {
+  margin-bottom: 32rpx;
+}
+
+.analysis-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 16rpx;
+  display: flex;
+  align-items: center;
+}
+
+.section-title::before {
+  content: '';
+  width: 6rpx;
+  height: 20rpx;
+  background: #4F46E5;
+  border-radius: 3rpx;
+  margin-right: 12rpx;
+}
+
+/* 标签容器 */
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.knowledge-tag,
+.concept-tag {
+  background: #EEF2FF;
+  color: #4338CA;
+  font-size: 24rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  border: 1rpx solid #C7D2FE;
+}
+
+.concept-tag {
+  background: #F0FDF4;
+  color: #166534;
+  border-color: #BBF7D0;
+}
+
+/* 参考答案 */
+.suggested-answer {
+  background: #F9FAFB;
+  border: 1rpx solid #E5E7EB;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  font-size: 28rpx;
+  color: #1F2937;
+  line-height: 1.6;
+}
+
+/* 详细解析 */
+.explanation-text {
+  background: #FFFBEB;
+  border: 1rpx solid #FED7AA;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  font-size: 28rpx;
+  color: #92400E;
+  line-height: 1.6;
+}
+
+/* 图片裁剪界面样式 */
+/* 锁定页面滚动的容器 */
+.crop-lock-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  z-index: 9999;
+  background: #000;
+}
+
+/* 裁剪覆盖层 - 锁定页面滚动 */
+.crop-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  z-index: 9999;
+  background: #000;
+}
+
+/* 裁剪容器 - 修复后的样式 */
+.crop-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 图片包装器 - 占满除按钮外的所有空间 */
+.crop-image-wrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20rpx;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* 图片容器 - 最大化利用空间 */
+.crop-image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 图片 - 全屏显示 */
+.crop-image {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* 裁剪框 */
+.crop-box {
+  position: absolute;
+  border: 3rpx solid #007AFF;
+  border-radius: 8rpx;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+}
+
+.crop-box.dragging {
+  border-color: #FF3B30;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+  transform: scale(1.02);
+}
+
+/* 裁剪框内容 */
+.crop-content {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  cursor: move;
+}
+
+/* 网格线 */
+.crop-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.grid-line {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.grid-v1, .grid-v2 {
+  width: 1rpx;
+  height: 100%;
+  top: 0;
+}
+
+.grid-v1 { left: 33.33%; }
+.grid-v2 { left: 66.66%; }
+
+.grid-h1, .grid-h2 {
+  height: 1rpx;
+  width: 100%;
+  left: 0;
+}
+
+.grid-h1 { top: 33.33%; }
+.grid-h2 { top: 66.66%; }
+
+/* 角点控制 */
+.crop-handle {
+  position: absolute;
+  width: 48rpx;
+  height: 48rpx;
+  background: #007AFF;
+  border: 4rpx solid #FFFFFF;
+  border-radius: 50%;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.5);
+  z-index: 10;
+}
+
+.corner-tl {
+  top: -24rpx;
+  left: -24rpx;
+}
+
+.corner-tr {
+  top: -24rpx;
+  right: -24rpx;
+}
+
+.corner-bl {
+  bottom: -24rpx;
+  left: -24rpx;
+}
+
+.corner-br {
+  bottom: -24rpx;
+  right: -24rpx;
+}
+
+/* 底部操作按钮 */
+.crop-actions {
+  display: flex;
+  gap: 40rpx;
+  padding: 40rpx;
+  padding-bottom: calc(40rpx + env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.9);
+  flex-shrink: 0;
+}
+
+/* 通用按钮样式 */
+.crop-btn {
+  flex: 1;
+  height: 96rpx;
+  font-size: 34rpx;
+  border-radius: 48rpx;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 重置按钮 */
+.crop-btn-reset {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2rpx solid rgba(255, 255, 255, 0.3);
+  color: #FFFFFF;
+}
+
+/* 确认按钮 */
+.crop-btn-confirm {
+  background: #007AFF;
+  color: #FFFFFF;
+}
+
+/* 相机控制按钮样式 */
+.camera-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 60rpx 80rpx;
+  padding-bottom: calc(60rpx + env(safe-area-inset-bottom));
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.5));
+}
+
+.control-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.control-icon {
+  font-size: 48rpx;
+}
+
+.control-text {
+  font-size: 24rpx;
+  color: white;
+}
+
+.capture-button {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: #007AFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 6rpx solid white;
+}
+
+.capture-icon {
+  font-size: 60rpx;
+  color: white;
+}
+
+/* 隐藏Canvas */
+.crop-canvas {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+  opacity: 0;
+}
+
+/* Apple风格裁剪框 */
+.apple-crop-box {
+  position: absolute;
+  z-index: 3;
+  border: 2rpx solid rgba(255, 255, 255, 0.8);
+  border-radius: 4rpx;
+  transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+}
+
+.apple-crop-box.dragging {
+  border-color: #007AFF;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7), 0 8rpx 32rpx rgba(0, 122, 255, 0.3);
+  transform: scale(1.02);
+}
+
+/* Apple风格裁剪框内容区域 */
+.apple-crop-content {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  cursor: move;
+  /* 提升触摸体验 */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Apple风格控制点基础样式 */
+.apple-crop-handle {
+  position: absolute;
+  z-index: 4;
+  /* 提升触摸体验 */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  /* 增大触摸热区 */
+  padding: 8rpx;
+  margin: -8rpx;
+}
+
+/* Apple风格角控制点 */
+.apple-crop-handle.apple-corner {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  border: 4rpx solid #007AFF;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.apple-crop-handle.apple-corner:active {
+  transform: scale(1.2);
+  background: #007AFF;
+  border-color: white;
+}
+
+.apple-corner-dot {
+  width: 12rpx;
+  height: 12rpx;
+  background: #007AFF;
+  border-radius: 50%;
+}
+
+.apple-crop-handle.apple-corner:active .apple-corner-dot {
+  background: white;
+}
+
+.apple-crop-handle.apple-corner.apple-corner-tl {
+  top: -24rpx;
+  left: -24rpx;
+  cursor: nw-resize;
+}
+
+.apple-crop-handle.apple-corner.apple-corner-tr {
+  top: -24rpx;
+  right: -24rpx;
+  cursor: ne-resize;
+}
+
+.apple-crop-handle.apple-corner.apple-corner-bl {
+  bottom: -24rpx;
+  left: -24rpx;
+  cursor: sw-resize;
+}
+
+.apple-crop-handle.apple-corner.apple-corner-br {
+  bottom: -24rpx;
+  right: -24rpx;
+  cursor: se-resize;
+}
+
+/* Apple风格边缘控制点 */
+.apple-crop-handle.apple-edge {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2rpx solid #007AFF;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.apple-crop-handle.apple-edge:active {
+  background: #007AFF;
+  border-color: white;
+  transform: scale(1.1);
+}
+
+.apple-edge-line {
+  background: #007AFF;
+  border-radius: 2rpx;
+}
+
+.apple-crop-handle.apple-edge:active .apple-edge-line {
+  background: white;
+}
+
+.apple-crop-handle.apple-edge.apple-edge-top,
+.apple-crop-handle.apple-edge.apple-edge-bottom {
+  left: 50%;
+  width: 120rpx;
+  height: 32rpx;
+  transform: translateX(-50%);
+  cursor: n-resize;
+}
+
+.apple-crop-handle.apple-edge.apple-edge-top {
+  top: -16rpx;
+}
+
+.apple-crop-handle.apple-edge.apple-edge-top .apple-edge-line {
+  width: 100%;
+  height: 4rpx;
+}
+
+.apple-crop-handle.apple-edge.apple-edge-bottom {
+  bottom: -16rpx;
+  cursor: s-resize;
+}
+
+.apple-crop-handle.apple-edge.apple-edge-bottom .apple-edge-line {
+  width: 100%;
+  height: 4rpx;
+}
+
+.apple-crop-handle.apple-edge.apple-edge-left,
+.apple-crop-handle.apple-edge.apple-edge-right {
+  top: 50%;
+  width: 32rpx;
+  height: 120rpx;
+  transform: translateY(-50%);
+  cursor: w-resize;
+}
+
+.apple-crop-handle.apple-edge.apple-edge-left {
+  left: -16rpx;
+}
+
+.apple-crop-handle.apple-edge.apple-edge-left .apple-edge-line {
+  width: 4rpx;
+  height: 100%;
+}
+
+.apple-crop-handle.apple-edge.apple-edge-right {
+  right: -16rpx;
+  cursor: e-resize;
+}
+
+.apple-crop-handle.apple-edge.apple-edge-right .apple-edge-line {
+  width: 4rpx;
+  height: 100%;
+}
+
+/* Apple风格控制点激活状态 */
+.apple-crop-handle.apple-edge.apple-edge-top:active,
+.apple-crop-handle.apple-edge.apple-edge-bottom:active {
+  transform: translateX(-50%) scale(1.1);
+}
+
+.apple-crop-handle.apple-edge.apple-edge-left:active,
+.apple-crop-handle.apple-edge.apple-edge-right:active {
+  transform: translateY(-50%) scale(1.1);
+}
+
+/* 拖拽时的整体视觉反馈 */
+.crop-box.dragging {
+  box-shadow: 0 12rpx 40rpx rgba(79, 70, 229, 0.4);
+  border-color: #3730A3;
+}
+
+.crop-box.dragging .crop-content {
+  background: rgba(79, 70, 229, 0.1);
+}
+
+/* 优化裁剪提示在拖拽时的显示 */
+.crop-box.dragging .crop-hint {
+  opacity: 0.8;
+  transform: translate(-50%, -50%) scale(0.9);
+}
+
+/* 网格线 */
+.crop-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.grid-line {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.grid-line.vertical {
+  width: 1rpx;
+  height: 100%;
+}
+
+.grid-line.vertical.left {
+  left: 33.33%;
+}
+
+.grid-line.vertical.right {
+  right: 33.33%;
+}
+
+.grid-line.horizontal {
+  width: 100%;
+  height: 1rpx;
+}
+
+.grid-line.horizontal.top {
+  top: 33.33%;
+}
+
+.grid-line.horizontal.bottom {
+  bottom: 33.33%;
+}
+
+/* 裁剪提示 */
+.crop-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #FFFFFF;
+  background: rgba(79, 70, 229, 0.8);
+  padding: 16rpx 24rpx;
+  border-radius: 12rpx;
+  backdrop-filter: blur(8rpx);
+  pointer-events: none;
+}
+
+.hint-icon {
+  font-size: 32rpx;
+  margin-bottom: 8rpx;
+}
+
+.hint-text {
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+/* 遮罩层 */
+.crop-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.mask-part {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.mask-part.middle {
+  display: flex;
+  height: auto;
+}
+
+.mask-left,
+.mask-right {
+  background: rgba(0, 0, 0, 0.4);
+  height: 100%;
+}
+
+.mask-left {
+  position: absolute;
+  left: 0;
+}
+
+.mask-right {
+  position: absolute;
+  right: 0;
+}
+
+/* 裁剪控制区域 */
+.crop-controls {
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  padding: 32rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+
+.control-row {
+  margin-bottom: 24rpx;
+}
+
+.control-row:last-child {
+  margin-bottom: 0;
+}
+
+.control-label {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 16rpx;
+}
+
+.control-buttons {
+  display: flex;
+  gap: 16rpx;
+  flex-wrap: wrap;
+}
+
+.control-btn {
+  flex: 1;
+  min-width: 120rpx;
+  font-size: 24rpx !important;
+  padding: 16rpx 20rpx !important;
+  border-radius: 12rpx !important;
+  background: #F3F4F6 !important;
+  color: #374151 !important;
+  border: none !important;
+}
+
+.control-btn:active {
+  background: #E5E7EB !important;
+}
+
+/* 裁剪信息 */
+.crop-info {
+  padding-top: 24rpx;
+  border-top: 1rpx solid #F3F4F6;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.info-item:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  font-size: 26rpx;
+  color: #6B7280;
+}
+
+.info-value {
+  font-size: 26rpx;
+  color: #1F2937;
+  font-weight: 600;
+}
+
+/* 裁剪操作按钮 */
+.crop-actions {
+  display: flex;
+  gap: 24rpx;
+}
+
+.crop-actions .van-button {
+  flex: 1;
+}
+
+/* 隐藏的Canvas */
+.crop-canvas {
+  position: absolute;
+  left: -9999rpx;
+  top: -9999rpx;
+  visibility: hidden;
+}
+
+.debug-info {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  background-color: #f5f5f5;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  color: #666;
+}
+
+.debug-info text {
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.warning-tip {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 10rpx 15rpx;
+  border-radius: 6rpx;
+  font-size: 24rpx;
+  margin-top: 10rpx;
+}
+
+/* 裁剪框把手样式 - 优化触摸 */
+.crop-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: #007AFF;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 10001;
+  /* 增大触摸热区 */
+  padding: 10px;
+  margin: -10px;
+}
+
+.crop-handle-tl { top: -10px; left: -10px; }
+.crop-handle-tr { top: -10px; right: -10px; }
+.crop-handle-bl { bottom: -10px; left: -10px; }
+.crop-handle-br { bottom: -10px; right: -10px; }
+
+/* 裁剪框基础样式 - 优化边框 */
+.crop-box {
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+  transition: all 0.1s ease;
+  border: 2px solid #007AFF;
+}
+
+.crop-box:active {
+  border-color: #FF3B30;
+  transform: scale(1.01);
+}
+
+
+

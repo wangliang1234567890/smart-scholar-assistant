@@ -1,11 +1,11 @@
 /**
- * 性能监控工具
+ * 性能监控工具 - 优化版
  * 实时收集和分析应用性能数据
+ * 优化点：内存管理、数据压缩、智能采样、异步处理
  */
 
-import CacheManager from './cache-manager';
-import ConcurrentProcessor from './concurrent-processor';
-import AIService from './ai-service';
+import { errorHandler } from './error-handler';
+import { debounce, throttle, deepClone } from './common';
 
 class PerformanceMonitor {
   constructor() {
@@ -15,8 +15,8 @@ class PerformanceMonitor {
       app: {
         startTime: Date.now(),
         launchTime: 0,
-        pageLoadTimes: {},
-        navigationTimes: {},
+        pageLoadTimes: new Map(), // 使用Map提高查找性能
+        navigationTimes: new Map(),
         errorCount: 0,
         crashCount: 0
       },
@@ -32,286 +32,353 @@ class PerformanceMonitor {
         preferences: {}
       },
       api: {
-        calls: [],
+        calls: new Map(), // 优化API调用数据结构
         errors: [],
         latencies: [],
-        successRates: {}
+        successRates: new Map()
       }
     };
     
+    // 性能阈值配置
     this.thresholds = {
-      pageLoadTime: 3000,  // 3秒
-      apiLatency: 5000,    // 5秒
-      memoryUsage: 100,    // 100MB
-      errorRate: 0.05      // 5%
+      pageLoadTime: 3000,
+      apiLatency: 5000,
+      memoryUsage: 100,
+      errorRate: 0.05,
+      maxDataPoints: 1000, // 限制数据点数量
+      sampleInterval: 5000 // 采样间隔
     };
+
+    // 优化配置
+    this.config = {
+      enableSmartSampling: true, // 智能采样
+      enableDataCompression: true, // 数据压缩
+      enableAsyncProcessing: true, // 异步处理
+      maxMemoryUsage: 10 * 1024 * 1024, // 10MB内存限制
+      compressionRatio: 0.1 // 压缩比例
+    };
+
+    // 性能监控状态
+    this.monitoring = {
+      currentMemoryUsage: 0,
+      lastCleanup: Date.now(),
+      cleanupInterval: 60000, // 1分钟清理间隔
+      isProcessing: false
+    };
+
+    // 防抖和节流函数
+    this.debouncedCollectData = debounce(this.collectSystemData.bind(this), 1000);
+    this.throttledLogPerformance = throttle(this.logPerformanceMetric.bind(this), 100);
 
     this.initMonitoring();
   }
 
   /**
-   * 初始化监控
+   * 初始化监控系统
    */
-  initMonitoring() {
-    // 监听应用生命周期
-    this.setupAppLifecycleMonitoring();
-    
-    // 监听页面性能
-    this.setupPagePerformanceMonitoring();
-    
-    // 监听网络状态
-    this.setupNetworkMonitoring();
-    
-    // 监听错误
-    this.setupErrorMonitoring();
-    
-    // 启动定时监控
-    this.startPeriodicMonitoring();
-  }
-
-  /**
-   * 设置应用生命周期监控
-   */
-  setupAppLifecycleMonitoring() {
-    // 监听应用启动
-    wx.onAppShow(() => {
-      const now = Date.now();
-      this.performanceData.app.launchTime = now - this.performanceData.app.startTime;
-      this.recordUserAction('app_show', { timestamp: now });
-    });
-
-    // 监听应用隐藏
-    wx.onAppHide(() => {
-      this.recordUserAction('app_hide', { timestamp: Date.now() });
-      this.savePerformanceData();
-    });
-
-    // 监听内存警告
-    wx.onMemoryWarning((res) => {
-      this.recordSystemEvent('memory_warning', {
-        level: res.level,
-        timestamp: Date.now()
+  async initMonitoring() {
+    try {
+      // 设置页面性能监控
+      this.setupPagePerformanceMonitoring();
+      
+      // 设置API性能监控
+      this.setupAPIPerformanceMonitoring();
+      
+      // 设置内存管理
+      this.setupMemoryManagement();
+      
+      // 启动后台清理任务
+      this.startCleanupTask();
+      
+      console.log('性能监控初始化完成');
+    } catch (error) {
+      errorHandler.handleError(error, {
+        context: 'PerformanceMonitor.initMonitoring',
+        level: 'warning'
       });
-    });
+    }
   }
 
   /**
    * 设置页面性能监控
    */
   setupPagePerformanceMonitoring() {
-    const originalPage = Page;
-    const self = this;
-    
-    Page = function(options) {
-      const originalOnLoad = options.onLoad;
-      const originalOnShow = options.onShow;
-      const originalOnReady = options.onReady;
-      
-      // 页面加载监控
-      options.onLoad = function(...args) {
-        const startTime = Date.now();
-        this.__pageStartTime = startTime;
-        
-        if (originalOnLoad) {
-          originalOnLoad.apply(this, args);
-        }
-      };
+    // 监听页面加载事件
+    const originalOnLoad = wx.onPageLoad || function() {};
+    const originalOnShow = wx.onPageShow || function() {};
 
-      // 页面显示监控
-      options.onShow = function(...args) {
-        const startTime = Date.now();
-        
-        if (originalOnShow) {
-          originalOnShow.apply(this, args);
-        }
-        
-        // 记录页面切换时间
-        if (this.__pageStartTime) {
-          const loadTime = Date.now() - this.__pageStartTime;
-          self.recordPageLoad(this.route, loadTime);
-        }
-      };
+    wx.onPageLoad = (options) => {
+      const startTime = Date.now();
+      this.recordPageEvent('load', { page: getCurrentPages().pop()?.route, startTime });
+      return originalOnLoad.call(this, options);
+    };
 
-      // 页面渲染完成监控
-      options.onReady = function(...args) {
-        if (this.__pageStartTime) {
-          const renderTime = Date.now() - this.__pageStartTime;
-          self.recordPageRender(this.route, renderTime);
-        }
-        
-        if (originalOnReady) {
-          originalOnReady.apply(this, args);
-        }
-      };
-
-      return originalPage(options);
+    wx.onPageShow = () => {
+      this.recordPageEvent('show', { page: getCurrentPages().pop()?.route });
+      return originalOnShow.call(this);
     };
   }
 
   /**
-   * 设置网络监控
+   * 设置API性能监控
    */
-  setupNetworkMonitoring() {
-    // 监听网络状态变化
-    wx.onNetworkStatusChange((res) => {
-      this.recordNetworkStatus({
-        isConnected: res.isConnected,
-        networkType: res.networkType,
-        timestamp: Date.now()
-      });
-    });
-
-    // 包装wx.request方法
+  setupAPIPerformanceMonitoring() {
+    // 拦截wx.request
     const originalRequest = wx.request;
-    const self = this;
-    
-    wx.request = function(options) {
+    wx.request = (options) => {
       const startTime = Date.now();
-      const originalSuccess = options.success;
-      const originalFail = options.fail;
+      const apiKey = `${options.method || 'GET'}_${options.url}`;
       
-      options.success = function(res) {
-        const latency = Date.now() - startTime;
-        self.recordApiCall({
-          url: options.url,
-          method: options.method || 'GET',
-          statusCode: res.statusCode,
-          latency,
+      const originalSuccess = options.success || function() {};
+      const originalFail = options.fail || function() {};
+
+      options.success = (res) => {
+        this.recordAPICall(apiKey, {
+          latency: Date.now() - startTime,
           success: true,
-          timestamp: startTime
+          statusCode: res.statusCode
         });
-        
-        if (originalSuccess) {
-          originalSuccess(res);
-        }
+        return originalSuccess(res);
       };
-      
-      options.fail = function(error) {
-        const latency = Date.now() - startTime;
-        self.recordApiCall({
-          url: options.url,
-          method: options.method || 'GET',
-          error: error.errMsg,
-          latency,
+
+      options.fail = (error) => {
+        this.recordAPICall(apiKey, {
+          latency: Date.now() - startTime,
           success: false,
-          timestamp: startTime
+          error: error.errMsg
         });
-        
-        if (originalFail) {
-          originalFail(error);
-        }
+        return originalFail(error);
       };
-      
+
       return originalRequest(options);
     };
   }
 
   /**
-   * 设置错误监控
+   * 设置内存管理
    */
-  setupErrorMonitoring() {
-    // 监听小程序错误
-    wx.onError((error) => {
-      this.recordError({
-        type: 'runtime_error',
-        message: error,
-        timestamp: Date.now(),
-        stack: error.stack || ''
-      });
-    });
-
-    // 监听Promise未处理的rejection
-    wx.onUnhandledRejection((res) => {
-      this.recordError({
-        type: 'unhandled_rejection',
-        message: res.reason,
-        timestamp: Date.now(),
-        promise: res.promise
-      });
-    });
+  setupMemoryManagement() {
+    // 定期检查内存使用情况
+    setInterval(() => {
+      this.checkMemoryUsage();
+    }, this.monitoring.cleanupInterval);
   }
 
   /**
-   * 启动定时监控
+   * 检查内存使用情况
    */
-  startPeriodicMonitoring() {
-    if (this.isMonitoring) return;
+  checkMemoryUsage() {
+    try {
+      const memoryInfo = wx.getSystemInfoSync();
+      this.monitoring.currentMemoryUsage = this.calculateDataSize();
+
+      if (this.monitoring.currentMemoryUsage > this.config.maxMemoryUsage) {
+        console.warn('性能监控内存使用过高，开始清理');
+        this.performDataCleanup();
+      }
+
+      // 记录内存使用情况
+      if (this.config.enableSmartSampling) {
+        this.smartSampleSystemData('memory', {
+          used: this.monitoring.currentMemoryUsage,
+          available: memoryInfo.memorySize || 0,
+          timestamp: Date.now()
+        });
+      }
+    } catch (error) {
+      errorHandler.handleError(error, {
+        context: 'PerformanceMonitor.checkMemoryUsage',
+        level: 'warning'
+      });
+    }
+  }
+
+  /**
+   * 智能采样系统数据
+   */
+  smartSampleSystemData(type, data) {
+    const typeData = this.performanceData.system[type];
     
+    // 如果数据点过多，进行采样
+    if (typeData.length >= this.thresholds.maxDataPoints) {
+      const sampleSize = Math.floor(typeData.length * this.config.compressionRatio);
+      const sampledData = this.sampleArray(typeData, sampleSize);
+      this.performanceData.system[type] = sampledData;
+    }
+    
+    typeData.push(data);
+  }
+
+  /**
+   * 数组采样
+   */
+  sampleArray(array, sampleSize) {
+    if (array.length <= sampleSize) return array;
+    
+    const step = array.length / sampleSize;
+    const sampled = [];
+    
+    for (let i = 0; i < array.length; i += step) {
+      sampled.push(array[Math.floor(i)]);
+    }
+    
+    return sampled;
+  }
+
+  /**
+   * 记录页面事件
+   */
+  recordPageEvent(event, data) {
+    try {
+      const pageData = {
+        event,
+        timestamp: Date.now(),
+        ...data
+      };
+
+      if (event === 'load') {
+        this.performanceData.app.pageLoadTimes.set(data.page, Date.now() - data.startTime);
+      }
+
+      // 使用节流防止过度记录
+      this.throttledLogPerformance('page', pageData);
+    } catch (error) {
+      errorHandler.handleError(error, {
+        context: 'PerformanceMonitor.recordPageEvent',
+        level: 'info'
+      });
+    }
+  }
+
+  /**
+   * 记录API调用
+   */
+  recordAPICall(apiKey, metrics) {
+    try {
+      if (!this.performanceData.api.calls.has(apiKey)) {
+        this.performanceData.api.calls.set(apiKey, []);
+      }
+
+      const callData = {
+        timestamp: Date.now(),
+        ...metrics
+      };
+
+      this.performanceData.api.calls.get(apiKey).push(callData);
+      this.performanceData.api.latencies.push(metrics.latency);
+
+      // 更新成功率
+      this.updateSuccessRate(apiKey, metrics.success);
+
+      // 检查是否超过阈值
+      if (metrics.latency > this.thresholds.apiLatency) {
+        console.warn(`API响应时间过长: ${apiKey} - ${metrics.latency}ms`);
+      }
+    } catch (error) {
+      errorHandler.handleError(error, {
+        context: 'PerformanceMonitor.recordAPICall',
+        level: 'info'
+      });
+    }
+  }
+
+  /**
+   * 更新成功率
+   */
+  updateSuccessRate(apiKey, success) {
+    if (!this.performanceData.api.successRates.has(apiKey)) {
+      this.performanceData.api.successRates.set(apiKey, { total: 0, success: 0 });
+    }
+
+    const rate = this.performanceData.api.successRates.get(apiKey);
+    rate.total++;
+    if (success) rate.success++;
+  }
+
+  /**
+   * 开始监控
+   */
+  startMonitoring() {
+    if (this.isMonitoring) return;
+
     this.isMonitoring = true;
+    this.performanceData.app.startTime = Date.now();
+
+    // 启动定期数据收集
     this.monitoringInterval = setInterval(() => {
-      this.collectSystemMetrics();
-    }, 30000); // 每30秒收集一次系统指标
+      if (this.config.enableAsyncProcessing) {
+        // 异步处理避免阻塞主线程
+        setTimeout(() => this.debouncedCollectData(), 0);
+      } else {
+        this.debouncedCollectData();
+      }
+    }, this.thresholds.sampleInterval);
+
+    console.log('性能监控已启动');
   }
 
   /**
    * 停止监控
    */
   stopMonitoring() {
+    if (!this.isMonitoring) return;
+
     this.isMonitoring = false;
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval);
       this.monitoringInterval = null;
     }
+
+    console.log('性能监控已停止');
   }
 
   /**
-   * 收集系统指标
+   * 收集系统数据
    */
-  async collectSystemMetrics() {
+  async collectSystemData() {
+    if (this.monitoring.isProcessing) return;
+    
+    this.monitoring.isProcessing = true;
+    
     try {
-      // 收集系统信息
-      const systemInfo = this.getSystemInfo();
-      
-      // 收集网络信息
-      const networkInfo = await this.getNetworkInfo();
-      
-      // 收集缓存统计
-      const cacheStats = await CacheManager.getStats();
-      
-      // 收集并发处理统计
-      const concurrencyStats = ConcurrentProcessor.getAllQueueStatus();
-      
-      // 收集AI服务统计
-      const aiStats = await AIService.getPerformanceStats();
-      
-      // 记录系统指标
-      this.recordSystemMetrics({
-        timestamp: Date.now(),
-        system: systemInfo,
-        network: networkInfo,
-        cache: cacheStats,
-        concurrency: concurrencyStats,
-        ai: aiStats
-      });
-      
-    } catch (error) {
-      console.error('收集系统指标失败:', error);
-    }
-  }
+      const systemInfo = wx.getSystemInfoSync();
+      const timestamp = Date.now();
 
-  /**
-   * 获取系统信息（新API）
-   */
-  getSystemInfo() {
-    try {
-      const deviceInfo = wx.getDeviceInfo();
-      const windowInfo = wx.getWindowInfo();
-      const appBaseInfo = wx.getAppBaseInfo();
-      
-      return {
-        model: deviceInfo.model,
-        system: deviceInfo.system,
-        version: deviceInfo.version || appBaseInfo.version,
-        platform: deviceInfo.platform,
-        brand: deviceInfo.brand,
-        screenWidth: windowInfo.screenWidth,
-        screenHeight: windowInfo.screenHeight,
-        pixelRatio: windowInfo.pixelRatio,
-        SDKVersion: appBaseInfo.SDKVersion
+      // 系统信息
+      const systemData = {
+        timestamp,
+        platform: systemInfo.platform,
+        version: systemInfo.version,
+        screenWidth: systemInfo.screenWidth,
+        screenHeight: systemInfo.screenHeight,
+        pixelRatio: systemInfo.pixelRatio
       };
+
+      // 网络信息
+      const networkInfo = await this.getNetworkInfo();
+      if (networkInfo) {
+        this.smartSampleSystemData('network', {
+          ...networkInfo,
+          timestamp
+        });
+      }
+
+      // 电池信息
+      const batteryInfo = await this.getBatteryInfo();
+      if (batteryInfo) {
+        this.smartSampleSystemData('battery', {
+          ...batteryInfo,
+          timestamp
+        });
+      }
+
     } catch (error) {
-      console.warn('使用新API获取系统信息失败，降级使用旧API:', error);
-      return wx.getSystemInfoSync();
+      errorHandler.handleError(error, {
+        context: 'PerformanceMonitor.collectSystemData',
+        level: 'info'
+      });
+    } finally {
+      this.monitoring.isProcessing = false;
     }
   }
 
@@ -321,365 +388,233 @@ class PerformanceMonitor {
   getNetworkInfo() {
     return new Promise((resolve) => {
       wx.getNetworkType({
-        success: (res) => {
-          resolve({
-            networkType: res.networkType,
-            isConnected: res.networkType !== 'none'
-          });
-        },
-        fail: () => {
-          resolve({
-            networkType: 'unknown',
-            isConnected: false
-          });
+        success: (res) => resolve(res),
+        fail: () => resolve(null)
+      });
+    });
+  }
+
+  /**
+   * 获取电池信息
+   */
+  getBatteryInfo() {
+    return new Promise((resolve) => {
+      wx.getBatteryInfo({
+        success: (res) => resolve(res),
+        fail: () => resolve(null)
+      });
+    });
+  }
+
+  /**
+   * 记录性能指标
+   */
+  logPerformanceMetric(type, data) {
+    try {
+      if (this.config.enableDataCompression) {
+        // 压缩数据减少内存占用
+        data = this.compressData(data);
+      }
+
+      console.log(`性能指标 [${type}]:`, data);
+    } catch (error) {
+      // 静默处理日志错误
+    }
+  }
+
+  /**
+   * 压缩数据
+   */
+  compressData(data) {
+    // 简单的数据压缩：移除不必要的字段
+    const compressed = { ...data };
+    
+    // 移除可能占用大量内存的字段
+    delete compressed.rawData;
+    delete compressed.debugInfo;
+    
+    return compressed;
+  }
+
+  /**
+   * 执行数据清理
+   */
+  performDataCleanup() {
+    try {
+      const now = Date.now();
+      
+      // 清理过期的页面加载时间
+      for (const [page, timestamp] of this.performanceData.app.pageLoadTimes) {
+        if (now - timestamp > 24 * 60 * 60 * 1000) { // 24小时
+          this.performanceData.app.pageLoadTimes.delete(page);
+        }
+      }
+
+      // 清理系统数据
+      Object.keys(this.performanceData.system).forEach(key => {
+        const data = this.performanceData.system[key];
+        if (data.length > this.thresholds.maxDataPoints) {
+          this.performanceData.system[key] = data.slice(-this.thresholds.maxDataPoints);
         }
       });
-    });
-  }
 
-  /**
-   * 记录页面加载时间
-   */
-  recordPageLoad(route, loadTime) {
-    if (!this.performanceData.app.pageLoadTimes[route]) {
-      this.performanceData.app.pageLoadTimes[route] = [];
-    }
-    
-    this.performanceData.app.pageLoadTimes[route].push({
-      loadTime,
-      timestamp: Date.now()
-    });
-
-    // 检查是否超过阈值
-    if (loadTime > this.thresholds.pageLoadTime) {
-      this.recordPerformanceAlert('slow_page_load', {
-        route,
-        loadTime,
-        threshold: this.thresholds.pageLoadTime
-      });
-    }
-  }
-
-  /**
-   * 记录页面渲染时间
-   */
-  recordPageRender(route, renderTime) {
-    console.log(`页面 ${route} 渲染完成，耗时 ${renderTime}ms`);
-  }
-
-  /**
-   * 记录API调用
-   */
-  recordApiCall(callData) {
-    this.performanceData.api.calls.push(callData);
-    
-    // 记录延迟
-    this.performanceData.api.latencies.push({
-      url: callData.url,
-      latency: callData.latency,
-      timestamp: callData.timestamp
-    });
-
-    // 更新成功率统计
-    const urlKey = callData.url.split('?')[0]; // 去除查询参数
-    if (!this.performanceData.api.successRates[urlKey]) {
-      this.performanceData.api.successRates[urlKey] = {
-        total: 0,
-        success: 0
-      };
-    }
-    
-    this.performanceData.api.successRates[urlKey].total++;
-    if (callData.success) {
-      this.performanceData.api.successRates[urlKey].success++;
-    }
-
-    // 检查延迟阈值
-    if (callData.latency > this.thresholds.apiLatency) {
-      this.recordPerformanceAlert('slow_api_call', {
-        url: callData.url,
-        latency: callData.latency,
-        threshold: this.thresholds.apiLatency
-      });
-    }
-
-    // 记录错误
-    if (!callData.success) {
-      this.performanceData.api.errors.push({
-        url: callData.url,
-        error: callData.error,
-        timestamp: callData.timestamp
-      });
-    }
-  }
-
-  /**
-   * 记录用户行为
-   */
-  recordUserAction(action, data = {}) {
-    this.performanceData.user.actions.push({
-      action,
-      ...data,
-      timestamp: Date.now()
-    });
-  }
-
-  /**
-   * 记录系统事件
-   */
-  recordSystemEvent(event, data = {}) {
-    console.log('系统事件:', event, data);
-  }
-
-  /**
-   * 记录网络状态
-   */
-  recordNetworkStatus(status) {
-    this.performanceData.system.network.push(status);
-  }
-
-  /**
-   * 记录系统指标
-   */
-  recordSystemMetrics(metrics) {
-    this.performanceData.system.memory.push({
-      timestamp: metrics.timestamp,
-      usage: metrics.cache.memory.usage
-    });
-
-    // 限制数据量，只保留最近的100条记录
-    Object.keys(this.performanceData.system).forEach(key => {
-      if (this.performanceData.system[key].length > 100) {
-        this.performanceData.system[key] = this.performanceData.system[key].slice(-100);
+      // 清理API调用数据
+      for (const [apiKey, calls] of this.performanceData.api.calls) {
+        if (calls.length > this.thresholds.maxDataPoints) {
+          this.performanceData.api.calls.set(apiKey, calls.slice(-this.thresholds.maxDataPoints));
+        }
       }
-    });
+
+      // 清理延迟数据
+      if (this.performanceData.api.latencies.length > this.thresholds.maxDataPoints) {
+        this.performanceData.api.latencies = this.performanceData.api.latencies.slice(-this.thresholds.maxDataPoints);
+      }
+
+      this.monitoring.lastCleanup = now;
+      console.log('性能数据清理完成');
+    } catch (error) {
+      errorHandler.handleError(error, {
+        context: 'PerformanceMonitor.performDataCleanup',
+        level: 'warning'
+      });
+    }
   }
 
   /**
-   * 记录错误
+   * 启动清理任务
    */
-  recordError(error) {
-    this.performanceData.app.errorCount++;
-    console.error('应用错误:', error);
-    
-    // 保存错误到本地存储
-    const errors = wx.getStorageSync('app_errors') || [];
-    errors.push(error);
-    
-    // 只保留最近的50个错误
-    if (errors.length > 50) {
-      errors.splice(0, errors.length - 50);
-    }
-    
-    wx.setStorageSync('app_errors', errors);
+  startCleanupTask() {
+    setInterval(() => {
+      if (Date.now() - this.monitoring.lastCleanup > this.monitoring.cleanupInterval) {
+        this.performDataCleanup();
+      }
+    }, this.monitoring.cleanupInterval);
   }
 
   /**
-   * 记录性能告警
+   * 计算数据大小
    */
-  recordPerformanceAlert(type, data) {
-    console.warn('性能告警:', type, data);
-    
-    const alerts = wx.getStorageSync('performance_alerts') || [];
-    alerts.push({
-      type,
-      ...data,
-      timestamp: Date.now()
-    });
-    
-    // 只保留最近的20个告警
-    if (alerts.length > 20) {
-      alerts.splice(0, alerts.length - 20);
+  calculateDataSize() {
+    try {
+      return JSON.stringify(this.performanceData).length;
+    } catch {
+      return 0;
     }
-    
-    wx.setStorageSync('performance_alerts', alerts);
   }
 
   /**
    * 获取性能报告
    */
   getPerformanceReport() {
-    const now = Date.now();
-    const appRunTime = now - this.performanceData.app.startTime;
-    
-    // 计算平均页面加载时间
-    const avgPageLoadTimes = {};
-    Object.keys(this.performanceData.app.pageLoadTimes).forEach(route => {
-      const times = this.performanceData.app.pageLoadTimes[route];
-      const avg = times.reduce((sum, item) => sum + item.loadTime, 0) / times.length;
-      avgPageLoadTimes[route] = Math.round(avg);
-    });
-
-    // 计算API成功率
-    const apiSuccessRates = {};
-    Object.keys(this.performanceData.api.successRates).forEach(url => {
-      const stats = this.performanceData.api.successRates[url];
-      apiSuccessRates[url] = (stats.success / stats.total * 100).toFixed(1) + '%';
-    });
-
-    // 计算平均API延迟
-    const recentLatencies = this.performanceData.api.latencies.slice(-20);
-    const avgApiLatency = recentLatencies.length > 0 ? 
-      recentLatencies.reduce((sum, item) => sum + item.latency, 0) / recentLatencies.length : 0;
-
-    return {
-      summary: {
-        appRunTime: Math.round(appRunTime / 1000), // 秒
-        launchTime: this.performanceData.app.launchTime,
-        errorCount: this.performanceData.app.errorCount,
-        avgPageLoadTime: this.calculateOverallAvgPageLoadTime(),
-        avgApiLatency: Math.round(avgApiLatency)
-      },
-      details: {
-        pageLoadTimes: avgPageLoadTimes,
-        apiSuccessRates,
-        recentErrors: wx.getStorageSync('app_errors') || [],
-        performanceAlerts: wx.getStorageSync('performance_alerts') || []
-      },
-      timestamp: now
-    };
-  }
-
-  /**
-   * 计算总体平均页面加载时间
-   */
-  calculateOverallAvgPageLoadTime() {
-    let totalTime = 0;
-    let totalCount = 0;
-    
-    Object.values(this.performanceData.app.pageLoadTimes).forEach(times => {
-      times.forEach(item => {
-        totalTime += item.loadTime;
-        totalCount++;
-      });
-    });
-    
-    return totalCount > 0 ? Math.round(totalTime / totalCount) : 0;
-  }
-
-  /**
-   * 保存性能数据
-   */
-  savePerformanceData() {
     try {
-      const report = this.getPerformanceReport();
-      wx.setStorageSync('performance_report', report);
-      
-      // 同步到云端（可选）
-      this.syncToCloud(report);
-      
-    } catch (error) {
-      console.error('保存性能数据失败:', error);
-    }
-  }
+      const report = {
+        summary: {
+          monitoringTime: Date.now() - this.performanceData.app.startTime,
+          totalAPIRequests: Array.from(this.performanceData.api.calls.values()).reduce((sum, calls) => sum + calls.length, 0),
+          averageResponseTime: this.calculateAverageLatency(),
+          errorRate: this.calculateErrorRate(),
+          memoryUsage: this.monitoring.currentMemoryUsage
+        },
+        details: deepClone(this.performanceData),
+        recommendations: this.generateRecommendations()
+      };
 
-  /**
-   * 同步到云端
-   */
-  async syncToCloud(report) {
-    try {
-      await wx.cloud.database().collection('performance_reports').add({
-        data: {
-          ...report,
-          userId: this.getUserId(),
-          appVersion: this.getAppVersion()
-        }
+      return report;
+    } catch (error) {
+      errorHandler.handleError(error, {
+        context: 'PerformanceMonitor.getPerformanceReport',
+        level: 'warning'
       });
-    } catch (error) {
-      console.error('同步性能数据到云端失败:', error);
+      return null;
     }
   }
 
   /**
-   * 获取用户ID
+   * 计算平均延迟
    */
-  getUserId() {
-    // 获取匿名用户ID或微信openid
-    return wx.getStorageSync('user_id') || 'anonymous';
+  calculateAverageLatency() {
+    const latencies = this.performanceData.api.latencies;
+    if (latencies.length === 0) return 0;
+    
+    return latencies.reduce((sum, latency) => sum + latency, 0) / latencies.length;
   }
 
   /**
-   * 获取应用版本
+   * 计算错误率
    */
-  getAppVersion() {
-    const accountInfo = wx.getAccountInfoSync();
-    return accountInfo.miniProgram.version || 'dev';
+  calculateErrorRate() {
+    let totalRequests = 0;
+    let errorRequests = 0;
+
+    for (const [apiKey, rate] of this.performanceData.api.successRates) {
+      totalRequests += rate.total;
+      errorRequests += (rate.total - rate.success);
+    }
+
+    return totalRequests > 0 ? errorRequests / totalRequests : 0;
   }
 
   /**
-   * 设置性能阈值
+   * 生成优化建议
    */
-  setThresholds(newThresholds) {
-    this.thresholds = {
-      ...this.thresholds,
-      ...newThresholds
+  generateRecommendations() {
+    const recommendations = [];
+    
+    const averageLatency = this.calculateAverageLatency();
+    if (averageLatency > this.thresholds.apiLatency) {
+      recommendations.push('API响应时间过长，建议优化网络请求或使用缓存');
+    }
+
+    const errorRate = this.calculateErrorRate();
+    if (errorRate > this.thresholds.errorRate) {
+      recommendations.push('错误率过高，建议检查错误处理和重试机制');
+    }
+
+    if (this.monitoring.currentMemoryUsage > this.config.maxMemoryUsage * 0.8) {
+      recommendations.push('内存使用率较高，建议优化数据结构和清理策略');
+    }
+
+    return recommendations;
+  }
+
+  /**
+   * 重置监控数据
+   */
+  reset() {
+    this.stopMonitoring();
+    this.performanceData = {
+      app: {
+        startTime: Date.now(),
+        launchTime: 0,
+        pageLoadTimes: new Map(),
+        navigationTimes: new Map(),
+        errorCount: 0,
+        crashCount: 0
+      },
+      system: {
+        memory: [],
+        cpu: [],
+        network: [],
+        battery: []
+      },
+      user: {
+        actions: [],
+        sessions: [],
+        preferences: {}
+      },
+      api: {
+        calls: new Map(),
+        errors: [],
+        latencies: [],
+        successRates: new Map()
+      }
     };
-  }
-
-  /**
-   * 清理历史数据
-   */
-  cleanup() {
-    // 清理超过7天的数据
-    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    
-    // 清理API调用记录
-    this.performanceData.api.calls = this.performanceData.api.calls.filter(
-      call => call.timestamp > sevenDaysAgo
-    );
-    
-    // 清理用户行为记录
-    this.performanceData.user.actions = this.performanceData.user.actions.filter(
-      action => action.timestamp > sevenDaysAgo
-    );
-    
-    // 清理系统指标
-    Object.keys(this.performanceData.system).forEach(key => {
-      this.performanceData.system[key] = this.performanceData.system[key].filter(
-        item => item.timestamp > sevenDaysAgo
-      );
-    });
-  }
-
-  /**
-   * 生成性能诊断建议
-   */
-  generateDiagnosticSuggestions() {
-    const report = this.getPerformanceReport();
-    const suggestions = [];
-
-    // 检查页面加载时间
-    if (report.summary.avgPageLoadTime > this.thresholds.pageLoadTime) {
-      suggestions.push({
-        type: 'performance',
-        level: 'warning',
-        message: '页面加载时间较长，建议优化页面资源和代码'
-      });
-    }
-
-    // 检查API延迟
-    if (report.summary.avgApiLatency > this.thresholds.apiLatency) {
-      suggestions.push({
-        type: 'network',
-        level: 'warning', 
-        message: 'API调用延迟较高，建议检查网络环境或优化接口'
-      });
-    }
-
-    // 检查错误率
-    const apiCalls = this.performanceData.api.calls.length;
-    const apiErrors = this.performanceData.api.errors.length;
-    if (apiCalls > 0 && (apiErrors / apiCalls) > this.thresholds.errorRate) {
-      suggestions.push({
-        type: 'reliability',
-        level: 'error',
-        message: 'API错误率较高，建议检查接口稳定性'
-      });
-    }
-
-    return suggestions;
+    this.monitoring.currentMemoryUsage = 0;
+    this.monitoring.lastCleanup = Date.now();
   }
 }
 
-// 导出单例
-export default new PerformanceMonitor(); 
+// 创建单例实例
+const performanceMonitor = new PerformanceMonitor();
+
+export default performanceMonitor; 

@@ -11,28 +11,28 @@
       <view class="stat-icon blue-bg">
         <image src="/images/icons/white/homework.svg" class="stat-icon-img" />
       </view>
-      <view class="stat-number">45</view>
+      <view class="stat-number">{{statistics.total}}</view>
       <view class="stat-label">总错题</view>
     </view>
     <view class="stat-item" bindtap="filterByStatus" data-status="new">
       <view class="stat-icon red-bg">
         <text class="stat-icon-text">新</text>
       </view>
-      <view class="stat-number">12</view>
+      <view class="stat-number">{{statistics.new}}</view>
       <view class="stat-label">待复习</view>
     </view>
     <view class="stat-item" bindtap="filterByStatus" data-status="reviewing">
       <view class="stat-icon orange-bg">
         <image src="/images/icons/white/practice.svg" class="stat-icon-img" />
       </view>
-      <view class="stat-number">18</view>
+      <view class="stat-number">{{statistics.reviewing}}</view>
       <view class="stat-label">复习中</view>
     </view>
     <view class="stat-item" bindtap="filterByStatus" data-status="mastered">
       <view class="stat-icon green-bg">
         <van-icon name="success" size="20" color="white" />
       </view>
-      <view class="stat-number">15</view>
+      <view class="stat-number">{{statistics.mastered}}</view>
       <view class="stat-label">已掌握</view>
     </view>
   </view>
@@ -68,7 +68,7 @@
           data-type="subject"
           data-value="all"
         >
-          全部 45
+          全部 {{statistics.total}}
         </view>
         <view 
           class="filter-chip {{filters.subject === '数学' ? 'filter-active' : ''}}"
@@ -79,7 +79,7 @@
           <view class="chip-icon math-chip">
             <image src="/images/icons/white/brain.svg" class="chip-icon-img" />
           </view>
-          数学 18
+          数学
         </view>
         <view 
           class="filter-chip {{filters.subject === '语文' ? 'filter-active' : ''}}"

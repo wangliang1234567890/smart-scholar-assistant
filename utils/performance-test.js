@@ -330,16 +330,28 @@ class PerformanceTest {
         details: perfStats
       });
 
-      // 测试4: OCR识别（模拟模式）
-      const ocrStartTime = Date.now();
-      const ocrResult = await AIService.recognizeText(mockImagePath);
-      const ocrDuration = Date.now() - ocrStartTime;
+      // 测试4: 图片分析（模拟模式）
+      const analysisStartTime = Date.now();
+      const analysisResult = await AIService.analyzeQuestionFromImage(mockImagePath);
+      const analysisDuration = Date.now() - analysisStartTime;
       
       tests.push({
-        name: 'OCR识别（模拟）',
-        success: ocrResult && ocrResult.success,
-        details: ocrResult,
-        performance: `${ocrDuration}ms`
+        name: '图片分析（模拟）',
+        success: analysisResult && analysisResult.success,
+        details: analysisResult,
+        performance: `${analysisDuration}ms`
+      });
+
+      // 测试5: 向后兼容性检查
+      const compatibilityStartTime = Date.now();
+      const compatibilityResult = await AIService.recognizeText(mockImagePath);
+      const compatibilityDuration = Date.now() - compatibilityStartTime;
+      
+      tests.push({
+        name: '向后兼容接口',
+        success: compatibilityResult && compatibilityResult.success,
+        details: compatibilityResult,
+        performance: `${compatibilityDuration}ms`
       });
 
       // 重置配置

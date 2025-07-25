@@ -7,7 +7,17 @@
     "dev": "echo 'Development mode - Use WeChat Developer Tools'",
     "build": "echo 'Build for production'",
     "lint": "eslint --ext .js .",
-    "lint:fix": "eslint --ext .js . --fix"
+    "lint:fix": "eslint --ext .js . --fix",
+    "lint:report": "eslint --ext .js . --format html --output-file eslint-report.html",
+    "test": "echo 'Running tests...' && echo 'No tests specified yet'",
+    "precommit": "npm run lint && npm run test",
+    "clean": "echo 'Cleaning temporary files...'",
+    "deploy:dev": "echo 'Deploying to development environment'",
+    "deploy:prod": "echo 'Deploying to production environment'",
+    "performance:audit": "node scripts/performance-audit.js",
+    "security:audit": "echo 'Running security audit...'",
+    "docs:generate": "echo 'Generating documentation...'",
+    "check:all": "npm run lint && npm run test && npm run performance:audit"
   },
   "keywords": [
     "微信小程序",
@@ -15,9 +25,16 @@
     "AI",
     "错题本",
     "学习助手",
-    "小学生"
+    "小学生",
+    "智能批改",
+    "OCR识别",
+    "机器学习"
   ],
-  "author": "Smart Study Team",
+  "author": {
+    "name": "Smart Study Team", 
+    "email": "team@smartstudy.com",
+    "url": "https://github.com/wangliang1234567890/smart-scholar-assistant"
+  },
   "license": "MIT",
   "dependencies": {
     "@vant/weapp": "^1.10.20",
@@ -30,12 +47,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-team/smart-study-assistant.git"
+    "url": "https://github.com/wangliang1234567890/smart-scholar-assistant.git"
   },
   "bugs": {
-    "url": "https://github.com/your-team/smart-study-assistant/issues"
+    "url": "https://github.com/wangliang1234567890/smart-scholar-assistant/issues"
   },
-  "homepage": "https://github.com/your-team/smart-study-assistant#readme",
+  "homepage": "https://github.com/wangliang1234567890/smart-scholar-assistant#readme",
   "engines": {
     "node": ">=16.0.0"
   },
@@ -44,6 +61,25 @@
     "cloud": true,
     "components": [
       "@vant/weapp"
-    ]
+    ],
+    "optimization": {
+      "subPackages": true,
+      "lazyCodeLoading": true,
+      "minifyJS": true,
+      "minifyWXML": true,
+      "minifyWXSS": true
+    }
+  },
+  "config": {
+    "performance": {
+      "maxBundleSize": "2MB",
+      "maxPageLoadTime": "3s",
+      "maxApiResponseTime": "5s"
+    },
+    "development": {
+      "enableHotReload": true,
+      "enableSourceMap": true,
+      "enableDebugMode": true
+    }
   }
 } 

@@ -35,7 +35,43 @@ function formatNumber(num) {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
+/**
+ * 防抖函数
+ * @param {Function} func 要防抖的函数
+ * @param {number} delay 延迟时间（毫秒）
+ * @returns {Function}
+ */
+function debounce(func, delay = 300) {
+  let timer = null;
+  return function(...args) {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => {
+      func.apply(this, args);
+      timer = null;
+    }, delay);
+  };
+}
+
+/**
+ * 节流函数
+ * @param {Function} func 要节流的函数
+ * @param {number} delay 间隔时间（毫秒）
+ * @returns {Function}
+ */
+function throttle(func, delay = 300) {
+  let lastTime = 0;
+  return function(...args) {
+    const now = Date.now();
+    if (now - lastTime >= delay) {
+      func.apply(this, args);
+      lastTime = now;
+    }
+  };
+}
+
 module.exports = {
   formatTime,
-  formatNumber
+  formatNumber,
+  debounce,
+  throttle
 }; 

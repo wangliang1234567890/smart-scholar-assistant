@@ -64,36 +64,8 @@ export const QUESTION_TYPE_LABELS = {
   [QUESTION_TYPES.JUDGE]: '判断题'
 };
 
-// AI服务配置
+// AI服务配置（简化版 - 已去掉独立OCR配置）
 export const AI_CONFIG = {
-  // OCR服务配置
-  OCR: {
-    // 腾讯云OCR配置
-    TENCENT: {
-      SECRET_ID: '', // 在云函数中配置
-      SECRET_KEY: '', // 在云函数中配置
-      REGION: 'ap-beijing',
-      ENDPOINT: 'ocr.tencentcloudapi.com',
-      VERSION: '2018-11-19',
-      ACTION: 'GeneralBasicOCR'
-    },
-    // 百度OCR配置
-    BAIDU: {
-      API_KEY: '', // 在云函数中配置
-      SECRET_KEY: '', // 在云函数中配置
-      ACCESS_TOKEN_URL: 'https://aip.baidubce.com/oauth/2.0/token',
-      OCR_URL: 'https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic'
-    },
-    // 配置选项
-    OPTIONS: {
-      MAX_IMAGE_SIZE: 4 * 1024 * 1024, // 4MB
-      SUPPORTED_FORMATS: ['jpg', 'jpeg', 'png', 'bmp'],
-      CONFIDENCE_THRESHOLD: 0.7,
-      RETRY_COUNT: 2,
-      TIMEOUT: 15000
-    }
-  },
-  
   // AI题目生成配置
   QUESTION_GENERATION: {
     // GPT配置
@@ -264,8 +236,8 @@ export const API_CONFIG = {
 // 云开发配置
 export const CLOUD_CONFIG = {
   ENV_ID: {
-    DEVELOPMENT: 'smart-study-dev-7g9k8l2m3n',
-    PRODUCTION: 'smart-study-prod-8h0l9m3n4p'
+    DEVELOPMENT: 'cloud1-9gms5vr2451418c9',
+    PRODUCTION: 'cloud1-9gms5vr2451418c9'  // 开发阶段可以先用同一个环境
   }
 };
 
@@ -276,12 +248,7 @@ export const UPLOAD_CONFIG = {
   COMPRESS_QUALITY: 0.8
 };
 
-// OCR配置
-export const OCR_CONFIG = {
-  MAX_IMAGE_SIZE: 3 * 1024 * 1024, // 3MB
-  SUPPORTED_FORMATS: ['jpg', 'jpeg', 'png'],
-  CONFIDENCE_THRESHOLD: 0.8
-};
+// 注意：OCR配置已整合到豆包AI配置中，请使用DOUBAO_CONFIG
 
 // 分页配置
 export const PAGINATION = {
@@ -353,4 +320,57 @@ export const DEFAULT_CONFIG = {
     timeLimit: 0,
     autoNext: true
   }
-}; 
+};
+
+// 豆包AI配置 - 更新传输阈值
+export const DOUBAO_CONFIG = {
+  API_KEY: '',
+  ENDPOINT: 'https://ark.cn-beijing.volces.com/api/v3',
+  MODEL_ID: 'doubao-seed-1-6-250615',
+  
+  OCR: {
+    MAX_IMAGE_SIZE: 5 * 1024 * 1024, // 5MB
+    SUPPORTED_FORMATS: ['jpg', 'jpeg', 'png', 'webp'],
+    TIMEOUT: 30000,
+    RETRY_COUNT: 3, // 增加重试次数
+    CONFIDENCE_THRESHOLD: 0.7,
+    
+    // 优化的压缩配置
+    COMPRESSION: {
+      MAX_WIDTH: 1920,
+      MAX_HEIGHT: 1920,
+      QUALITY: 70,
+      ENABLE_AUTO_COMPRESS: true,
+      AGGRESSIVE_QUALITY: 40 // 降级时使用的质量
+    },
+    
+    // 优化的传输配置
+    TRANSMISSION: {
+      BASE64_THRESHOLD: 800 * 1024, // 提升到800KB
+      USE_CLOUD_STORAGE_ABOVE: 800 * 1024,
+      RETRY_BASE_DELAY: 1000,
+      RETRY_MAX_DELAY: 10000
+    }
+  },
+  
+  // 题目生成配置
+  QUESTION_GENERATION: {
+    MAX_TOKENS: 2000,
+    TEMPERATURE: 0.7,
+    TOP_P: 0.9,
+    TIMEOUT: 45000
+  },
+  
+  // 错误码定义
+  ERROR_CODES: {
+    API_KEY_INVALID: 'API_KEY_INVALID',
+    IMAGE_TOO_LARGE: 'IMAGE_TOO_LARGE',
+    UNSUPPORTED_FORMAT: 'UNSUPPORTED_FORMAT',
+    NETWORK_ERROR: 'NETWORK_ERROR',
+    AI_SERVICE_ERROR: 'AI_SERVICE_ERROR',
+    TIMEOUT_ERROR: 'TIMEOUT_ERROR',
+    QUOTA_EXCEEDED: 'QUOTA_EXCEEDED',
+    CLOUD_STORAGE_ERROR: 'CLOUD_STORAGE_ERROR',
+    COMPRESSION_FAILED: 'COMPRESSION_FAILED'
+  }
+};

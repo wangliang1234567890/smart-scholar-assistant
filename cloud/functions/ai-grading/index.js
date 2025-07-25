@@ -10,6 +10,22 @@ cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
 });
 
+// 常量定义
+const QUESTION_TYPES = {
+  SINGLE_CHOICE: 'single_choice',
+  MULTIPLE_CHOICE: 'multiple_choice',
+  FILL_BLANK: 'fill_blank',
+  SOLVE: 'solve',
+  JUDGE: 'judge'
+};
+
+const ERROR_CODES = {
+  INVALID_PARAMS: 'INVALID_PARAMS',
+  GRADING_ERROR: 'GRADING_ERROR',
+  AI_SERVICE_ERROR: 'AI_SERVICE_ERROR',
+  TIMEOUT_ERROR: 'TIMEOUT_ERROR'
+};
+
 /**
  * 云函数主入口
  * @param {Object} event - 请求参数
@@ -17,100 +33,172 @@ cloud.init({
  * @param {string} event.userAnswer - 用户答案
  * @param {string} event.standardAnswer - 标准答案
  * @param {Object} event.gradingOptions - 批改选项
+ * @param {Object} context - 云函数运行上下文
  * @returns {Promise<Object>} 批改结果
  */
 exports.main = async (event, context) => {
+  const startTime = Date.now();
+  
   console.log('AI智能批改云函数开始执行:', {
     questionType: event.question?.type,
     hasUserAnswer: !!event.userAnswer,
-    hasStandardAnswer: !!event.standardAnswer
+    hasStandardAnswer: !!event.standardAnswer,
+    requestId: context.requestId
   });
 
   try {
     // 参数验证
-    if (!event.question || !event.userAnswer || !event.standardAnswer) {
-      throw new Error('批改参数不完整');
-    }
-
-    const { question, userAnswer, standardAnswer, gradingOptions = {} } = event;
+    const validatedParams = validateParameters(event);
+    const { question, userAnswer, standardAnswer, gradingOptions } = validatedParams;
 
     // 根据题目类型选择批改策略
     let result;
     switch (question.type) {
-      case 'single_choice':
-      case 'multiple_choice':
+      case QUESTION_TYPES.SINGLE_CHOICE:
+      case QUESTION_TYPES.MULTIPLE_CHOICE:
         result = await gradeChoiceQuestion(question, userAnswer, standardAnswer, gradingOptions);
         break;
-      case 'fill_blank':
+      case QUESTION_TYPES.FILL_BLANK:
         result = await gradeFillBlankQuestion(question, userAnswer, standardAnswer, gradingOptions);
         break;
-      case 'solve':
+      case QUESTION_TYPES.SOLVE:
         result = await gradeSolveQuestion(question, userAnswer, standardAnswer, gradingOptions);
+        break;
+      case QUESTION_TYPES.JUDGE:
+        result = await gradeJudgeQuestion(question, userAnswer, standardAnswer, gradingOptions);
         break;
       default:
         result = await gradeGeneralQuestion(question, userAnswer, standardAnswer, gradingOptions);
     }
 
+    const response = {
+      success: true,
+      data: {
+        ...result,
+        questionType: question.type,
+        processingTime: Date.now() - startTime,
+        requestId: context.requestId
+      },
+      timestamp: new Date().toISOString()
+    };
+
     console.log('智能批改完成:', {
       isCorrect: result.isCorrect,
       score: result.score,
-      hasAnalysis: !!result.analysis
+      processingTime: response.data.processingTime
     });
 
-    return {
-      success: true,
-      ...result,
-      processingTime: Date.now() - context.startTime || 0
-    };
+    return response;
 
   } catch (error) {
     console.error('智能批改失败:', error);
     
-    return {
-      success: false,
-      error: {
-        code: error.code || 'GRADING_ERROR',
-        message: error.message || '批改失败',
-        details: error.details || null
-      }
-    };
+    return createErrorResponse(error, {
+      processingTime: Date.now() - startTime,
+      requestId: context.requestId
+    });
   }
 };
 
 /**
+ * 验证输入参数
+ * @param {Object} event - 事件参数
+ * @returns {Object} 验证后的参数
+ * @throws {Error} 参数验证失败时抛出错误
+ */
+function validateParameters(event) {
+  const { question, userAnswer, standardAnswer, gradingOptions = {} } = event;
+
+  // 检查必需参数
+  if (!question || typeof question !== 'object') {
+    throw createError(ERROR_CODES.INVALID_PARAMS, '题目信息不能为空');
+  }
+
+  if (!question.type) {
+    throw createError(ERROR_CODES.INVALID_PARAMS, '题目类型不能为空');
+  }
+
+  if (userAnswer === undefined || userAnswer === null) {
+    throw createError(ERROR_CODES.INVALID_PARAMS, '用户答案不能为空');
+  }
+
+  if (!standardAnswer) {
+    throw createError(ERROR_CODES.INVALID_PARAMS, '标准答案不能为空');
+  }
+
+  // 验证题目类型
+  const validTypes = Object.values(QUESTION_TYPES);
+  if (!validTypes.includes(question.type)) {
+    throw createError(ERROR_CODES.INVALID_PARAMS, `无效的题目类型: ${question.type}`);
+  }
+
+  return {
+    question: {
+      type: question.type,
+      content: question.content || '',
+      subject: question.subject || '',
+      difficulty: Math.max(1, Math.min(5, parseInt(question.difficulty) || 3))
+    },
+    userAnswer: normalizeAnswer(userAnswer),
+    standardAnswer: normalizeAnswer(standardAnswer),
+    gradingOptions: {
+      strictMode: gradingOptions.strictMode || false,
+      enableFuzzyMatch: gradingOptions.enableFuzzyMatch !== false,
+      confidenceThreshold: Math.max(0, Math.min(1, parseFloat(gradingOptions.confidenceThreshold) || 0.8))
+    }
+  };
+}
+
+/**
  * 批改选择题
+ * @param {Object} question - 题目对象
+ * @param {string|Array} userAnswer - 用户答案
+ * @param {string|Array} standardAnswer - 标准答案
+ * @param {Object} options - 批改选项
+ * @returns {Promise<Object>} 批改结果
  */
 async function gradeChoiceQuestion(question, userAnswer, standardAnswer, options) {
   try {
     let isCorrect = false;
     let score = 0;
     let feedback = '';
+    let partialCredit = 0;
 
-    if (question.type === 'single_choice') {
+    if (question.type === QUESTION_TYPES.SINGLE_CHOICE) {
       // 单选题批改
-      isCorrect = String(userAnswer).toUpperCase() === String(standardAnswer).toUpperCase();
+      const userChoice = String(userAnswer).toUpperCase().trim();
+      const correctChoice = String(standardAnswer).toUpperCase().trim();
+      
+      isCorrect = userChoice === correctChoice;
       score = isCorrect ? 100 : 0;
-      feedback = isCorrect ? '回答正确！' : `正确答案是 ${standardAnswer}`;
+      feedback = isCorrect ? '回答正确！' : `正确答案是 ${correctChoice}`;
       
-    } else if (question.type === 'multiple_choice') {
+    } else if (question.type === QUESTION_TYPES.MULTIPLE_CHOICE) {
       // 多选题批改
-      const userAnswers = Array.isArray(userAnswer) ? userAnswer : [userAnswer];
-      const standardAnswers = Array.isArray(standardAnswer) ? standardAnswer : [standardAnswer];
+      const userChoices = Array.isArray(userAnswer) ? 
+        userAnswer.map(a => String(a).toUpperCase().trim()) : 
+        [String(userAnswer).toUpperCase().trim()];
       
-      const userSorted = userAnswers.map(a => String(a).toUpperCase()).sort();
-      const standardSorted = standardAnswers.map(a => String(a).toUpperCase()).sort();
+      const correctChoices = Array.isArray(standardAnswer) ? 
+        standardAnswer.map(a => String(a).toUpperCase().trim()) : 
+        [String(standardAnswer).toUpperCase().trim()];
       
-      isCorrect = JSON.stringify(userSorted) === JSON.stringify(standardSorted);
+      const userSet = new Set(userChoices);
+      const correctSet = new Set(correctChoices);
+      
+      isCorrect = userSet.size === correctSet.size && 
+                  [...userSet].every(choice => correctSet.has(choice));
       
       if (isCorrect) {
         score = 100;
         feedback = '回答正确！';
       } else {
         // 部分分数计算
-        const intersection = userSorted.filter(x => standardSorted.includes(x));
-        const union = [...new Set([...userSorted, ...standardSorted])];
-        score = Math.round((intersection.length / union.length) * 100);
-        feedback = `部分正确，正确答案是 ${standardAnswers.join(', ')}`;
+        const intersection = [...userSet].filter(choice => correctSet.has(choice));
+        const union = new Set([...userSet, ...correctSet]);
+        partialCredit = intersection.length / union.size;
+        score = Math.round(partialCredit * 100);
+        feedback = `部分正确，正确答案是 ${correctChoices.join(', ')}`;
       }
     }
 
@@ -121,20 +209,27 @@ async function gradeChoiceQuestion(question, userAnswer, standardAnswer, options
       score,
       feedback,
       analysis,
+      partialCredit,
       details: {
-        questionType: question.type,
-        gradingMethod: 'exact_match'
+        gradingMethod: 'exact_match',
+        userChoices: Array.isArray(userAnswer) ? userAnswer : [userAnswer],
+        correctChoices: Array.isArray(standardAnswer) ? standardAnswer : [standardAnswer]
       }
     };
 
   } catch (error) {
     console.error('选择题批改失败:', error);
-    throw error;
+    throw createError(ERROR_CODES.GRADING_ERROR, '选择题批改失败', error);
   }
 }
 
 /**
  * 批改填空题
+ * @param {Object} question - 题目对象
+ * @param {string} userAnswer - 用户答案
+ * @param {string} standardAnswer - 标准答案
+ * @param {Object} options - 批改选项
+ * @returns {Promise<Object>} 批改结果
  */
 async function gradeFillBlankQuestion(question, userAnswer, standardAnswer, options) {
   try {
@@ -145,12 +240,13 @@ async function gradeFillBlankQuestion(question, userAnswer, standardAnswer, opti
     let isCorrect = cleanUserAnswer === cleanStandardAnswer;
     let score = isCorrect ? 100 : 0;
     let feedback = '';
+    let similarity = 0;
     
-    if (!isCorrect && options.FUZZY_MATCH_ENABLED) {
+    if (!isCorrect && options.enableFuzzyMatch) {
       // 模糊匹配
-      const similarity = calculateSimilarity(cleanUserAnswer, cleanStandardAnswer);
+      similarity = calculateSimilarity(cleanUserAnswer, cleanStandardAnswer);
       
-      if (similarity >= 0.8) {
+      if (similarity >= options.confidenceThreshold) {
         isCorrect = true;
         score = Math.round(similarity * 100);
         feedback = '答案基本正确';
@@ -171,53 +267,113 @@ async function gradeFillBlankQuestion(question, userAnswer, standardAnswer, opti
       score,
       feedback,
       analysis,
+      similarity,
       details: {
-        questionType: question.type,
-        similarity: calculateSimilarity(cleanUserAnswer, cleanStandardAnswer),
-        gradingMethod: options.FUZZY_MATCH_ENABLED ? 'fuzzy_match' : 'exact_match'
+        gradingMethod: options.enableFuzzyMatch ? 'fuzzy_match' : 'exact_match',
+        cleanUserAnswer,
+        cleanStandardAnswer,
+        originalUserAnswer: userAnswer,
+        originalStandardAnswer: standardAnswer
       }
     };
 
   } catch (error) {
     console.error('填空题批改失败:', error);
-    throw error;
+    throw createError(ERROR_CODES.GRADING_ERROR, '填空题批改失败', error);
+  }
+}
+
+/**
+ * 批改判断题
+ * @param {Object} question - 题目对象
+ * @param {string|boolean} userAnswer - 用户答案
+ * @param {string|boolean} standardAnswer - 标准答案
+ * @param {Object} options - 批改选项
+ * @returns {Promise<Object>} 批改结果
+ */
+async function gradeJudgeQuestion(question, userAnswer, standardAnswer, options) {
+  try {
+    const normalizedUserAnswer = normalizeJudgeAnswer(userAnswer);
+    const normalizedStandardAnswer = normalizeJudgeAnswer(standardAnswer);
+    
+    const isCorrect = normalizedUserAnswer === normalizedStandardAnswer;
+    const score = isCorrect ? 100 : 0;
+    const feedback = isCorrect ? '回答正确！' : `正确答案是：${normalizedStandardAnswer ? '正确' : '错误'}`;
+
+    const analysis = `判断题批改结果：${isCorrect ? '✓' : '✗'}`;
+
+    return {
+      isCorrect,
+      score,
+      feedback,
+      analysis,
+      details: {
+        gradingMethod: 'boolean_match',
+        normalizedUserAnswer,
+        normalizedStandardAnswer
+      }
+    };
+
+  } catch (error) {
+    console.error('判断题批改失败:', error);
+    throw createError(ERROR_CODES.GRADING_ERROR, '判断题批改失败', error);
   }
 }
 
 /**
  * 批改解答题
+ * @param {Object} question - 题目对象
+ * @param {string} userAnswer - 用户答案
+ * @param {string} standardAnswer - 标准答案
+ * @param {Object} options - 批改选项
+ * @returns {Promise<Object>} 批改结果
  */
 async function gradeSolveQuestion(question, userAnswer, standardAnswer, options) {
   try {
-    // 解答题需要更复杂的分析
-    const analysis = await analyzeWithAI(question, userAnswer, standardAnswer);
+    // 首先尝试关键词匹配
+    const keywordResult = await gradeByKeywords(question, userAnswer, standardAnswer);
     
-    if (analysis.success) {
-      return {
-        isCorrect: analysis.isCorrect,
-        score: analysis.score,
-        feedback: analysis.feedback,
-        analysis: analysis.detailAnalysis,
-        details: {
-          questionType: question.type,
-          gradingMethod: 'ai_analysis',
-          keyPoints: analysis.keyPoints || []
-        }
-      };
-    } else {
-      // AI分析失败，使用简单的关键词匹配
-      return await gradeByKeywords(question, userAnswer, standardAnswer);
+    // 如果关键词匹配度较高，直接返回结果
+    if (keywordResult.matchRate >= 0.7) {
+      return keywordResult;
     }
+    
+    // 否则使用AI分析（如果可用）
+    try {
+      const aiResult = await analyzeWithAI(question, userAnswer, standardAnswer);
+      if (aiResult.success) {
+        return {
+          isCorrect: aiResult.isCorrect,
+          score: aiResult.score,
+          feedback: aiResult.feedback,
+          analysis: aiResult.detailAnalysis,
+          details: {
+            gradingMethod: 'ai_analysis',
+            keyPoints: aiResult.keyPoints || [],
+            confidence: aiResult.confidence || 0.8
+          }
+        };
+      }
+    } catch (aiError) {
+      console.warn('AI分析失败，使用关键词匹配结果:', aiError);
+    }
+    
+    // 回退到关键词匹配结果
+    return keywordResult;
 
   } catch (error) {
     console.error('解答题批改失败:', error);
-    // 降级处理
-    return await gradeByKeywords(question, userAnswer, standardAnswer);
+    throw createError(ERROR_CODES.GRADING_ERROR, '解答题批改失败', error);
   }
 }
 
 /**
  * 通用题目批改
+ * @param {Object} question - 题目对象
+ * @param {string} userAnswer - 用户答案
+ * @param {string} standardAnswer - 标准答案
+ * @param {Object} options - 批改选项
+ * @returns {Promise<Object>} 批改结果
  */
 async function gradeGeneralQuestion(question, userAnswer, standardAnswer, options) {
   const cleanUserAnswer = preprocessAnswer(userAnswer);
@@ -233,56 +389,81 @@ async function gradeGeneralQuestion(question, userAnswer, standardAnswer, option
     feedback,
     analysis: `你的答案：${userAnswer}\n正确答案：${standardAnswer}`,
     details: {
-      questionType: question.type || 'general',
       gradingMethod: 'simple_match'
     }
   };
 }
 
 /**
- * 使用AI分析解答题
+ * 工具函数：标准化答案
  */
-async function analyzeWithAI(question, userAnswer, standardAnswer) {
-  try {
-    // 构建AI分析提示词
-    const prompt = `请分析以下学生答案的正确性：
-
-题目：${question.content}
-学科：${question.subject || '数学'}
-标准答案：${standardAnswer}
-学生答案：${userAnswer}
-
-请从以下几个方面分析：
-1. 答案的正确性（完全正确/部分正确/完全错误）
-2. 解题思路是否正确
-3. 计算过程是否有误
-4. 关键知识点的掌握情况
-5. 给出具体的改进建议
-
-请以JSON格式返回分析结果：
-{
-  "isCorrect": true/false,
-  "score": 0-100,
-  "feedback": "简短反馈",
-  "detailAnalysis": "详细分析",
-  "keyPoints": ["关键点1", "关键点2"]
-}`;
-
-    // 这里应该调用AI服务，简化处理返回模拟结果
-    // 实际部署时可以集成到ai-question-generator云函数中
-    
-    return {
-      success: false,
-      message: 'AI分析服务暂未集成'
-    };
-
-  } catch (error) {
-    console.error('AI分析失败:', error);
-    return {
-      success: false,
-      message: error.message
-    };
+function normalizeAnswer(answer) {
+  if (answer === null || answer === undefined) {
+    return '';
   }
+  return String(answer).trim();
+}
+
+/**
+ * 工具函数：标准化判断题答案
+ */
+function normalizeJudgeAnswer(answer) {
+  const str = String(answer).toLowerCase().trim();
+  const trueValues = ['true', '正确', '对', '是', 'yes', 'y', '1', 'right'];
+  const falseValues = ['false', '错误', '错', '否', 'no', 'n', '0', 'wrong'];
+  
+  if (trueValues.includes(str)) return true;
+  if (falseValues.includes(str)) return false;
+  
+  // 如果是布尔值，直接返回
+  if (typeof answer === 'boolean') return answer;
+  
+  // 默认返回false
+  return false;
+}
+
+/**
+ * 工具函数：预处理答案
+ */
+function preprocessAnswer(answer) {
+  return String(answer)
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w\u4e00-\u9fa5]/g, ''); // 只保留字母、数字和中文
+}
+
+/**
+ * 工具函数：计算相似度
+ */
+function calculateSimilarity(str1, str2) {
+  if (str1 === str2) return 1;
+  if (str1.length === 0 || str2.length === 0) return 0;
+  
+  // 使用简单的编辑距离算法
+  const matrix = [];
+  for (let i = 0; i <= str2.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= str1.length; j++) {
+    matrix[0][j] = j;
+  }
+  
+  for (let i = 1; i <= str2.length; i++) {
+    for (let j = 1; j <= str1.length; j++) {
+      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+  
+  const maxLength = Math.max(str1.length, str2.length);
+  return (maxLength - matrix[str2.length][str1.length]) / maxLength;
 }
 
 /**
@@ -314,133 +495,79 @@ async function gradeByKeywords(question, userAnswer, standardAnswer) {
     score,
     feedback,
     analysis: `关键词匹配度：${Math.round(matchRate * 100)}%\n匹配的关键词：${matchedWords.join(', ')}`,
+    matchRate,
     details: {
-      questionType: question.type,
       gradingMethod: 'keyword_match',
-      matchRate: matchRate,
-      matchedKeywords: matchedWords
+      matchedKeywords: matchedWords,
+      totalKeywords: standardWords.length
     }
   };
-}
-
-/**
- * 生成选择题分析
- */
-async function generateChoiceAnalysis(question, userAnswer, standardAnswer, isCorrect) {
-  if (isCorrect) {
-    return `回答正确！正确答案确实是 ${standardAnswer}。`;
-  } else {
-    return `你选择了 ${userAnswer}，但正确答案是 ${standardAnswer}。
-建议：请重新理解题目要求，仔细分析各个选项的含义。`;
-  }
-}
-
-/**
- * 生成填空题分析
- */
-async function generateFillBlankAnalysis(question, userAnswer, standardAnswer, isCorrect) {
-  if (isCorrect) {
-    return `回答正确！答案就是：${standardAnswer}`;
-  } else {
-    return `你的答案是"${userAnswer}"，标准答案是"${standardAnswer}"。
-建议：注意答案的准确性和完整性，检查是否有遗漏或错误的地方。`;
-  }
-}
-
-/**
- * 预处理答案
- */
-function preprocessAnswer(answer) {
-  if (!answer) return '';
-  
-  return answer
-    .toString()
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, ' ') // 标准化空格
-    .replace(/[，。！？；：]/g, match => {
-      // 中文标点转英文
-      const map = { '，': ',', '。': '.', '！': '!', '？': '?', '；': ';', '：': ':' };
-      return map[match] || match;
-    })
-    .replace(/[^\w\u4e00-\u9fa5\s.,!?;:()]/g, ''); // 移除特殊字符
-}
-
-/**
- * 计算相似度
- */
-function calculateSimilarity(str1, str2) {
-  if (!str1 || !str2) return 0;
-  if (str1 === str2) return 1;
-
-  const len1 = str1.length;
-  const len2 = str2.length;
-  const maxLen = Math.max(len1, len2);
-
-  if (maxLen === 0) return 1;
-
-  // 使用编辑距离计算相似度
-  const distance = levenshteinDistance(str1, str2);
-  return Math.max(0, (maxLen - distance) / maxLen);
-}
-
-/**
- * 计算编辑距离
- */
-function levenshteinDistance(str1, str2) {
-  const matrix = [];
-
-  for (let i = 0; i <= str2.length; i++) {
-    matrix[i] = [i];
-  }
-
-  for (let j = 0; j <= str1.length; j++) {
-    matrix[0][j] = j;
-  }
-
-  for (let i = 1; i <= str2.length; i++) {
-    for (let j = 1; j <= str1.length; j++) {
-      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // 替换
-          matrix[i][j - 1] + 1,     // 插入
-          matrix[i - 1][j] + 1      // 删除
-        );
-      }
-    }
-  }
-
-  return matrix[str2.length][str1.length];
 }
 
 /**
  * 提取关键词
  */
 function extractKeywords(text) {
-  if (!text) return [];
-  
-  // 简单的关键词提取
-  const words = text
+  return String(text)
     .toLowerCase()
     .replace(/[^\w\u4e00-\u9fa5\s]/g, ' ')
     .split(/\s+/)
-    .filter(word => word.length > 1)
-    .filter(word => !isStopWord(word));
-
-  // 去重
-  return [...new Set(words)];
+    .filter(word => word.length > 1);
 }
 
 /**
- * 判断是否为停用词
+ * 生成选择题分析
  */
-function isStopWord(word) {
-  const stopWords = [
-    '的', '了', '在', '是', '我', '有', '和', '就', '不', '人', '都', '一', '个', '上', '也', '很', '到', '说', '要', '去', '你', '会', '着', '没有', '看', '好', '自己', '这样',
-    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should'
-  ];
-  
-  return stopWords.includes(word.toLowerCase());
+async function generateChoiceAnalysis(question, userAnswer, standardAnswer, isCorrect) {
+  return isCorrect ? 
+    '选择正确！这道题考查的是基础知识的掌握。' :
+    '选择错误。建议回顾相关知识点，加强理解。';
+}
+
+/**
+ * 生成填空题分析
+ */
+async function generateFillBlankAnalysis(question, userAnswer, standardAnswer, isCorrect) {
+  return isCorrect ?
+    '填空正确！答案准确。' :
+    '填空有误。请注意答案的准确性和完整性。';
+}
+
+/**
+ * AI分析（模拟实现）
+ */
+async function analyzeWithAI(question, userAnswer, standardAnswer) {
+  // 这里是模拟的AI分析，实际部署时可以集成真实的AI服务
+  return {
+    success: false,
+    message: 'AI分析服务暂未集成'
+  };
+}
+
+/**
+ * 创建错误对象
+ */
+function createError(code, message, originalError = null) {
+  const error = new Error(message);
+  error.code = code;
+  error.originalError = originalError;
+  return error;
+}
+
+/**
+ * 创建错误响应
+ */
+function createErrorResponse(error, metadata = {}) {
+  return {
+    success: false,
+    error: {
+      code: error.code || ERROR_CODES.GRADING_ERROR,
+      message: error.message || '批改失败',
+      details: error.originalError ? error.originalError.message : null
+    },
+    metadata: {
+      ...metadata,
+      timestamp: new Date().toISOString()
+    }
+  };
 } 

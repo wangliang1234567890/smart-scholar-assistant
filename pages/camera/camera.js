@@ -4,93 +4,52 @@ import { formatTime } from '../../utils/util';
 
 Page({
   data: {
-    // 界面状态
-    showPreview: false,
-    showAnalyzing: false,
-    showResultModal: false,
+    // 相机状态
+    cameraReady: false,
     
-    // 选择器状态
-    showSubjectPicker: false,
-    showGradePicker: false,
-    showDifficultyPicker: false,
+    // 界面状态
+    showCropping: false,
+    showAnalyzing: false,
+    
+    // 图片相关
+    originalImagePath: '',
+    croppedImagePath: '',
+    
+    // 裁剪相关
+    cropArea: { x: 0, y: 0, width: 0, height: 0 },
+    imageDisplaySize: { width: 0, height: 0 },
+    isDragging: false,
     
     // 相机设置
     devicePosition: 'back',
     flash: 'off',
-    cameraFrameSize: { width: 300, height: 200 },
     
-    // 识别进度
+    // AI分析状态
     progressStep: 0,
-    processingStatus: '准备开始识别...',
-    
-    // 识别结果
-    previewImagePath: '',
-    recognizedQuestion: '',
-    ocrResult: null,
-    analysisResult: null,
-    
-    // 表单数据
-    formData: {
-      subject: '数学',
-      grade: 1,
-      gradeLabel: '一年级',
-      difficulty: 3,
-      difficultyLabel: '中等',
-      description: ''
-    },
-    
-    // 选择器数据
-    subjects: ['数学', '语文', '英语', '物理', '化学', '生物', '历史', '地理', '政治'],
-    grades: [
-      { value: 1, label: '一年级' },
-      { value: 2, label: '二年级' },
-      { value: 3, label: '三年级' },
-      { value: 4, label: '四年级' },
-      { value: 5, label: '五年级' },
-      { value: 6, label: '六年级' },
-      { value: 7, label: '七年级' },
-      { value: 8, label: '八年级' },
-      { value: 9, label: '九年级' },
-      { value: 10, label: '高一' },
-      { value: 11, label: '高二' },
-      { value: 12, label: '高三' }
-    ],
-    difficulties: [
-      { value: 1, label: '很简单' },
-      { value: 2, label: '简单' },
-      { value: 3, label: '中等' },
-      { value: 4, label: '较难' },
-      { value: 5, label: '很难' }
-    ],
-    
-    // 开发模式
-    isDevelopment: true,
-    
-    // 错误处理
-    hasError: false,
-    errorMessage: '',
-    
-    // 计算属性
-    progressRotation: 0,
-    progressPercent: 0,
-    confidencePercent: 0,
-    hasValidQuestion: false
+    processingStatus: '正在初始化...'
   },
 
-  onLoad() {
-    this.initPage();
+  onLoad(options) {
+    console.log('Camera page initialized');
+    
+    // ❌ 删除或注释掉自动测试
+    // this.autoTestCloudFunction();
   },
 
   onShow() {
-    this.resetPageState();
+    console.log('Camera page show');
+    
+    // ❌ 删除或注释掉自动测试
+    // this.autoTestCloudFunction();
   },
 
   onHide() {
-    this.cleanupResources();
+    this.cleanupAllResources();
   },
 
   onUnload() {
-    this.cleanupResources();
+    console.log('Camera page unloading, cleaning up resources...');
+    this.cleanupAllResources();
   },
 
   /**
@@ -100,7 +59,7 @@ Page({
     // 获取系统信息
     this.getSystemInfo();
 
-  // 初始化相机
+    // 初始化相机
     this.initCamera();
     
     // 检查权限
@@ -109,7 +68,15 @@ Page({
     // 设置AI服务模式
     AIService.setProductionMode(false);
     
+    // 添加调试模式检测
+    this.setData({
+      isDevelopment: true // 开发模式，显示调试按钮
+    });
+    
     console.log('Camera page initialized');
+    
+    // 自动测试云函数连接（可选）
+    this.autoTestConnection();
   },
 
   /**
@@ -133,35 +100,74 @@ Page({
   },
 
   /**
-   * 初始化相机
+   * 页面加载完成
    */
-  initCamera() {
-    const cameraContext = wx.createCameraContext();
-    this.cameraContext = cameraContext;
+  onReady() {
+    console.log('Camera page ready');
+    this.initCamera();
   },
 
   /**
-   * 检查权限
+   * 初始化相机
    */
-  checkPermissions() {
-    wx.getSetting({
-      success: (res) => {
-        if (!res.authSetting['scope.camera']) {
-          wx.authorize({
-            scope: 'scope.camera',
-            success: () => {
-              console.log('相机权限获取成功');
-      },
-            fail: () => {
-              wx.showModal({
-                title: '需要相机权限',
-                content: '请在设置中开启相机权限以使用拍照功能',
-                showCancel: false
-              });
-            }
-          });
-        }
+  initCamera() {
+    try {
+      console.log('开始初始化相机...');
+      
+      // 创建相机上下文
+      this.cameraContext = wx.createCameraContext();
+      
+      if (!this.cameraContext) {
+        throw new Error('创建相机上下文失败');
       }
+      
+      console.log('相机上下文创建成功');
+      
+      // 设置相机初始化完成标志
+      this.setData({
+        cameraReady: true
+      });
+      
+      console.log('相机初始化完成');
+      
+    } catch (error) {
+      console.error('相机初始化失败:', error);
+      wx.showToast({
+        title: '相机初始化失败',
+        icon: 'none'
+      });
+    }
+  },
+
+  /**
+   * 相机初始化完成回调
+   */
+  onCameraReady() {
+    console.log('相机准备就绪');
+    this.setData({
+      cameraReady: true
+    });
+  },
+
+  /**
+   * 相机错误回调
+   */
+  onCameraError(e) {
+    console.error('相机错误:', e.detail);
+    wx.showModal({
+      title: '相机错误',
+      content: '相机启动失败，请检查相机权限或重新进入页面',
+      showCancel: false
+    });
+  },
+
+  /**
+   * 相机停止回调
+   */
+  onCameraStop() {
+    console.log('相机已停止');
+    this.setData({
+      cameraReady: false
     });
   },
 
@@ -181,17 +187,80 @@ Page({
   },
 
   /**
-   * 清理资源
+   * 清理所有资源
    */
-  cleanupResources() {
-    if (this.progressTimer) {
-      clearInterval(this.progressTimer);
-      this.progressTimer = null;
-    }
+  cleanupAllResources() {
+    // 清理所有定时器
+    this.clearAllTimers();
     
-    if (this.statusTimer) {
-      clearTimeout(this.statusTimer);
-      this.statusTimer = null;
+    // 清理图片缓存
+    this.clearImageCache();
+    
+    // 清理事件监听
+    this.cleanupEventListeners();
+    
+    // 清理相机上下文
+    if (this.cameraContext) {
+      this.cameraContext = null;
+    }
+  },
+
+  /**
+   * 清理所有定时器
+   */
+  clearAllTimers() {
+    const timers = ['statusTimer', 'progressTimer', 'retryTimer', 'cleanupTimer'];
+    
+    timers.forEach(timerName => {
+      if (this[timerName]) {
+        if (timerName.includes('Interval')) {
+          clearInterval(this[timerName]);
+        } else {
+          clearTimeout(this[timerName]);
+        }
+        this[timerName] = null;
+        console.log(`已清理定时器: ${timerName}`);
+      }
+    });
+  },
+
+  /**
+   * 清理图片缓存
+   */
+  clearImageCache() {
+    const imagePaths = [
+      this.data.previewImagePath,
+      this.data.originalImagePath,
+      this.data.croppedImagePath
+    ];
+    
+    imagePaths.forEach(path => {
+      if (path && path.includes('temp')) {
+        try {
+          wx.getFileSystemManager().unlinkSync(path);
+          console.log('已清理图片缓存:', path);
+        } catch (error) {
+          console.warn('清理图片缓存失败:', error);
+        }
+      }
+    });
+  },
+
+  /**
+   * 清理事件监听
+   */
+  cleanupEventListeners() {
+    // 清理裁剪相关的事件监听
+    this.cleanupCropEvents();
+  },
+
+  /**
+   * 清理裁剪事件
+   */
+  cleanupCropEvents() {
+    // 如果有绑定的触摸事件，在这里清理
+    if (this.cropTouchHandler) {
+      this.cropTouchHandler = null;
     }
   },
 
@@ -225,14 +294,15 @@ Page({
       wx.hideLoading();
       
       if (result.tempImagePath) {
-      this.setData({
+        // 拍照成功，进入裁剪界面
+        this.setData({
+          originalImagePath: result.tempImagePath,
           previewImagePath: result.tempImagePath,
-          showPreview: false,
-          showAnalyzing: true
-      });
+          showCropping: true
+        });
         
-        // 开始AI识别
-        this.startAnalyzing(result.tempImagePath);
+        // 初始化裁剪区域
+        this.initCropArea(result.tempImagePath);
       } else {
         this.showError('拍照失败，请重试');
       }
@@ -261,13 +331,15 @@ Page({
     });
   },
 
-  /**
-   * 开始AI识别
-   */
-  async startAnalyzing(imagePath) {
+     /**
+    * 开始AI识别 - 优化版
+    */
+   async startAnalyzing(imagePath, options = {}) {
     try {
+      console.log('🤖 开始AI分析:', imagePath);
+      
       // 重置进度
-    this.setData({
+      this.setData({
         progressStep: 0,
         processingStatus: '正在预处理图像...'
       });
@@ -275,21 +347,40 @@ Page({
       // 开始进度更新
       this.startProgressUpdate();
       
-      // 调用AI服务进行OCR识别
-      const ocrResult = await AIService.recognizeText(imagePath);
+      // 图片质量检查
+      console.log('📋 开始图片质量检查...');
+      const imageValid = await this.validateImage(imagePath);
+      if (!imageValid.valid) {
+        throw new Error(imageValid.message);
+      }
+      console.log('✅ 图片质量检查通过');
       
-      // 更新进度
-      this.updateProgress(4, '识别完成！');
+      this.updateProgress(1, '正在压缩图片...');
       
-      // 保存识别结果
-      const confidencePercent = ocrResult.confidence ? Math.round(ocrResult.confidence * 100) : 0;
-      const recognizedText = ocrResult.text || '';
-      this.setData({
-        ocrResult,
-        recognizedQuestion: recognizedText,
-        confidencePercent,
-        hasValidQuestion: recognizedText.trim().length > 0
+      // 调用AI服务进行图片分析
+      console.log('🔍 开始调用AI服务...');
+      const aiService = getApp().globalData.aiService;
+      
+      if (!aiService) {
+        throw new Error('AI服务未初始化');
+      }
+      
+      console.log('📤 调用AI分析接口...');
+      const ocrResult = await aiService.analyzeQuestionFromImage(imagePath, {
+        enhanceAccuracy: true,
+        detectQuestionType: true,
+        cropOptimized: options.cropOptimized || false,
+        ...options
       });
+      
+      console.log('📥 AI分析结果:', ocrResult);
+      
+      this.updateProgress(3, '正在分析题目结构...');
+      
+      // 处理识别结果
+      await this.processOCRResult(ocrResult);
+      
+      this.updateProgress(4, '识别完成！');
       
       // 延迟后显示确认页面
       setTimeout(() => {
@@ -300,13 +391,136 @@ Page({
       }, 1000);
       
     } catch (error) {
-      console.error('AI识别失败:', error);
-      
-      // 停止进度更新
-      this.stopProgressUpdate();
-      
-      // 显示错误并降级到手动输入
+      console.error('❌ AI识别失败:', error);
       this.handleAnalyzingError(error);
+    }
+  },
+
+  /**
+   * 验证图片质量
+   */
+  async validateImage(imagePath) {
+    // 直接放行，不再检查分辨率
+    return { valid: true };
+  },
+
+  /**
+   * 获取图片信息
+   */
+  getImageInfo(imagePath) {
+    return new Promise((resolve, reject) => {
+      wx.getImageInfo({
+        src: imagePath,
+        success: resolve,
+        fail: reject
+      });
+    });
+  },
+
+  /**
+   * 处理OCR识别结果
+   */
+  async processOCRResult(result) {
+    console.log('📝 处理OCR结果:', result);
+    
+    if (!result || !result.success) {
+      throw new Error(result?.error?.message || '识别结果无效');
+    }
+    
+    // 检查识别文本
+    const recognizedText = result.text || result.recognizedText || '';
+    if (!recognizedText.trim()) {
+      throw new Error('未识别到文字内容');
+    }
+    
+    // 强制上传到云存储
+    const uploadRes = await wx.cloud.uploadFile({
+      cloudPath: `ocr-images/${Date.now()}.jpg`,
+      filePath: this.data.croppedImagePath || this.data.originalImagePath
+    });
+    
+    // 保存结果到全局数据
+    const app = getApp();
+    app.globalData.lastOCRResult = {
+      ocrResult: {
+        text: recognizedText,
+        confidence: result.confidence || 0,
+        questionType: result.questionType || 'unknown',
+        subject: result.subject || 'unknown',
+        difficulty: result.difficulty || 1
+      },
+      imagePath: uploadRes.fileID,
+      sourceType: 'camera'
+    };
+    
+    // 强制跳转到结果页，使用云存储fileID
+    wx.navigateTo({
+      url: `/pages/result/result?fileID=${uploadRes.fileID}`
+    });
+    
+    console.log('✅ OCR结果处理完成，已跳转到结果页面');
+  },
+
+  /**
+   * 自动填充题目数据
+   */
+  autoFillQuestionData(structuredData) {
+    if (structuredData.question) {
+      this.setData({
+        'questionData.content': structuredData.question,
+        'questionData.type': this.data.questionType,
+        'questionData.options': structuredData.options || [],
+        'questionData.correctAnswer': structuredData.correctAnswer || ''
+      });
+    }
+  },
+
+  /**
+   * 生成练习题
+   */
+  async generatePracticeQuestions() {
+    if (!this.data.hasValidQuestion) {
+      wx.showToast({
+        title: '请先识别有效题目',
+        icon: 'none'
+      });
+      return;
+    }
+    
+    try {
+      wx.showLoading({ title: '正在生成练习题...' });
+      
+      const errorQuestion = {
+        content: this.data.recognizedQuestion,
+        type: this.data.questionType,
+        subject: this.data.subject,
+        difficulty: 3, // 默认中等难度
+        structuredData: this.data.structuredData
+      };
+      
+      const result = await getApp().globalData.aiService.generatePracticeQuestions(errorQuestion, {
+        count: 3,
+        types: ['single_choice', 'fill_blank']
+      });
+      
+      wx.hideLoading();
+      
+      if (result.success && result.questions) {
+        // 跳转到练习题页面
+        wx.navigateTo({
+          url: `/pages/practice/practice?questions=${encodeURIComponent(JSON.stringify(result.questions))}`
+        });
+      } else {
+        throw new Error('练习题生成失败');
+      }
+      
+    } catch (error) {
+      wx.hideLoading();
+      console.error('生成练习题失败:', error);
+      wx.showToast({
+        title: '生成失败，请重试',
+        icon: 'none'
+      });
     }
   },
 
@@ -314,41 +528,44 @@ Page({
    * 开始进度更新
    */
   startProgressUpdate() {
-    let step = 0;
-    const steps = [
-      { step: 1, status: '正在预处理图像...', delay: 800 },
-      { step: 2, status: 'AI正在识别文字...', delay: 1500 },
-      { step: 3, status: '正在解析题目结构...', delay: 1200 },
-      { step: 4, status: '正在生成识别结果...', delay: 800 }
-    ];
+    // 清除之前的定时器
+    if (this.progressTimer) {
+      clearInterval(this.progressTimer);
+    }
     
-    const updateNextStep = () => {
-      if (step < steps.length) {
-        const currentStep = steps[step];
-        this.updateProgress(currentStep.step, currentStep.status);
-        step++;
-        
-        this.statusTimer = setTimeout(updateNextStep, currentStep.delay);
+    // 模拟进度更新
+    this.progressTimer = setInterval(() => {
+      const currentStep = this.data.progressStep;
+      if (currentStep < 3) {
+        this.setData({
+          progressStep: currentStep + 0.1
+        });
       }
-    };
-    
-    // 开始第一步
-    updateNextStep();
+    }, 500);
   },
 
   /**
    * 更新进度
    */
   updateProgress(step, status) {
-    const progressPercent = Math.round((step / 4) * 100);
-    const progressRotation = (step / 4) * 360;
+    console.log('📊 进度更新:', `${step}/4 - ${status}`);
     
     this.setData({
       progressStep: step,
-      processingStatus: status,
-      progressPercent,
-      progressRotation
+      processingStatus: status
     });
+    
+    // 🔧 如果是最后一步，确保隐藏加载状态
+    if (step >= 4) {
+      setTimeout(() => {
+        this.setData({
+          showAnalyzing: false,
+          isProcessing: false,
+          showProgress: false
+        });
+        wx.hideLoading();
+      }, 500); // 延迟500ms让用户看到完成状态
+    }
   },
 
   /**
@@ -362,47 +579,859 @@ Page({
   },
 
   /**
-   * 处理识别错误
+   * 处理AI分析错误
    */
   handleAnalyzingError(error) {
-    let errorMessage = '识别失败，请重试';
+    console.error('🚨 处理AI分析错误:', error);
     
-    if (error.code === 'IMAGE_TOO_LARGE') {
-      errorMessage = '图片文件过大，请重新拍照';
-    } else if (error.code === 'NETWORK_ERROR') {
-      errorMessage = '网络连接失败，已切换到离线模式';
-    } else if (error.code === 'OCR_SERVICE_ERROR') {
-      errorMessage = 'AI服务暂时不可用，请手动输入题目';
+    // 清除定时器
+    if (this.progressTimer) {
+      clearInterval(this.progressTimer);
+      this.progressTimer = null;
     }
     
+    // 隐藏加载状态
+    wx.hideLoading();
+    
+    // 更新界面状态
+    this.setData({
+      showAnalyzing: false,
+      hasError: true,
+      errorMessage: error.message || '识别失败，请重试'
+    });
+    
+    // 显示错误提示
     wx.showModal({
       title: '识别失败',
-      content: errorMessage,
+      content: error.message || '图片识别失败，请重试',
       showCancel: true,
       cancelText: '重新拍照',
-      confirmText: '手动输入',
+      confirmText: '重试',
       success: (res) => {
         if (res.confirm) {
-          // 手动输入
-          this.setData({
-            showAnalyzing: false,
-            showPreview: true,
-            recognizedQuestion: ''
-          });
+          // 重试分析
+          this.retryAnalysis();
         } else {
-          // 重新拍照
-          this.setData({
-            showAnalyzing: false,
-            showPreview: false
-            });
+          // 返回相机界面
+          this.resetToCamera();
         }
       }
     });
   },
 
   /**
-   * 取消识别
+   * 重试分析
    */
+  async retryAnalysis() {
+    const { croppedImagePath } = this.data;
+    if (croppedImagePath) {
+      console.log('🔄 重试AI分析...');
+      this.setData({
+        showAnalyzing: true,
+        hasError: false,
+        errorMessage: ''
+      });
+      await this.startAnalyzing(croppedImagePath, { cropOptimized: true });
+    } else {
+      this.resetToCamera();
+    }
+  },
+
+  /**
+   * 重置到相机界面
+   */
+  resetToCamera() {
+    console.log('🔄 重置到相机界面');
+    this.setData({
+      showCropping: false,
+      showAnalyzing: false,
+      showPreview: false,
+      hasError: false,
+      errorMessage: '',
+      originalImagePath: '',
+      croppedImagePath: '',
+      progressStep: 0,
+      processingStatus: '准备开始识别...'
+    });
+  },
+
+  /**
+   * 增强的错误处理 - 添加恢复选项
+   */
+  showErrorWithRecovery(error, recoveryOptions = {}) {
+    console.error('显示错误恢复界面:', error);
+    
+    let errorMessage = '识别失败';
+    let errorDetail = '';
+    let suggestions = [];
+    
+    // 根据错误类型提供具体建议
+    if (error.message.includes('图片文件过大')) {
+      errorMessage = '图片文件过大';
+      errorDetail = '建议使用裁剪功能精确选择题目区域';
+      suggestions = [
+        { text: '重新裁剪', action: 'recrop', icon: '✂️' },
+        { text: '重新拍照', action: 'retake', icon: '📷' },
+        { text: '从相册选择', action: 'album', icon: '🖼️' }
+      ];
+    } else if (error.message.includes('网络')) {
+      errorMessage = '网络连接异常';
+      errorDetail = '请检查网络连接后重试';
+      suggestions = [
+        { text: '重试识别', action: 'retry', icon: '🔄' },
+        { text: '重新拍照', action: 'retake', icon: '📷' }
+      ];
+    } else {
+      errorMessage = 'AI识别失败';
+      errorDetail = error.message || '未知错误';
+      suggestions = [
+        { text: '重试识别', action: 'retry', icon: '🔄' },
+        { text: '重新裁剪', action: 'recrop', icon: '✂️' },
+        { text: '重新拍照', action: 'retake', icon: '📷' }
+      ];
+    }
+    
+    // 显示错误恢复弹窗
+    this.setData({
+      showErrorRecovery: true,
+      errorInfo: {
+        title: errorMessage,
+        detail: errorDetail,
+        suggestions: suggestions,
+        recoveryOptions: recoveryOptions
+      }
+    });
+  },
+
+  /**
+   * 执行错误恢复操作
+   */
+  executeRecoveryAction(action) {
+    const { recoveryOptions } = this.data.errorInfo;
+    
+    // 隐藏错误弹窗
+    this.setData({ showErrorRecovery: false });
+    
+    switch (action) {
+      case 'retry':
+        if (recoveryOptions.retry) {
+          recoveryOptions.retry();
+        } else if (this.data.previewImagePath) {
+          this.startAnalyzing(this.data.previewImagePath);
+        }
+        break;
+        
+      case 'recrop':
+        if (recoveryOptions.recrop) {
+          recoveryOptions.recrop();
+        } else {
+          this.switchToStep('crop');
+        }
+        break;
+        
+      case 'retake':
+        if (recoveryOptions.retake) {
+          recoveryOptions.retake();
+        } else {
+          this.switchToStep('camera');
+        }
+        break;
+        
+      case 'album':
+        this.chooseFromAlbum();
+        break;
+        
+      default:
+        console.warn('未知的恢复操作:', action);
+    }
+  },
+
+  /**
+   * 真实进度更新 - 替换假进度条
+   */
+  startRealProgressUpdate() {
+    this.setData({
+      progressStep: 0,
+      progressPercent: 0,
+      processingStatus: '正在预处理图像...'
+    });
+  },
+
+  /**
+   * 更新真实进度
+   */
+  updateRealProgress(step, message, progress) {
+    const progressPercent = Math.min(Math.max(progress || 0, 0), 100);
+    
+    this.setData({
+      progressStep: step,
+      progressPercent: progressPercent,
+      processingStatus: message,
+      progressRotation: (progressPercent / 100) * 360
+    });
+    
+    console.log(`进度更新: ${progressPercent}% - ${message}`);
+  },
+
+  /**
+   * 显示错误提示弹窗
+   */
+  showErrorModal(title, detail, suggestions) {
+    const suggestionText = suggestions.length > 0 ? 
+      '\n\n解决建议：\n' + suggestions.map((s, i) => `${i + 1}. ${s}`).join('\n') : '';
+    
+    wx.showModal({
+      title: title,
+      content: detail + suggestionText,
+      showCancel: true,
+      cancelText: '取消',
+      confirmText: '重试',
+      success: (res) => {
+        if (res.confirm && this.data.showRetry) {
+          // 重新开始识别
+          this.retryAnalysis();
+        } else {
+          // 返回拍照界面
+          this.resetToCamera();
+        }
+             }
+     });
+   },
+
+   /**
+    * 重试分析
+    */
+   retryAnalysis() {
+    if (this.data.previewImagePath) {
+      this.setData({
+        showAnalyzing: true,
+        hasError: false,
+        errorMessage: '',
+        progressStep: 0
+      });
+      this.startAnalyzing(this.data.previewImagePath);
+         } else {
+       this.resetToCamera();
+     }
+   },
+
+   /**
+    * 重置到拍照界面
+    */
+      resetToCamera() {
+     this.setData({
+       showPreview: false,
+       showAnalyzing: false,
+       showCropping: false,
+       hasError: false,
+       errorMessage: '',
+       previewImagePath: '',
+       originalImagePath: '',
+       croppedImagePath: '',
+       recognizedQuestion: '',
+       ocrResult: null,
+       analysisResult: null,
+       progressStep: 0,
+       cropArea: { x: 0, y: 0, width: 0, height: 0 },
+       imageDisplaySize: { width: 0, height: 0 },
+       isDragging: false,
+       dragStartArea: null,
+       resizeType: null,
+       resizeDirection: null,
+       containerRect: null
+     });
+   },
+
+   /**
+    * 初始化裁剪区域 - 修复坐标映射
+    */
+   async initCropArea() {
+     try {
+       const { originalImagePath } = this.data;
+       if (!originalImagePath) return;
+
+       const imageInfo = await this.getImageInfo(originalImagePath);
+       const system = wx.getSystemInfoSync();
+       
+       // ✅ 获取图片容器的实际位置和尺寸
+       const query = wx.createSelectorQuery();
+       query.select('.crop-image-container').boundingClientRect();
+       
+       const containerInfo = await new Promise((resolve) => {
+         query.exec((res) => resolve(res[0]));
+       });
+       
+       if (!containerInfo) {
+         console.error('无法获取图片容器信息');
+         return;
+       }
+       
+       // ✅ 计算图片在容器中的实际显示尺寸和位置
+       const containerWidth = containerInfo.width;
+       const containerHeight = containerInfo.height;
+       
+       const imageRatio = imageInfo.width / imageInfo.height;
+       const containerRatio = containerWidth / containerHeight;
+       
+       let displayWidth, displayHeight, offsetX = 0, offsetY = 0;
+       
+       if (imageRatio > containerRatio) {
+         // 图片更宽，以容器宽度为准
+         displayWidth = containerWidth;
+         displayHeight = containerWidth / imageRatio;
+         offsetY = (containerHeight - displayHeight) / 2;
+       } else {
+         // 图片更高，以容器高度为准
+         displayHeight = containerHeight;
+         displayWidth = containerHeight * imageRatio;
+         offsetX = (containerWidth - displayWidth) / 2;
+       }
+       
+       // ✅ 初始裁剪区域：占图片显示区域的80%，居中
+       const cropWidth = displayWidth * 0.8;
+       const cropHeight = displayHeight * 0.6;
+       const cropX = offsetX + (displayWidth - cropWidth) / 2;
+       const cropY = offsetY + (displayHeight - cropHeight) / 2;
+       
+       this.setData({
+         imageDisplaySize: {
+           width: displayWidth,
+           height: displayHeight
+         },
+         imageOffset: {
+           x: offsetX,
+           y: offsetY
+         },
+         containerSize: {
+           width: containerWidth,
+           height: containerHeight
+         },
+         cropArea: {
+           x: cropX,
+           y: cropY,
+           width: cropWidth,
+           height: cropHeight
+         }
+       });
+       
+       console.log('✅ 裁剪区域初始化完成:', {
+         容器尺寸: `${containerWidth}x${containerHeight}`,
+         图片显示尺寸: `${displayWidth}x${displayHeight}`,
+         图片偏移: `${offsetX},${offsetY}`,
+         裁剪区域: `${cropX},${cropY} ${cropWidth}x${cropHeight}`
+       });
+       
+     } catch (error) {
+       console.error('❌ 初始化裁剪区域失败:', error);
+     }
+   },
+
+   /**
+    * 获取图片信息
+    */
+   getImageInfo(imagePath) {
+     return new Promise((resolve, reject) => {
+       wx.getImageInfo({
+         src: imagePath,
+         success: resolve,
+         fail: reject
+       });
+     });
+   },
+
+   /**
+    * 裁剪框移动处理 - 简化版本
+    */
+   onCropMove(e) {
+     const { type } = e;
+     if (type === 'touchstart') this.startCropMove(e);
+     else if (type === 'touchmove') this.processCropMove(e);
+     else if (type === 'touchend') this.endCropMove(e);
+     return false; // 阻止事件冒泡
+   },
+
+   /**
+    * 开始移动裁剪框 - 修复坐标计算
+    */
+   startCropMove(e) {
+     const { containerSize, imageOffset } = this.data;
+  
+     // ✅ 获取触摸点相对于容器的坐标
+     const touch = e.touches[0];
+     const relativeX = touch.clientX - imageOffset.x;
+     const relativeY = touch.clientY - imageOffset.y;
+
+     console.log('拖拽开始 - 修复版本:', {
+       触摸点: `${touch.clientX},${touch.clientY}`,
+       图片偏移: `${imageOffset.x},${imageOffset.y}`,
+       相对坐标: `${relativeX},${relativeY}`,
+       当前裁剪区域: this.data.cropArea
+     });
+
+     this.setData({
+       isDragging: true,
+       dragStart: { 
+         x: relativeX, 
+         y: relativeY 
+       },
+       dragStartArea: { ...this.data.cropArea }
+     });
+
+     wx.vibrateShort({ type: 'light' });
+   },
+
+   /**
+    * 处理移动裁剪框 - 修复坐标计算
+    */
+   processCropMove(e) {
+     if (!this.data.isDragging) return;
+
+     // 节流优化
+     const now = Date.now();
+     if (now - (this.data.lastMoveTime || 0) < 16) return;
+     this.setData({ lastMoveTime: now });
+
+     const { dragStart, dragStartArea, imageDisplaySize, imageOffset } = this.data;
+     const touch = e.touches[0];
+  
+     // ✅ 计算相对于图片的移动距离
+     const relativeX = touch.clientX - imageOffset.x;
+     const relativeY = touch.clientY - imageOffset.y;
+     const deltaX = relativeX - dragStart.x;
+     const deltaY = relativeY - dragStart.y;
+
+     // ✅ 计算新的裁剪区域位置
+     let newX = dragStartArea.x + deltaX;
+     let newY = dragStartArea.y + deltaY;
+
+     // ✅ 边界限制：确保裁剪框不超出图片显示区域
+     const minX = imageOffset.x;
+     const minY = imageOffset.y;
+     const maxX = imageOffset.x + imageDisplaySize.width - dragStartArea.width;
+     const maxY = imageOffset.y + imageDisplaySize.height - dragStartArea.height;
+
+     newX = Math.max(minX, Math.min(newX, maxX));
+     newY = Math.max(minY, Math.min(newY, maxY));
+
+     this.setData({
+       cropArea: {
+         ...dragStartArea,
+         x: newX,
+         y: newY
+       }
+     });
+   },
+
+   /**
+    * 结束移动裁剪框
+    */
+   endCropMove() {
+     console.log('拖拽结束');
+     this.setData({
+       isDragging: false,
+       dragStart: null,
+       dragStartArea: null
+     });
+     wx.vibrateShort({ type: 'light' });
+   },
+
+   /**
+    * 裁剪框缩放处理 - 简化版本
+    */
+   onCropResize(e) {
+     const { type } = e;
+     if (type === 'touchstart') this.startCropResize(e);
+     else if (type === 'touchmove') this.processCropResize(e);
+     else if (type === 'touchend') this.endCropResize(e);
+     return false; // 阻止事件冒泡
+   },
+
+   /**
+    * 开始缩放裁剪框
+    */
+   startCropResize(e) {
+     const { imageDisplaySize } = this.data;
+     const system = wx.getSystemInfoSync();
+     const imageLeft = (system.windowWidth - imageDisplaySize.width) / 2;
+     const { corner } = e.currentTarget.dataset;
+
+     console.log('缩放开始:', corner);
+
+     this.setData({
+       isDragging: true,
+       resizeCorner: corner,
+       dragStart: { 
+         x: e.touches[0].clientX - imageLeft, 
+         y: e.touches[0].clientY 
+       },
+       dragStartArea: { ...this.data.cropArea }
+     });
+
+     wx.vibrateShort({ type: 'medium' });
+   },
+
+   /**
+    * 处理缩放裁剪框 - 修复边界计算
+    */
+   processCropResize(e) {
+     if (!this.data.isDragging || !this.data.resizeCorner) return;
+  
+     // 节流优化
+     const now = Date.now();
+     if (now - (this.data.lastMoveTime || 0) < 16) return;
+     this.setData({ lastMoveTime: now });
+  
+     const { dragStart, dragStartArea, resizeCorner, imageDisplaySize } = this.data;
+     const system = wx.getSystemInfoSync();
+     const imageLeft = (system.windowWidth - imageDisplaySize.width) / 2;
+
+     const deltaX = e.touches[0].clientX - (dragStart.x + imageLeft);
+     const deltaY = e.touches[0].clientY - dragStart.y;
+
+     let newArea = { ...dragStartArea };
+     const minSize = 50;
+
+     // ✅ 使用屏幕尺寸作为边界
+     const screenWidth = wx.getSystemInfoSync().windowWidth;
+     const screenHeight = wx.getSystemInfoSync().windowHeight;
+
+     switch (resizeCorner) {
+       case 'top-left':
+         newArea.x = Math.max(0, Math.min(dragStartArea.x + deltaX, dragStartArea.x + dragStartArea.width - minSize));
+         newArea.y = Math.max(0, Math.min(dragStartArea.y + deltaY, dragStartArea.y + dragStartArea.height - minSize));
+         newArea.width = dragStartArea.width - (newArea.x - dragStartArea.x);
+         newArea.height = dragStartArea.height - (newArea.y - dragStartArea.y);
+         break;
+         
+       case 'top-right':
+         newArea.y = Math.max(0, Math.min(dragStartArea.y + deltaY, dragStartArea.y + dragStartArea.height - minSize));
+         newArea.width = Math.max(minSize, Math.min(dragStartArea.width + deltaX, screenWidth - dragStartArea.x));
+         newArea.height = dragStartArea.height - (newArea.y - dragStartArea.y);
+         break;
+         
+       case 'bottom-left':
+         newArea.x = Math.max(0, Math.min(dragStartArea.x + deltaX, dragStartArea.x + dragStartArea.width - minSize));
+         newArea.width = dragStartArea.width - (newArea.x - dragStartArea.x);
+         newArea.height = Math.max(minSize, Math.min(dragStartArea.height + deltaY, screenHeight - dragStartArea.y));
+         break;
+         
+       case 'bottom-right':
+         newArea.width = Math.max(minSize, Math.min(dragStartArea.width + deltaX, screenWidth - dragStartArea.x));
+         newArea.height = Math.max(minSize, Math.min(dragStartArea.height + deltaY, screenHeight - dragStartArea.y));
+         break;
+     }
+
+     this.setData({ cropArea: newArea });
+   },
+
+   /**
+    * 结束缩放裁剪框
+    */
+   endCropResize() {
+     console.log('缩放结束');
+     this.setData({
+       isDragging: false,
+       resizeCorner: null,
+       dragStart: null,
+       dragStartArea: null
+     });
+     wx.vibrateShort({ type: 'light' });
+   },
+
+   /**
+    * 确认裁剪并开始AI分析
+    */
+   async confirmCropAndAnalyze() {
+     try {
+       console.log('开始确认裁剪...');
+       
+       // 移除过严格的尺寸检查，直接执行裁剪
+       await this.proceedWithCrop();
+       
+     } catch (error) {
+       console.error('裁剪分析失败:', error);
+       wx.showModal({
+         title: '处理失败',
+         content: error.message || '图片处理失败，请重试',
+         showCancel: false
+       });
+     }
+   },
+
+   /**
+    * 执行裁剪流程
+    */
+   async proceedWithCrop() {
+     // 显示加载状态
+     wx.showLoading({
+       title: '正在处理...',
+       mask: true
+     });
+
+     // 使用现有的裁剪方法
+     const croppedImagePath = await this.cropImage();
+     
+     if (!croppedImagePath) {
+       throw new Error('图片裁剪失败');
+     }
+
+     console.log('裁剪完成，开始AI分析:', croppedImagePath);
+
+     // 切换到分析界面
+     this.setData({
+       showCropping: false,
+       showAnalyzing: true,
+       croppedImagePath: croppedImagePath
+     });
+
+     // 开始AI分析
+     await this.startAnalyzing(croppedImagePath, {
+       cropOptimized: true
+     });
+   },
+
+   /**
+    * 取消裁剪
+    */
+   cancelCrop() {
+     this.setData({
+       showCropping: false,
+       showAnalyzing: true,
+       previewImagePath: this.data.originalImagePath
+     });
+     
+     // 使用原图进行识别
+     this.startAnalyzing(this.data.originalImagePath);
+   },
+
+   /**
+    * 执行图片裁剪 - 修复坐标映射
+    */
+   async cropImage() {
+     const { originalImagePath, cropArea, imageDisplaySize, imageOffset } = this.data;
+
+     if (!originalImagePath || !cropArea || !imageDisplaySize || !imageOffset) {
+       console.error('裁剪参数不完整');
+       return originalImagePath;
+     }
+
+     try {
+       // 获取原始图片信息
+       const imageInfo = await this.getImageInfo(originalImagePath);
+       console.log('🖼️ 开始裁剪，原始图片信息:', imageInfo);
+       
+       // ✅ 修复坐标映射：裁剪区域相对于图片显示区域的位置
+       const cropRelativeX = cropArea.x - imageOffset.x;
+       const cropRelativeY = cropArea.y - imageOffset.y;
+       
+       // ✅ 计算缩放比例
+       const scaleX = imageInfo.width / imageDisplaySize.width;
+       const scaleY = imageInfo.height / imageDisplaySize.height;
+       
+       // ✅ 计算实际裁剪区域（映射到原始图片坐标）
+       const realCropX = Math.round(cropRelativeX * scaleX);
+       const realCropY = Math.round(cropRelativeY * scaleY);
+       const realCropWidth = Math.round(cropArea.width * scaleX);
+       const realCropHeight = Math.round(cropArea.height * scaleY);
+       
+       // 边界检查
+       const finalCropX = Math.max(0, Math.min(realCropX, imageInfo.width - 1));
+       const finalCropY = Math.max(0, Math.min(realCropY, imageInfo.height - 1));
+       const finalCropWidth = Math.max(50, Math.min(realCropWidth, imageInfo.width - finalCropX));
+       const finalCropHeight = Math.max(50, Math.min(realCropHeight, imageInfo.height - finalCropY));
+       
+       console.log('✂️ 裁剪参数计算（修复版）:', {
+         原始图片: `${imageInfo.width}x${imageInfo.height}`,
+         显示尺寸: `${imageDisplaySize.width}x${imageDisplaySize.height}`,
+         图片偏移: `${imageOffset.x},${imageOffset.y}`,
+         裁剪区域: `${cropArea.x},${cropArea.y} ${cropArea.width}x${cropArea.height}`,
+         相对位置: `${cropRelativeX},${cropRelativeY}`,
+         缩放比例: `${scaleX.toFixed(2)}x${scaleY.toFixed(2)}`,
+         实际裁剪: `${finalCropX},${finalCropY} ${finalCropWidth}x${finalCropHeight}`
+       });
+
+       // Canvas裁剪逻辑保持不变
+       const ctx = wx.createCanvasContext('cropCanvas');
+       ctx.clearRect(0, 0, finalCropWidth, finalCropHeight);
+       ctx.drawImage(
+         originalImagePath,
+         finalCropX, finalCropY, finalCropWidth, finalCropHeight,
+         0, 0, finalCropWidth, finalCropHeight
+       );
+       
+       return new Promise((resolve) => {
+         ctx.draw(false, () => {
+           wx.canvasToTempFilePath({
+             canvasId: 'cropCanvas',
+             x: 0, y: 0,
+             width: finalCropWidth,
+             height: finalCropHeight,
+             destWidth: finalCropWidth,
+             destHeight: finalCropHeight,
+             success: (res) => {
+               console.log('✅ 图片裁剪成功（修复版）:', {
+                 输出路径: res.tempFilePath,
+                 裁剪尺寸: `${finalCropWidth}x${finalCropHeight}`
+               });
+               resolve(res.tempFilePath);
+             },
+             fail: (error) => {
+               console.error('❌ Canvas导出失败:', error);
+               resolve(originalImagePath);
+             }
+           });
+         });
+       });
+
+     } catch (error) {
+       console.error('❌ 裁剪过程异常:', error);
+       return originalImagePath;
+     }
+   },
+
+   /**
+    * 重置裁剪区域
+    */
+   resetCropArea() {
+     const { imageDisplaySize } = this.data;
+     
+     // 重置为默认的80%区域
+     const cropWidth = imageDisplaySize.width * 0.8;
+     const cropHeight = imageDisplaySize.height * 0.6;
+     const cropX = (imageDisplaySize.width - cropWidth) / 2;
+     const cropY = (imageDisplaySize.height - cropHeight) / 2;
+     
+     this.setData({
+       cropArea: {
+         x: cropX,
+         y: cropY,
+         width: cropWidth,
+         height: cropHeight
+       },
+       cropBoxSize: {
+         width: cropWidth,
+         height: cropHeight
+       }
+     });
+     
+     wx.showToast({
+       title: '已重置选择区域',
+       icon: 'success',
+       duration: 1000
+     });
+   },
+
+   /**
+    * 扩大裁剪区域
+    */
+   expandCropArea() {
+     const { cropArea, imageDisplaySize } = this.data;
+     const expandRatio = 1.1; // 扩大10%
+     
+     const newWidth = Math.min(cropArea.width * expandRatio, imageDisplaySize.width);
+     const newHeight = Math.min(cropArea.height * expandRatio, imageDisplaySize.height);
+     
+     // 保持中心位置
+     const newX = Math.max(0, cropArea.x - (newWidth - cropArea.width) / 2);
+     const newY = Math.max(0, cropArea.y - (newHeight - cropArea.height) / 2);
+     
+     // 确保不超出边界
+     const finalX = Math.min(newX, imageDisplaySize.width - newWidth);
+     const finalY = Math.min(newY, imageDisplaySize.height - newHeight);
+     
+     this.setData({
+       cropArea: {
+         x: finalX,
+         y: finalY,
+         width: newWidth,
+         height: newHeight
+       },
+       cropBoxSize: {
+         width: newWidth,
+         height: newHeight
+       }
+     });
+   },
+
+   /**
+    * 缩小裁剪区域
+    */
+   shrinkCropArea() {
+     const { cropArea } = this.data;
+     const shrinkRatio = 0.9; // 缩小10%
+     
+     const newWidth = Math.max(cropArea.width * shrinkRatio, 100);
+     const newHeight = Math.max(cropArea.height * shrinkRatio, 100);
+     
+     // 保持中心位置
+     const newX = cropArea.x + (cropArea.width - newWidth) / 2;
+     const newY = cropArea.y + (cropArea.height - newHeight) / 2;
+     
+     this.setData({
+       cropArea: {
+         x: newX,
+         y: newY,
+         width: newWidth,
+         height: newHeight
+       },
+       cropBoxSize: {
+         width: newWidth,
+         height: newHeight
+       }
+     });
+   },
+
+   /**
+    * 智能识别题目区域
+    */
+   async autoDetectArea() {
+     try {
+       wx.showLoading({ title: '智能识别中...' });
+       
+       // 模拟智能识别过程
+       await new Promise(resolve => setTimeout(resolve, 1500));
+       
+       const { imageDisplaySize } = this.data;
+       
+       // 简单的智能识别算法：假设题目在图片的中央70%区域
+       const cropWidth = imageDisplaySize.width * 0.7;
+       const cropHeight = imageDisplaySize.height * 0.5;
+       const cropX = (imageDisplaySize.width - cropWidth) / 2;
+       const cropY = imageDisplaySize.height * 0.25; // 稍微偏上
+       
+       this.setData({
+         cropArea: {
+           x: cropX,
+           y: cropY,
+           width: cropWidth,
+           height: cropHeight
+         },
+         cropBoxSize: {
+           width: cropWidth,
+           height: cropHeight
+         }
+       });
+       
+       wx.hideLoading();
+       wx.showToast({
+         title: '智能识别完成',
+         icon: 'success',
+         duration: 1500
+       });
+       
+     } catch (error) {
+       wx.hideLoading();
+       console.error('智能识别失败:', error);
+       wx.showToast({
+         title: '智能识别失败',
+         icon: 'none'
+       });
+     }
+   },
+
+   /**
+    * 取消识别
+    */
   cancelAnalyzing() {
     this.stopProgressUpdate();
     
@@ -426,26 +1455,65 @@ Page({
   async chooseFromAlbum() {
     try {
       const res = await wx.chooseImage({
-      count: 1,
-      sizeType: ['compressed'],
+        count: 1,
+        sizeType: ['compressed'], // 强制压缩
         sourceType: ['album']
       });
       
       if (res.tempFilePaths && res.tempFilePaths.length > 0) {
         const imagePath = res.tempFilePaths[0];
+        
+                 // 预验证图片大小
+         try {
+           const imageInfo = await this.getImageInfo(imagePath);
+           console.log('选择的图片信息:', imageInfo);
+           
+           // 根据图片大小给出不同的提示
+           if (imageInfo.size > 2 * 1024 * 1024) { // 超过2MB
+             wx.showModal({
+               title: '图片较大，建议裁剪',
+               content: `图片大小: ${Math.round(imageInfo.size/1024/1024*100)/100}MB\n\n为了确保识别成功，强烈建议使用裁剪功能精确选择题目区域。这样既能减少数据传输，又能提高识别准确率。`,
+               showCancel: false,
+               confirmText: '好的，我会裁剪'
+             });
+           } else if (imageInfo.size > 1 * 1024 * 1024) { // 超过1MB
+             wx.showToast({
+               title: '图片较大，建议裁剪题目区域',
+               icon: 'none',
+               duration: 3000
+             });
+           }
+         } catch (error) {
+           console.warn('获取图片信息失败:', error);
+         }
+        
+        // 从相册选择图片后也进入裁剪界面
         this.setData({
+          originalImagePath: imagePath,
           previewImagePath: imagePath,
-          showPreview: false,
-          showAnalyzing: true
+          showCropping: true
         });
         
-        // 开始AI识别
-        this.startAnalyzing(imagePath);
+        // 初始化裁剪区域
+        this.initCropArea(imagePath);
       }
     } catch (error) {
-        console.error('选择图片失败:', error);
-          this.showError('选择图片失败');
-        }
+      console.error('选择图片失败:', error);
+      this.showError('选择图片失败');
+    }
+  },
+
+  /**
+   * 获取图片信息（辅助方法）
+   */
+  getImageInfo(imagePath) {
+    return new Promise((resolve, reject) => {
+      wx.getImageInfo({
+        src: imagePath,
+        success: resolve,
+        fail: reject
+      });
+    });
   },
 
   /**
@@ -820,6 +1888,307 @@ Page({
     
     // 模拟AI识别
     this.startAnalyzing(mockImagePath);
-  }
+  },
+
+  // 添加调试按钮的事件处理
+  async testOCRFunction() {
+    wx.showLoading({ title: '测试中...' })
+    
+    try {
+      const result = await wx.cloud.callFunction({
+        name: 'ocr-recognition',
+        data: {
+          test: true,
+          imageBase64: 'test_image_data'
+        }
+      })
+      
+      console.log('OCR云函数测试结果:', result)
+      
+      wx.hideLoading()
+      wx.showModal({
+        title: '测试成功',
+        content: `识别文字: ${result.result.text}`,
+        showCancel: false
+      })
+      
+    } catch (error) {
+      console.error('OCR云函数测试失败:', error)
+      wx.hideLoading()
+      wx.showToast({
+        title: '测试失败: ' + error.message,
+        icon: 'none'
+      })
+    }
+  },
+
+  // 测试OCR识别
+  async testOCR() {
+    try {
+      wx.showLoading({ title: '识别中...' });
+      
+      // 选择图片
+      const res = await wx.chooseImage({
+        count: 1,
+        sourceType: ['album', 'camera']
+      });
+      
+      const imagePath = res.tempFilePaths[0];
+      console.log('选择的图片:', imagePath);
+      
+      // 调用OCR识别
+      const result = await getApp().globalData.aiService.analyzeQuestionFromImage(imagePath);
+      
+      wx.hideLoading();
+      
+      console.log('OCR识别结果:', result);
+      
+      wx.showModal({
+        title: '识别结果',
+        content: `文字: ${result.text}\n置信度: ${Math.round(result.confidence * 100)}%`,
+        showCancel: false
+      });
+      
+    } catch (error) {
+      wx.hideLoading();
+      console.error('OCR测试失败:', error);
+      wx.showToast({
+        title: '识别失败: ' + error.message,
+        icon: 'none'
+      });
+    }
+  },
   // 已移除对全局 Math 对象的直接引用，避免只读属性报错
+  // 自动测试云函数连接
+  async autoTestCloudFunction() {
+    try {
+      console.log('自动测试云函数连接...');
+      
+      // 明确的测试调用
+      const result = await wx.cloud.callFunction({
+        name: 'ocr-recognition',
+        data: {
+          test: true // 只在测试时传递
+        }
+      });
+      
+      console.log('云函数连接正常:', result);
+      return result.result;
+      
+    } catch (error) {
+      console.error('云函数连接测试失败:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 测试云函数状态
+   */
+  async testCloudFunction() {
+    try {
+      wx.showLoading({ title: '测试中...' });
+      
+      const aiService = getApp().globalData.aiService;
+      const result = await aiService.testCloudFunction();
+      
+      wx.hideLoading();
+      
+      wx.showModal({
+        title: '云函数测试结果',
+        content: `状态: ${result.success ? '正常' : '异常'}\n提供商: ${result.provider}\n测试模式: ${result.testMode}`,
+        showCancel: false
+      });
+      
+    } catch (error) {
+      wx.hideLoading();
+      wx.showModal({
+        title: '云函数测试失败',
+        content: error.message,
+        showCancel: false
+      });
+    }
+  },
+
+  /**
+   * 测试OCR识别功能
+   */
+  async testOCR() {
+    try {
+      wx.showLoading({ title: '选择图片...' });
+      
+      // 选择图片
+      const res = await wx.chooseImage({
+        count: 1,
+        sourceType: ['album', 'camera'],
+        sizeType: ['compressed']
+      });
+      
+      const imagePath = res.tempFilePaths[0];
+      console.log('选择的图片路径:', imagePath);
+      
+      wx.showLoading({ title: 'OCR识别中...' });
+      
+      // 调用AI服务进行图片分析
+      const aiService = getApp().globalData.aiService;
+      const result = await aiService.analyzeQuestionFromImage(imagePath, {
+        enhanceAccuracy: true,
+        detectQuestionType: true
+      });
+      
+      wx.hideLoading();
+      
+      console.log('OCR识别结果:', result);
+      
+      wx.showModal({
+        title: 'OCR识别结果',
+        content: `识别文字: ${result.text || '无法识别'}\n置信度: ${Math.round((result.confidence || 0) * 100)}%`,
+        showCancel: false
+      });
+      
+    } catch (error) {
+      wx.hideLoading();
+      console.error('OCR测试失败:', error);
+      
+      wx.showModal({
+        title: 'OCR测试失败',
+        content: `错误信息: ${error.message}`,
+        showCancel: false
+      });
+    }
+  },
+
+  /**
+   * 开发模式：选择图片进行OCR测试
+   */
+  async testOCRWithImage() {
+    try {
+      wx.showLoading({ title: '选择图片...' });
+      
+      // 选择图片
+      const res = await wx.chooseImage({
+        count: 1,
+        sourceType: ['album'],
+        sizeType: ['compressed']
+      });
+      
+      const imagePath = res.tempFilePaths[0];
+      console.log('选择的图片路径:', imagePath);
+      
+      // 显示预览并开始识别
+      this.setData({
+        previewImagePath: imagePath,
+        showPreview: false,
+        showAnalyzing: true
+      });
+      
+      wx.hideLoading();
+      
+      // 开始AI识别
+      await this.startAnalyzing(imagePath);
+      
+    } catch (error) {
+      wx.hideLoading();
+      console.error('图片选择失败:', error);
+      
+      wx.showToast({
+        title: '图片选择失败',
+        icon: 'none'
+      });
+    }
+  },
+
+  /**
+   * 图片加载完成回调
+   */
+  onCropImageLoad(e) {
+    console.log('裁剪图片加载完成:', e.detail);
+  },
+
+  /**
+   * 预览图片加载错误处理
+   */
+  onPreviewImageError(e) {
+    console.warn('预览图片加载失败:', e.detail);
+    
+    // 如果裁剪图片加载失败，回退到原图
+    if (this.data.croppedImagePath && this.data.originalImagePath) {
+      this.setData({
+        croppedImagePath: this.data.originalImagePath
+      });
+    }
+  },
+
+  /**
+   * 自动测试连接（兼容方法）
+   */
+  async autoTestConnection() {
+    try {
+      const res = await wx.cloud.callFunction({ 
+        name: 'ocr-recognition', 
+        data: { test: true } 
+      });
+      console.log('云函数连接正常:', res);
+      return res;
+    } catch (error) {
+      console.error('云函数连接测试失败:', error);
+      throw error;
+    }
+  }
 }); 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

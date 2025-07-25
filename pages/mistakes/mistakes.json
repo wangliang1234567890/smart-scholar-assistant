@@ -5,5 +5,11 @@
   "backgroundColor": "#F8FAFC",
   "enablePullDownRefresh": true,
   "onReachBottomDistance": 50,
-  "usingComponents": {}
+  "usingComponents": {
+    "van-search": "@vant/weapp/search/index",
+    "van-skeleton": "@vant/weapp/skeleton/index",
+    "van-button": "@vant/weapp/button/index",
+    "van-icon": "@vant/weapp/icon/index",
+    "van-action-sheet": "@vant/weapp/action-sheet/index"
+  }
 } 

@@ -32,6 +32,11 @@ Page({
   },
 
   onShow() {
+    // 更新tabBar状态
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setActiveTab(3);
+    }
+    
     this.loadAllCourses();
     if (this.data.selectedDate) {
       this.loadCoursesForDate(this.data.selectedDate);

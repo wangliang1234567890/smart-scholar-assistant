@@ -1,0 +1,245 @@
+/* pages/result/result.wxss */
+.result-page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding-bottom: 120rpx;
+}
+
+/* 顶部导航 */
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 30rpx;
+  background: #fff;
+  border-bottom: 1rpx solid #eee;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  color: #007aff;
+}
+
+.back-icon {
+  font-size: 36rpx;
+  margin-right: 10rpx;
+}
+
+.back-text {
+  font-size: 32rpx;
+}
+
+.header-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.header-right {
+  color: #007aff;
+  font-size: 36rpx;
+}
+
+/* 图片预览 */
+.image-preview {
+  background: #fff;
+  margin: 20rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.1);
+}
+
+.preview-image {
+  width: 100%;
+  max-height: 400rpx;
+}
+
+.image-info {
+  padding: 20rpx;
+  border-top: 1rpx solid #eee;
+}
+
+.source-type {
+  font-size: 28rpx;
+  color: #666;
+}
+
+/* 信息卡片 */
+.info-card {
+  background: #fff;
+  margin: 20rpx;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.1);
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  font-size: 30rpx;
+  color: #666;
+}
+
+.info-value {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.confidence-high { color: #52c41a; }
+.confidence-medium { color: #faad14; }
+.confidence-low { color: #ff4d4f; }
+
+.difficulty-stars {
+  display: flex;
+}
+
+.star {
+  font-size: 28rpx;
+  color: #ddd;
+  margin-right: 4rpx;
+}
+
+.star.filled {
+  color: #faad14;
+}
+
+/* 文本卡片 */
+.text-card {
+  background: #fff;
+  margin: 20rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.1);
+}
+
+.text-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx 30rpx 20rpx;
+  border-bottom: 1rpx solid #eee;
+}
+
+.text-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.text-actions {
+  display: flex;
+  gap: 20rpx;
+}
+
+.action-btn {
+  font-size: 26rpx;
+  color: #007aff;
+  padding: 8rpx 16rpx;
+  border-radius: 8rpx;
+  background: #f0f8ff;
+}
+
+/* 文本显示 */
+.text-display {
+  padding: 30rpx;
+}
+
+.recognized-text {
+  font-size: 32rpx;
+  line-height: 1.6;
+  color: #333;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* 文本编辑 */
+.text-edit {
+  padding: 30rpx;
+}
+
+.text-input {
+  width: 100%;
+  min-height: 200rpx;
+  font-size: 32rpx;
+  line-height: 1.6;
+  border: 2rpx solid #eee;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  background: #fafafa;
+}
+
+.edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 20rpx;
+  margin-top: 20rpx;
+}
+
+.edit-btn {
+  padding: 16rpx 32rpx;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  border: none;
+}
+
+.cancel-btn {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.save-btn {
+  background: #007aff;
+  color: #fff;
+}
+
+/* 底部操作 */
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx;
+  background: #fff;
+  border-top: 1rpx solid #eee;
+  box-shadow: 0 -4rpx 12rpx rgba(0,0,0,0.1);
+}
+
+.action-button {
+  flex: 1;
+  height: 88rpx;
+  border-radius: 12rpx;
+  font-size: 30rpx;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-button.primary {
+  background: #007aff;
+  color: #fff;
+}
+
+.action-button.secondary {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.action-button.loading {
+  opacity: 0.6;
+}

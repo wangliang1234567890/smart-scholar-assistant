@@ -1,0 +1,26 @@
+{
+  "name": "ai-question-analyzer",
+  "version": "1.0.0",
+  "description": "豆包AI图片分析云函数，支持OCR识别、题目解析、学科判断等完整分析功能",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3",
+    "node-fetch": "^2.6.7"
+  },
+  "keywords": [
+    "ai",
+    "image-analysis",
+    "ocr",
+    "question-analysis",
+    "doubao",
+    "cloud-function"
+  ],
+  "author": "Smart Study Assistant",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+} 

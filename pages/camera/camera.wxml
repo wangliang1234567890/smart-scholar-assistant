@@ -1,219 +1,15 @@
 <!-- pages/camera/camera.wxml -->
 <view class="page-container">
-  <!-- AI识别中页面 -->
-  <view wx:if="{{showAnalyzing}}" class="analyzing-container">
-    <!-- 顶部信息 -->
-    <view class="analyzing-header">
-      <view class="analyzing-title">AI智能识别中</view>
-      <view class="analyzing-subtitle">正在使用人工智能技术分析您的题目</view>
-    </view>
-
-    <!-- 图片预览 -->
-    <view class="analyzing-image-container">
-      <image class="analyzing-image" src="{{previewImagePath}}" mode="aspectFit" />
-      <view class="analyzing-overlay">
-        <!-- 识别进度圆环 -->
-        <view class="progress-circle">
-          <view class="progress-ring">
-            <view class="progress-fill" style="transform: rotate({{progressRotation}}deg);"></view>
-          </view>
-          <view class="progress-center">
-                          <view class="progress-percentage">{{progressPercent}}%</view>
-    </view>
-  </view>
-      </view>
-      </view>
-      
-    <!-- 进度步骤 -->
-    <view class="progress-steps">
-      <view class="step-item">
-        <view class="step-icon">
-          <van-icon wx:if="{{progressStep > 1}}" name="success" size="16px" color="#10B981" />
-          <van-icon wx:elif="{{progressStep === 1}}" name="loading" size="16px" color="#4F46E5" />
-          <text wx:else class="step-number">1</text>
-        </view>
-        <view class="step-content">
-          <view class="step-title">图像预处理</view>
-          <view class="step-desc">优化图像质量</view>
-        </view>
-      </view>
-
-      <view class="step-item">
-        <view class="step-icon">
-          <van-icon wx:if="{{progressStep > 2}}" name="success" size="16px" color="#10B981" />
-          <van-icon wx:elif="{{progressStep === 2}}" name="loading" size="16px" color="#4F46E5" />
-          <text wx:else class="step-number">2</text>
-        </view>
-        <view class="step-content">
-          <view class="step-title">文字识别</view>
-          <view class="step-desc">AI识别文字内容</view>
-        </view>
-      </view>
-
-      <view class="step-item">
-        <view class="step-icon">
-          <van-icon wx:if="{{progressStep > 3}}" name="success" size="16px" color="#10B981" />
-          <van-icon wx:elif="{{progressStep === 3}}" name="loading" size="16px" color="#4F46E5" />
-          <text wx:else class="step-number">3</text>
-        </view>
-        <view class="step-content">
-          <view class="step-title">题目解析</view>
-          <view class="step-desc">分析题目结构</view>
-        </view>
-      </view>
-
-      <view class="step-item">
-        <view class="step-icon">
-          <van-icon wx:if="{{progressStep > 4}}" name="success" size="16px" color="#10B981" />
-          <van-icon wx:elif="{{progressStep === 4}}" name="loading" size="16px" color="#4F46E5" />
-          <text wx:else class="step-number">4</text>
-        </view>
-        <view class="step-content">
-          <view class="step-title">生成结果</view>
-          <view class="step-desc">完成智能分析</view>
-        </view>
-      </view>
-    </view>
-
-    <!-- 状态信息 -->
-    <view class="analyzing-status">
-      <view class="status-text">{{processingStatus}}</view>
-      <view wx:if="{{ocrResult && ocrResult.confidence}}" class="confidence-info">
-        <text class="confidence-label">识别置信度：</text>
-                      <text class="confidence-value">{{confidencePercent}}%</text>
-      </view>
-    </view>
-
-    <!-- 操作按钮 -->
-    <view class="analyzing-actions">
-      <van-button round type="default" size="large" bind:click="cancelAnalyzing">
-        取消识别
-      </van-button>
-    </view>
-  </view>
-
-  <!-- 确认题目页面 -->
-  <view wx:elif="{{showPreview}}" class="preview-container">
-    <!-- 顶部信息 -->
-    <view class="preview-header">
-      <view class="preview-title">确认题目内容</view>
-      <view class="preview-subtitle">请检查识别结果，可以手动编辑</view>
-    </view>
-
-    <!-- 识别结果 -->
-    <view class="recognition-result">
-      <view class="result-header">
-        <view class="result-title">识别结果</view>
-        <view wx:if="{{ocrResult && ocrResult.confidence}}" class="result-confidence">
-          <view class="confidence-badge">
-                            置信度 {{confidencePercent}}%
-      </view>
-        </view>
-      </view>
-      
-      <view class="result-content">
-        <textarea
-          class="question-input"
-          placeholder="请输入或编辑题目内容"
-          value="{{recognizedQuestion}}"
-          bind:input="onQuestionInput"
-          auto-height
-          maxlength="1000"
-        />
-        <view class="input-footer">
-          <text class="char-count">{{recognizedQuestion.length}}/1000</text>
-        </view>
-      </view>
-    </view>
-
-    <!-- 图片预览 -->
-    <view class="image-preview">
-      <view class="image-header">原图预览</view>
-      <image class="preview-image" src="{{previewImagePath}}" mode="aspectFit" />
-    </view>
-
-    <!-- 题目信息设置 -->
-    <view class="question-settings">
-      <view class="settings-title">题目信息</view>
-      
-      <view class="setting-item" bind:tap="showSubjectPicker">
-        <view class="setting-label">学科</view>
-        <view class="setting-value">
-          {{formData.subject}}
-          <van-icon name="arrow" size="16px" color="#9CA3AF" />
-        </view>
-          </view>
-
-      <view class="setting-item" bind:tap="showGradePicker">
-        <view class="setting-label">年级</view>
-        <view class="setting-value">
-          {{formData.gradeLabel}}
-          <van-icon name="arrow" size="16px" color="#9CA3AF" />
-        </view>
-          </view>
-
-      <view class="setting-item" bind:tap="showDifficultyPicker">
-        <view class="setting-label">难度</view>
-        <view class="setting-value">
-          {{formData.difficultyLabel}}
-          <van-icon name="arrow" size="16px" color="#9CA3AF" />
-        </view>
-      </view>
-    </view>
-
-    <!-- 备注输入 -->
-    <view class="description-input">
-      <view class="input-label">备注（可选）</view>
-      <textarea
-        class="description-textarea"
-        placeholder="添加备注或标签，帮助后续复习"
-        value="{{formData.description}}"
-        bind:input="onDescriptionInput"
-        maxlength="200"
-      />
-      <view class="input-footer">
-        <text class="char-count">{{formData.description.length}}/200</text>
-      </view>
-    </view>
-
-    <!-- 操作按钮 -->
-    <view class="preview-actions">
-      <van-button round type="default" size="large" bind:click="retakePhoto">
-        重新拍照
-      </van-button>
-      <van-button 
-        round 
-        type="primary" 
-        size="large" 
-        bind:click="confirmAndAnalyze"
-        disabled="{{!hasValidQuestion}}"
-      >
-        确认保存
-      </van-button>
-    </view>
-  </view>
-
-  <!-- 相机页面 -->
-  <view wx:else class="camera-container">
-    <!-- 自定义导航栏 -->
-    <view class="camera-navbar">
-      <view class="navbar-left" bind:tap="onBack">
-        <van-icon name="arrow-left" size="24px" color="white" />
-      </view>
-      <view class="navbar-center">
-        <text class="navbar-title">拍照识题</text>
-        </view>
-      <view class="navbar-right" bind:tap="chooseFromAlbum">
-        <van-icon name="photo" size="24px" color="white" />
-      </view>
-    </view>
-
-    <!-- 相机视图 -->
+  <!-- 1. 相机页面 -->
+  <view wx:if="{{!showCropping && !showAnalyzing}}" class="camera-container">
     <camera
       class="camera-view"
       device-position="{{devicePosition}}"
-      flash="{{flash}}"
-      bind:error="onCameraError"
+      flash="{{flashMode}}"
+      bindinitdone="onCameraReady"
+      binderror="onCameraError"
+      bindstop="onCameraStop"
+      wx:if="{{!showPreview && !showAnalyzing && !showCropper}}"
     >
       <!-- 相机框 -->
       <view class="camera-frame">
@@ -230,126 +26,157 @@
       </view>
     </camera>
 
-    <!-- 底部控制栏 -->
+    <!-- 相机控制按钮 -->
     <view class="camera-controls">
-      <!-- 闪光灯控制 -->
       <view class="control-item" bind:tap="switchFlash">
-        <view class="control-icon">
-          <van-icon 
-            name="flash" 
-            size="24px" 
-            color="white" 
-          />
-        </view>
+        <text class="control-icon">💡</text>
         <text class="control-text">闪光灯</text>
-          </view>
+      </view>
 
-      <!-- 拍照按钮 -->
       <view class="capture-button" bind:tap="takePhoto">
-        <view class="capture-inner">
-          <van-icon name="photograph" size="32px" color="white" />
-        </view>
-          </view>
+        <text class="capture-icon">📷</text>
+      </view>
 
-      <!-- 切换摄像头 -->
       <view class="control-item" bind:tap="switchCamera">
-        <view class="control-icon">
-          <van-icon name="replay" size="24px" color="white" />
-        </view>
+        <text class="control-icon">🔄</text>
         <text class="control-text">翻转</text>
       </view>
     </view>
   </view>
 
-  <!-- 选择器 -->
-  <van-action-sheet show="{{showSubjectPicker}}" bind:close="onPickerCancel">
-    <view class="picker-content">
-      <view class="picker-header">选择学科</view>
-      <view class="picker-options">
-        <view 
-          wx:for="{{subjects}}" 
-          wx:key="*this"
-          class="picker-option"
-          data-subject="{{item}}"
-          bind:tap="selectSubject"
-        >
-          {{item}}
-        </view>
-      </view>
-          </view>
-  </van-action-sheet>
+  <!-- 2. 裁剪页面 -->
+  <view wx:if="{{showCropping}}" class="crop-container">
+    <view class="crop-header">
+      <text class="crop-title">调整识别区域</text>
+      <text class="crop-desc">拖拽调整框选区域，确保包含完整题目</text>
+    </view>
 
-  <van-action-sheet show="{{showGradePicker}}" bind:close="onPickerCancel">
-    <view class="picker-content">
-      <view class="picker-header">选择年级</view>
-      <view class="picker-options">
-        <view 
-          wx:for="{{grades}}" 
-          wx:key="value"
-          class="picker-option"
-          data-grade="{{item}}"
-          bind:tap="selectGrade"
-        >
-          {{item.label}}
-        </view>
+    <view class="crop-image-container">
+      <image 
+        class="crop-image" 
+        src="{{originalImagePath}}" 
+        mode="aspectFit"
+        style="width: {{imageDisplaySize.width}}px; height: {{imageDisplaySize.height}}px;"
+        bindload="onCropImageLoad"
+        binderror="onCropImageError"
+      />
+      
+      <!-- 裁剪框 -->
+      <view 
+        class="crop-box" 
+        style="left: {{cropArea.x}}px; top: {{cropArea.y}}px; width: {{cropArea.width}}px; height: {{cropArea.height}}px;"
+        catchtouchstart="onCropMove"
+        catchtouchmove="onCropMove"
+        catchtouchend="onCropMove"
+        data-type="move"
+      >
+        <!-- 四个角把手 -->
+        <view class="crop-handle crop-handle-tl" data-corner="top-left" catchtouchstart="onCropResize" catchtouchmove="onCropResize" catchtouchend="onCropResize"></view>
+        <view class="crop-handle crop-handle-tr" data-corner="top-right" catchtouchstart="onCropResize" catchtouchmove="onCropResize" catchtouchend="onCropResize"></view>
+        <view class="crop-handle crop-handle-bl" data-corner="bottom-left" catchtouchstart="onCropResize" catchtouchmove="onCropResize" catchtouchend="onCropResize"></view>
+        <view class="crop-handle crop-handle-br" data-corner="bottom-right" catchtouchstart="onCropResize" catchtouchmove="onCropResize" catchtouchend="onCropResize"></view>
       </view>
-          </view>
-  </van-action-sheet>
+    </view>
 
-  <van-action-sheet show="{{showDifficultyPicker}}" bind:close="onPickerCancel">
-    <view class="picker-content">
-      <view class="picker-header">选择难度</view>
-      <view class="picker-options">
-        <view 
-          wx:for="{{difficulties}}" 
-          wx:key="value"
-          class="picker-option"
-          data-difficulty="{{item}}"
-          bind:tap="selectDifficulty"
-        >
-          {{item.label}}
+    <!-- 底部按钮 -->
+    <view class="crop-actions">
+      <button class="crop-btn crop-btn-reset" bind:tap="resetToCamera">
+        重置
+      </button>
+      <button class="crop-btn crop-btn-confirm" bind:tap="confirmCropAndAnalyze">
+        确认裁剪
+      </button>
+    </view>
+  </view>
+
+  <!-- 3. AI分析页面 -->
+  <view wx:elif="{{showAnalyzing}}" class="analyzing-container">
+    <view class="analyzing-content">
+      <view class="analyzing-preview">
+        <image 
+          class="preview-image" 
+          src="{{croppedImagePath || originalImagePath}}" 
+          mode="aspectFit"
+          binderror="onPreviewImageError"
+        />
+      </view>
+      
+      <view class="analyzing-progress">
+        <view class="progress-title">🤖 AI正在分析中...</view>
+        <view class="progress-desc">{{processingStatus}}</view>
+        
+        <view class="progress-bar">
+          <view class="progress-fill" style="width: {{progressStep * 25}}%"></view>
+        </view>
+        
+        <view class="progress-percent">{{Math.round(progressStep * 25)}}%</view>
+      </view>
+      
+      <view wx:if="{{hasError}}" class="error-container">
+        <view class="error-icon">❌</view>
+        <view class="error-message">{{errorMessage}}</view>
+        <view class="error-actions">
+          <button class="error-btn retry-btn" bind:tap="retryAnalysis">重试</button>
+          <button class="error-btn reset-btn" bind:tap="resetToCamera">重新拍照</button>
         </view>
       </view>
     </view>
-  </van-action-sheet>
+  </view>
+</view>
 
-  <!-- 结果弹窗 -->
-  <van-dialog
-    show="{{showResultModal}}"
-    title="分析完成"
-    confirm-button-text="保存到错题本"
-    cancel-button-text="取消"
-    bind:confirm="saveMistake"
-    bind:cancel="closeResultModal"
-  >
-    <view wx:if="{{analysisResult}}" class="result-modal-content">
-      <view class="modal-section">
-        <view class="section-title">题目内容</view>
-        <view class="section-content">{{analysisResult.question}}</view>
-          </view>
-      
-      <view class="modal-section">
-        <view class="section-title">参考答案</view>
-        <view class="section-content">{{analysisResult.answer}}</view>
-        </view>
+<!-- 隐藏的Canvas用于图片处理 -->
+<canvas 
+  id="compress-canvas" 
+  canvas-id="compressCanvas"
+  style="position: fixed; top: -1000px; left: -1000px; width: 100px; height: 100px;"
+></canvas>
 
-      <view class="modal-section">
-        <view class="section-title">详细解析</view>
-        <view class="section-content">{{analysisResult.explanation}}</view>
-          </view>
+<!-- 隐藏的Canvas用于图片裁剪 -->
+<canvas 
+  canvas-id="cropCanvas" 
+  style="position: fixed; top: -9999px; left: -9999px; width: 800px; height: 800px;"
+></canvas>
+
+<!-- 结果弹窗 -->
+<view class="result-modal" wx:if="{{showResultModal}}" catchtap="hideResultModal">
+  <view class="result-content" catchtap="stopPropagation">
+    <view class="result-header">
+      <text class="result-title">识别结果</text>
+      <view class="result-close" catchtap="hideResultModal">×</view>
+    </view>
+    
+    <view class="result-body">
+      <view class="recognized-text">
+        <text>{{ocrResult.text}}</text>
+      </view>
       
-      <view wx:if="{{analysisResult.knowledge_points && analysisResult.knowledge_points.length > 0}}" class="modal-section">
-        <view class="section-title">知识点</view>
-        <view class="tags-container">
-          <view 
-              wx:for="{{analysisResult.knowledge_points}}" 
-            wx:key="*this"
-            class="knowledge-tag"
-            >
-              {{item}}
-          </view>
-        </view>
+      <view class="result-info">
+        <text class="confidence">置信度: {{ocrResult.confidence * 100}}%</text>
+        <text class="question-type">类型: {{ocrResult.questionType}}</text>
+        <text class="subject">学科: {{ocrResult.subject}}</text>
       </view>
     </view>
-  </van-dialog>
-</view> 
+    
+    <view class="result-actions">
+      <button class="btn-secondary" catchtap="retakePhoto">重新拍照</button>
+      <button class="btn-primary" catchtap="saveResult">保存结果</button>
+    </view>
+  </view>
+</view>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

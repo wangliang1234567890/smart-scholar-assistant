@@ -170,5 +170,10 @@
     }
   },
   "simulatorPluginLibVersion": {},
-  "editorSetting": {}
+  "editorSetting": {},
+  "cloudfunctionRoot": "cloud/functions/",
+  "cloudfunctionTemplateRoot": "cloudfunctionTemplate/"
+  
+  
+
 }

@@ -1,4 +1,8 @@
 // 智能学霸小助手 - 数据库操作工具类
+import errorHandler from './error-handler';
+import { withRetry, generateUUID, safeJsonParse } from './common';
+import { REVIEW_INTERVALS, MISTAKE_STATUS } from './constants';
+
 class DatabaseManager {
   constructor() {
     this.db = wx.cloud.database();
@@ -9,6 +13,28 @@ class DatabaseManager {
       COURSES: 'courses',
       REVIEW_RECORDS: 'review_records'
     };
+    
+    // 添加重试机制的数据库操作
+    this.retryOptions = {
+      maxRetries: 2,
+      delay: 1000
+    };
+  }
+
+  /**
+   * 验证必需参数
+   * @param {Object} params - 参数对象
+   * @param {Array} required - 必需参数名称数组
+   * @throws {Error} 参数验证失败时抛出错误
+   */
+  validateRequired(params, required) {
+    const missing = required.filter(key => 
+      params[key] === undefined || params[key] === null || params[key] === ''
+    );
+    
+    if (missing.length > 0) {
+      throw new Error(`缺少必需参数: ${missing.join(', ')}`);
+    }
   }
 
   /**
@@ -18,35 +44,45 @@ class DatabaseManager {
    */
   async createUser(userInfo) {
     try {
-      const result = await this.db.collection(this.collections.USERS).add({
-        data: {
-          openid: userInfo.openid,
-          nickName: userInfo.nickName || '',
-          avatarUrl: userInfo.avatarUrl || '',
-          grade: userInfo.grade || 1,
-          subjects: userInfo.subjects || ['数学', '语文', '英语'],
-          level: 1,
-          exp: 0,
-          totalMistakes: 0,
-          masteredCount: 0,
-          settings: {
-            reminderEnabled: true,
-            autoReview: true,
-            difficulty: 3
-          },
-          createTime: new Date(),
-          updateTime: new Date()
-        }
-      });
+      this.validateRequired(userInfo, ['openid']);
+      
+      const userData = {
+        _id: generateUUID(),
+        openid: userInfo.openid,
+        nickName: userInfo.nickName || '',
+        avatarUrl: userInfo.avatarUrl || '',
+        grade: userInfo.grade || 1,
+        subjects: userInfo.subjects || ['数学', '语文', '英语'],
+        level: 1,
+        exp: 0,
+        totalMistakes: 0,
+        masteredCount: 0,
+        settings: {
+          reminderEnabled: true,
+          autoReview: true,
+          difficulty: 3,
+          ...userInfo.settings
+        },
+        createTime: new Date(),
+        updateTime: new Date()
+      };
+
+      const result = await withRetry(
+        () => this.db.collection(this.collections.USERS).add({ data: userData }),
+        this.retryOptions.maxRetries,
+        this.retryOptions.delay
+      );
       
       console.log('用户创建成功:', result._id);
       return {
         success: true,
-        data: result
+        data: { ...userData, _id: result._id }
       };
     } catch (error) {
-      console.error('创建用户失败:', error);
-      throw this.handleError(error, '创建用户失败');
+      return errorHandler.handle(error, {
+        scene: 'database_create_user',
+        showToast: true
+      });
     }
   }
 
@@ -56,22 +92,22 @@ class DatabaseManager {
    * @returns {Promise<Object|null>} 用户信息
    */
   async getUserInfo(openid) {
-    if (!openid) {
-      throw new Error('openid不能为空');
-    }
-
     try {
-      const result = await this.db.collection(this.collections.USERS)
-        .where({ openid })
-        .get();
+      this.validateRequired({ openid }, ['openid']);
+
+      const result = await withRetry(
+        () => this.db.collection(this.collections.USERS).where({ openid }).get(),
+        this.retryOptions.maxRetries,
+        this.retryOptions.delay
+      );
       
-      if (result.data.length > 0) {
-        return result.data[0];
-      }
-      return null;
+      return result.data.length > 0 ? result.data[0] : null;
     } catch (error) {
-      console.error('获取用户信息失败:', error);
-      throw this.handleError(error, '获取用户信息失败');
+      errorHandler.handle(error, {
+        scene: 'database_get_user',
+        showToast: false
+      });
+      return null;
     }
   }
 
@@ -83,22 +119,32 @@ class DatabaseManager {
    */
   async updateUser(userId, updateData) {
     try {
-      const result = await this.db.collection(this.collections.USERS)
-        .doc(userId)
-        .update({
-          data: {
-            ...updateData,
-            updateTime: new Date()
-          }
-        });
+      this.validateRequired({ userId }, ['userId']);
+      
+      if (!updateData || Object.keys(updateData).length === 0) {
+        throw new Error('更新数据不能为空');
+      }
+
+      const sanitizedData = this.sanitizeUpdateData(updateData);
+      sanitizedData.updateTime = new Date();
+
+      const result = await withRetry(
+        () => this.db.collection(this.collections.USERS).doc(userId).update({
+          data: sanitizedData
+        }),
+        this.retryOptions.maxRetries,
+        this.retryOptions.delay
+      );
       
       return {
         success: true,
         data: result
       };
     } catch (error) {
-      console.error('更新用户信息失败:', error);
-      throw this.handleError(error, '更新用户信息失败');
+      return errorHandler.handle(error, {
+        scene: 'database_update_user',
+        showToast: true
+      });
     }
   }
 
@@ -109,25 +155,32 @@ class DatabaseManager {
    */
   async addMistake(mistakeData) {
     try {
-      const result = await this.db.collection(this.collections.MISTAKES).add({
-        data: {
-          userId: mistakeData.userId,
-          subject: mistakeData.subject,
-          chapter: mistakeData.chapter || '',
-          difficulty: mistakeData.difficulty || 3,
-          question: mistakeData.question,
-          answer: mistakeData.answer,
-          userAnswer: mistakeData.userAnswer || '',
-          explanation: mistakeData.explanation || '',
-          images: mistakeData.images || [],
-          tags: mistakeData.tags || [],
-          status: 'unknown', // unknown/learning/mastered
-          reviewCount: 0,
-          lastReviewTime: null,
-          nextReviewTime: mistakeData.nextReviewTime || this.calculateNextReviewTime(0),
-          createTime: new Date()
-        }
-      });
+      this.validateRequired(mistakeData, ['userId', 'subject', 'question', 'answer']);
+      
+      const mistakeRecord = {
+        _id: generateUUID(),
+        userId: mistakeData.userId,
+        subject: mistakeData.subject,
+        chapter: mistakeData.chapter || '',
+        difficulty: this.validateDifficulty(mistakeData.difficulty),
+        question: mistakeData.question.trim(),
+        answer: mistakeData.answer.trim(),
+        userAnswer: mistakeData.userAnswer || '',
+        explanation: mistakeData.explanation || '',
+        images: mistakeData.images || [],
+        tags: mistakeData.tags || [],
+        status: MISTAKE_STATUS.UNKNOWN,
+        reviewCount: 0,
+        lastReviewTime: null,
+        nextReviewTime: mistakeData.nextReviewTime || this.calculateNextReviewTime(0),
+        createTime: new Date()
+      };
+
+      const result = await withRetry(
+        () => this.db.collection(this.collections.MISTAKES).add({ data: mistakeRecord }),
+        this.retryOptions.maxRetries,
+        this.retryOptions.delay
+      );
       
       // 更新用户错题总数
       await this.updateUserMistakeCount(mistakeData.userId, 1);
@@ -135,11 +188,13 @@ class DatabaseManager {
       console.log('错题添加成功:', result._id);
       return {
         success: true,
-        data: result
+        data: { ...mistakeRecord, _id: result._id }
       };
     } catch (error) {
-      console.error('添加错题失败:', error);
-      throw this.handleError(error, '添加错题失败');
+      return errorHandler.handle(error, {
+        scene: 'database_add_mistake',
+        showToast: true
+      });
     }
   }
 
@@ -147,10 +202,12 @@ class DatabaseManager {
    * 获取错题列表
    * @param {string} userId - 用户ID
    * @param {Object} options - 查询选项
-   * @returns {Promise<Array>} 错题列表
+   * @returns {Promise<Object>} 错题列表结果
    */
   async getMistakes(userId, options = {}) {
     try {
+      this.validateRequired({ userId }, ['userId']);
+      
       const {
         subject = '',
         status = '',
@@ -160,37 +217,46 @@ class DatabaseManager {
         sortOrder = 'desc'
       } = options;
 
-      let query = this.db.collection(this.collections.MISTAKES)
-        .where({ userId });
+      // 验证分页参数
+      const validatedPage = Math.max(1, parseInt(page));
+      const validatedPageSize = Math.min(100, Math.max(1, parseInt(pageSize)));
 
-      // 按学科筛选
+      let query = this.db.collection(this.collections.MISTAKES).where({ userId });
+
+      // 构建查询条件
       if (subject && subject !== '全部') {
         query = query.where({ subject });
       }
-
-      // 按状态筛选
-      if (status) {
+      if (status && Object.values(MISTAKE_STATUS).includes(status)) {
         query = query.where({ status });
       }
 
-      // 排序
+      // 排序和分页
       query = query.orderBy(sortBy, sortOrder);
+      const skip = (validatedPage - 1) * validatedPageSize;
+      query = query.skip(skip).limit(validatedPageSize);
 
-      // 分页
-      const skip = (page - 1) * pageSize;
-      query = query.skip(skip).limit(pageSize);
-
-      const result = await query.get();
+      const result = await withRetry(
+        () => query.get(),
+        this.retryOptions.maxRetries,
+        this.retryOptions.delay
+      );
       
       return {
         success: true,
         data: result.data,
-        total: result.data.length,
-        hasMore: result.data.length === pageSize
+        pagination: {
+          page: validatedPage,
+          pageSize: validatedPageSize,
+          total: result.data.length,
+          hasMore: result.data.length === validatedPageSize
+        }
       };
     } catch (error) {
-      console.error('获取错题列表失败:', error);
-      throw this.handleError(error, '获取错题列表失败');
+      return errorHandler.handle(error, {
+        scene: 'database_get_mistakes',
+        showToast: true
+      });
     }
   }
 
@@ -201,21 +267,27 @@ class DatabaseManager {
    */
   async getMistakeById(mistakeId) {
     try {
-      const result = await this.db.collection(this.collections.MISTAKES)
-        .doc(mistakeId)
-        .get();
+      this.validateRequired({ mistakeId }, ['mistakeId']);
+
+      const result = await withRetry(
+        () => this.db.collection(this.collections.MISTAKES).doc(mistakeId).get(),
+        this.retryOptions.maxRetries,
+        this.retryOptions.delay
+      );
       
-      if (result.data) {
-        return {
-          success: true,
-          data: result.data
-        };
-      } else {
+      if (!result.data) {
         throw new Error('错题不存在');
       }
+      
+      return {
+        success: true,
+        data: result.data
+      };
     } catch (error) {
-      console.error('获取错题详情失败:', error);
-      throw this.handleError(error, '获取错题详情失败');
+      return errorHandler.handle(error, {
+        scene: 'database_get_mistake_detail',
+        showToast: true
+      });
     }
   }
 
@@ -227,35 +299,74 @@ class DatabaseManager {
    */
   async updateMistakeStatus(mistakeId, status) {
     try {
+      this.validateRequired({ mistakeId, status }, ['mistakeId', 'status']);
+      
+      if (!Object.values(MISTAKE_STATUS).includes(status)) {
+        throw new Error('无效的错题状态');
+      }
+
       const updateData = {
         status,
         lastReviewTime: new Date()
       };
 
-      // 如果是标记为已掌握，设置下次复习时间为更远
-      if (status === 'mastered') {
-        updateData.nextReviewTime = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30天后
+      if (status === MISTAKE_STATUS.MASTERED) {
+        // 已掌握，设置较长的复习间隔
+        updateData.nextReviewTime = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
       } else {
-        // 获取当前复习次数计算下次复习时间
+        // 获取当前复习次数并更新
         const mistake = await this.getMistakeById(mistakeId);
-        const reviewCount = mistake.data.reviewCount || 0;
-        updateData.reviewCount = reviewCount + 1;
-        updateData.nextReviewTime = this.calculateNextReviewTime(reviewCount + 1);
+        if (mistake.success) {
+          const reviewCount = (mistake.data.reviewCount || 0) + 1;
+          updateData.reviewCount = reviewCount;
+          updateData.nextReviewTime = this.calculateNextReviewTime(reviewCount);
+        }
       }
 
-      const result = await this.db.collection(this.collections.MISTAKES)
-        .doc(mistakeId)
-        .update({
+      const result = await withRetry(
+        () => this.db.collection(this.collections.MISTAKES).doc(mistakeId).update({
           data: updateData
-        });
+        }),
+        this.retryOptions.maxRetries,
+        this.retryOptions.delay
+      );
       
       return {
         success: true,
         data: result
       };
     } catch (error) {
-      console.error('更新错题状态失败:', error);
-      throw this.handleError(error, '更新错题状态失败');
+      return errorHandler.handle(error, {
+        scene: 'database_update_mistake_status',
+        showToast: true
+      });
+    }
+  }
+
+  /**
+   * 删除错题
+   * @param {string} mistakeId - 错题ID
+   * @returns {Promise<Object>} 操作结果
+   */
+  async deleteMistake(mistakeId) {
+    try {
+      this.validateRequired({ mistakeId }, ['mistakeId']);
+
+      const result = await withRetry(
+        () => this.db.collection(this.collections.MISTAKES).doc(mistakeId).remove(),
+        this.retryOptions.maxRetries,
+        this.retryOptions.delay
+      );
+      
+      return {
+        success: true,
+        data: result
+      };
+    } catch (error) {
+      return errorHandler.handle(error, {
+        scene: 'database_delete_mistake',
+        showToast: true
+      });
     }
   }
 
@@ -266,54 +377,51 @@ class DatabaseManager {
    */
   async getTodayStats(userId) {
     try {
+      this.validateRequired({ userId }, ['userId']);
+      
       const today = new Date();
       const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
 
-      // 今日添加的错题数量
-      const todayMistakes = await this.db.collection(this.collections.MISTAKES)
-        .where({
+      // 并行查询多个统计数据
+      const [todayMistakes, totalMistakes, reviewTasks, masteredCount] = await Promise.all([
+        this.db.collection(this.collections.MISTAKES).where({
           userId,
           createTime: this.db.command.gte(todayStart).and(this.db.command.lt(todayEnd))
-        })
-        .count();
-
-      // 总错题数量
-      const totalMistakes = await this.db.collection(this.collections.MISTAKES)
-        .where({ userId })
-        .count();
-
-      // 待复习任务数量
-      const reviewTasks = await this.db.collection(this.collections.MISTAKES)
-        .where({
+        }).count(),
+        
+        this.db.collection(this.collections.MISTAKES).where({ userId }).count(),
+        
+        this.db.collection(this.collections.MISTAKES).where({
           userId,
           nextReviewTime: this.db.command.lte(new Date()),
-          status: this.db.command.neq('mastered')
-        })
-        .count();
-
-      // 已掌握错题数量
-      const masteredCount = await this.db.collection(this.collections.MISTAKES)
-        .where({
+          status: this.db.command.neq(MISTAKE_STATUS.MASTERED)
+        }).count(),
+        
+        this.db.collection(this.collections.MISTAKES).where({
           userId,
-          status: 'mastered'
-        })
-        .count();
+          status: MISTAKE_STATUS.MASTERED
+        }).count()
+      ]);
 
+      const totalCount = totalMistakes.total || 0;
+      const masteredCountValue = masteredCount.total || 0;
+      
       return {
         success: true,
         data: {
           todayMistakes: todayMistakes.total || 0,
-          totalMistakes: totalMistakes.total || 0,
+          totalMistakes: totalCount,
           reviewTasks: reviewTasks.total || 0,
-          masteredCount: masteredCount.total || 0,
-          masteryRate: totalMistakes.total > 0 ? 
-            Math.round((masteredCount.total / totalMistakes.total) * 100) : 0
+          masteredCount: masteredCountValue,
+          masteryRate: totalCount > 0 ? Math.round((masteredCountValue / totalCount) * 100) : 0
         }
       };
     } catch (error) {
-      console.error('获取今日统计失败:', error);
-      throw this.handleError(error, '获取今日统计失败');
+      return errorHandler.handle(error, {
+        scene: 'database_get_today_stats',
+        showToast: false
+      });
     }
   }
 
@@ -324,33 +432,48 @@ class DatabaseManager {
    */
   async savePracticeRecord(practiceData) {
     try {
-      const result = await this.db.collection(this.collections.PRACTICE_RECORDS).add({
-        data: {
-          userId: practiceData.userId,
-          subject: practiceData.subject,
-          difficulty: practiceData.difficulty,
-          questionType: practiceData.questionType,
-          totalQuestions: practiceData.totalQuestions,
-          correctAnswers: practiceData.correctAnswers,
-          score: practiceData.score,
-          duration: practiceData.duration, // 用时（秒）
-          questions: practiceData.questions || [],
-          userAnswers: practiceData.userAnswers || [],
-          createTime: new Date()
-        }
-      });
+      this.validateRequired(practiceData, [
+        'userId', 'subject', 'totalQuestions', 'correctAnswers', 'score'
+      ]);
+      
+      const practiceRecord = {
+        _id: generateUUID(),
+        userId: practiceData.userId,
+        subject: practiceData.subject,
+        difficulty: this.validateDifficulty(practiceData.difficulty),
+        questionType: practiceData.questionType || 'mixed',
+        totalQuestions: Math.max(1, parseInt(practiceData.totalQuestions)),
+        correctAnswers: Math.max(0, parseInt(practiceData.correctAnswers)),
+        score: Math.min(100, Math.max(0, parseInt(practiceData.score))),
+        duration: Math.max(0, parseInt(practiceData.duration || 0)),
+        questions: practiceData.questions || [],
+        userAnswers: practiceData.userAnswers || [],
+        createTime: new Date()
+      };
+
+      const result = await withRetry(
+        () => this.db.collection(this.collections.PRACTICE_RECORDS).add({
+          data: practiceRecord
+        }),
+        this.retryOptions.maxRetries,
+        this.retryOptions.delay
+      );
       
       // 更新用户经验值
-      const expGain = Math.floor(practiceData.score / 10);
-      await this.updateUserExp(practiceData.userId, expGain);
+      const expGain = Math.floor(practiceRecord.score / 10);
+      if (expGain > 0) {
+        await this.updateUserExp(practiceData.userId, expGain);
+      }
       
       return {
         success: true,
-        data: result
+        data: { ...practiceRecord, _id: result._id }
       };
     } catch (error) {
-      console.error('保存练习记录失败:', error);
-      throw this.handleError(error, '保存练习记录失败');
+      return errorHandler.handle(error, {
+        scene: 'database_save_practice_record',
+        showToast: true
+      });
     }
   }
 
@@ -361,14 +484,12 @@ class DatabaseManager {
    */
   async updateUserMistakeCount(userId, increment) {
     try {
-      await this.db.collection(this.collections.USERS)
-        .doc(userId)
-        .update({
-          data: {
-            totalMistakes: this.db.command.inc(increment),
-            updateTime: new Date()
-          }
-        });
+      await this.db.collection(this.collections.USERS).doc(userId).update({
+        data: {
+          totalMistakes: this.db.command.inc(increment),
+          updateTime: new Date()
+        }
+      });
     } catch (error) {
       console.error('更新用户错题数量失败:', error);
     }
@@ -381,14 +502,12 @@ class DatabaseManager {
    */
   async updateUserExp(userId, expGain) {
     try {
-      await this.db.collection(this.collections.USERS)
-        .doc(userId)
-        .update({
-          data: {
-            exp: this.db.command.inc(expGain),
-            updateTime: new Date()
-          }
-        });
+      await this.db.collection(this.collections.USERS).doc(userId).update({
+        data: {
+          exp: this.db.command.inc(expGain),
+          updateTime: new Date()
+        }
+      });
     } catch (error) {
       console.error('更新用户经验值失败:', error);
     }
@@ -400,22 +519,37 @@ class DatabaseManager {
    * @returns {Date} 下次复习时间
    */
   calculateNextReviewTime(reviewCount) {
-    const intervals = [1, 2, 4, 7, 15, 30]; // 天数间隔
-    const intervalDays = intervals[Math.min(reviewCount, intervals.length - 1)];
+    const intervalIndex = Math.min(reviewCount, REVIEW_INTERVALS.length - 1);
+    const intervalDays = REVIEW_INTERVALS[intervalIndex];
     return new Date(Date.now() + intervalDays * 24 * 60 * 60 * 1000);
   }
 
   /**
-   * 错误处理
-   * @param {Error} error - 原始错误
-   * @param {string} message - 用户友好的错误信息
-   * @returns {Error} 处理后的错误
+   * 验证难度值
+   * @param {number} difficulty - 难度值
+   * @returns {number} 验证后的难度值
    */
-  handleError(error, message) {
-    const handledError = new Error(message);
-    handledError.originalError = error;
-    handledError.code = error.code || 'UNKNOWN_ERROR';
-    return handledError;
+  validateDifficulty(difficulty) {
+    const diff = parseInt(difficulty);
+    return isNaN(diff) ? 3 : Math.min(5, Math.max(1, diff));
+  }
+
+  /**
+   * 清理更新数据，移除不允许的字段
+   * @param {Object} data - 原始数据
+   * @returns {Object} 清理后的数据
+   */
+  sanitizeUpdateData(data) {
+    const forbiddenFields = ['_id', '_openid', 'createTime'];
+    const sanitized = {};
+    
+    Object.keys(data).forEach(key => {
+      if (!forbiddenFields.includes(key)) {
+        sanitized[key] = data[key];
+      }
+    });
+    
+    return sanitized;
   }
 
   /**
@@ -425,19 +559,29 @@ class DatabaseManager {
    */
   async addCourse(courseData) {
     try {
-      const result = await this.db.collection(this.collections.COURSES).add({
-        data: {
-          ...courseData,
-          createTime: new Date()
-        }
-      });
+      this.validateRequired(courseData, ['userId', 'name', 'time']);
+      
+      const course = {
+        _id: generateUUID(),
+        ...courseData,
+        createTime: new Date()
+      };
+
+      const result = await withRetry(
+        () => this.db.collection(this.collections.COURSES).add({ data: course }),
+        this.retryOptions.maxRetries,
+        this.retryOptions.delay
+      );
+      
       return {
         success: true,
-        data: result
+        data: { ...course, _id: result._id }
       };
     } catch (error) {
-      console.error('添加课程失败:', error);
-      throw this.handleError(error, '添加课程失败');
+      return errorHandler.handle(error, {
+        scene: 'database_add_course',
+        showToast: true
+      });
     }
   }
 }

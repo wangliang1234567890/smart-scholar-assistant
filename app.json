@@ -1,70 +1,13 @@
 {
   "pages": [
-    "pages/login/login",
     "pages/home/home",
+    "pages/camera/camera", 
+    "pages/result/result",
     "pages/mistakes/mistakes",
     "pages/practice/practice",
-    "pages/practice/session",
-    "pages/practice/result",
-    "pages/practice/config",
     "pages/schedule/schedule",
     "pages/profile/profile",
-    "pages/settings/settings",
-    "pages/review/review",
-    "pages/report/report",
-    "pages/camera/camera",
-    "pages/mistakes/add",
-    "pages/mistakes/detail",
-    "pages/schedule/add",
-    "pages/schedule/detail"
-  ],
-  "window": {
-    "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#4F46E5",
-    "navigationBarTitleText": "智能学霸小助手",
-    "navigationBarTextStyle": "white",
-    "backgroundColor": "#F8FAFC",
-    "backgroundColorTop": "#F8FAFC",
-    "backgroundColorBottom": "#F8FAFC",
-    "enablePullDownRefresh": false,
-    "onReachBottomDistance": 50
-  },
-  "tabBar": {
-    "color": "#6B7280",
-    "selectedColor": "#4F46E5",
-    "backgroundColor": "#FFFFFF",
-    "borderStyle": "white",
-    "position": "bottom",
-    "custom": true,
-    "list": [
-      {
-        "pagePath": "pages/home/home",
-        "text": "首页"
-      },
-      {
-        "pagePath": "pages/mistakes/mistakes",
-        "text": "错题本"
-      },
-      {
-        "pagePath": "pages/practice/practice",
-        "text": "练习"
-      },
-      {
-        "pagePath": "pages/schedule/schedule",
-        "text": "课程表"
-      },
-      {
-        "pagePath": "pages/profile/profile",
-        "text": "我的"
-      }
-    ]
-  },
-  "networkTimeout": {
-    "request": 10000,
-    "downloadFile": 10000
-  },
-  "debug": false,
-  "lazyCodeLoading": "requiredComponents",
-  "style": "v2",
-  "sitemapLocation": "sitemap.json"
+    "pages/index/index",
+    "pages/logs/logs"
+  ]
 } 

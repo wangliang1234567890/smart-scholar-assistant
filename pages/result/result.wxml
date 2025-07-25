@@ -1,0 +1,107 @@
+<!-- pages/result/result.wxml -->
+<view class="result-page">
+  <!-- 顶部导航 -->
+  <view class="result-header">
+    <view class="header-left" bind:tap="goBack">
+      <text class="back-icon">←</text>
+      <text class="back-text">返回</text>
+    </view>
+    <view class="header-title">识别结果</view>
+    <view class="header-right" bind:tap="shareResult">
+      <text class="share-icon">⋯</text>
+    </view>
+  </view>
+
+  <!-- 图片预览区域 -->
+  <view class="image-preview" wx:if="{{originalImagePath}}">
+    <image 
+      class="preview-image" 
+      src="{{originalImagePath}}" 
+      mode="aspectFit"
+      show-menu-by-longpress="{{true}}"
+    />
+    <view class="image-info">
+      <text class="source-type">{{sourceType === 'camera' ? '📷 拍照识别' : '📁 相册选择'}}</text>
+    </view>
+  </view>
+
+  <!-- 识别信息卡片 -->
+  <view class="info-card">
+    <view class="info-row">
+      <text class="info-label">置信度</text>
+      <text class="info-value confidence-{{ocrResult.confidence >= 0.8 ? 'high' : ocrResult.confidence >= 0.6 ? 'medium' : 'low'}}">
+        {{Math.round(ocrResult.confidence * 100)}}%
+      </text>
+    </view>
+    
+    <view class="info-row">
+      <text class="info-label">题目类型</text>
+      <text class="info-value">{{ocrResult.questionType === 'unknown' ? '未知' : ocrResult.questionType}}</text>
+    </view>
+    
+    <view class="info-row">
+      <text class="info-label">学科</text>
+      <text class="info-value">{{ocrResult.subject === 'unknown' ? '未知' : ocrResult.subject}}</text>
+    </view>
+    
+    <view class="info-row">
+      <text class="info-label">难度</text>
+      <view class="difficulty-stars">
+        <text wx:for="{{5}}" wx:key="index" class="star {{index < ocrResult.difficulty ? 'filled' : ''}}">★</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 识别文本区域 -->
+  <view class="text-card">
+    <view class="text-header">
+      <text class="text-title">识别文本</text>
+      <view class="text-actions">
+        <text class="action-btn" bind:tap="copyText">📋 复制</text>
+        <text class="action-btn" bind:tap="{{isEditing ? 'cancelEdit' : 'startEdit'}}">
+          {{isEditing ? '✖ 取消' : '✏️ 编辑'}}
+        </text>
+      </view>
+    </view>
+    
+    <!-- 显示模式 -->
+    <view wx:if="{{!isEditing}}" class="text-display">
+      <text class="recognized-text" user-select="{{true}}">{{ocrResult.text || '未识别到文字内容'}}</text>
+    </view>
+    
+    <!-- 编辑模式 -->
+    <view wx:else class="text-edit">
+      <textarea 
+        class="text-input"
+        value="{{editedText}}"
+        placeholder="请输入或修改识别的文字内容"
+        maxlength="2000"
+        auto-height="{{true}}"
+        bind:input="onTextInput"
+      />
+      <view class="edit-actions">
+        <button class="edit-btn cancel-btn" bind:tap="cancelEdit">取消</button>
+        <button class="edit-btn save-btn" bind:tap="saveEdit">保存</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部操作按钮 -->
+  <view class="bottom-actions">
+    <button class="action-button secondary" bind:tap="retryRecognition">
+      🔄 重新识别
+    </button>
+    
+    <button class="action-button secondary" bind:tap="retakePhoto">
+      📷 重新拍照
+    </button>
+    
+    <button 
+      class="action-button primary {{isSaving ? 'loading' : ''}}" 
+      bind:tap="saveResult"
+      disabled="{{isSaving}}"
+    >
+      {{isSaving ? '保存中...' : '💾 保存结果'}}
+    </button>
+  </view>
+</view>

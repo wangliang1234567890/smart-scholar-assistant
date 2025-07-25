@@ -37,6 +37,11 @@ Page({
   },
 
   onShow() {
+    // 更新tabBar状态
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setActiveTab(2);
+    }
+    
     // Reload data every time the page is shown to reflect updates
     this.loadPracticeData()
   },

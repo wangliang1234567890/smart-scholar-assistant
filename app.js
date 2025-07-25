@@ -1,9 +1,10 @@
 import { store } from './store/index';
+import aiService from './utils/ai-service.js';
 
-// 智能学霸小助手 - 应用入口文件
 App({
   globalData: {
-    store: store, // 挂载store
+    store: store,
+    aiService: aiService,
     userInfo: null,
     systemInfo: null,
     theme: 'light',
@@ -14,12 +15,32 @@ App({
     console.log('🚀 智能学霸小助手启动中...');
     
     try {
-    // 初始化云开发
-    this.initCloud();
+      // 初始化云开发
+      this.initCloud();
+      
+      // 确保AI服务正确初始化
+      if (this.globalData.aiService) {
+        console.log('✅ AI服务已加载:', this.globalData.aiService);
+        
+        // 测试AI服务是否可用
+        if (typeof this.globalData.aiService.analyzeQuestionFromImage === 'function') {
+          console.log('✅ AI图片分析服务可用');
+        } else {
+          console.error('❌ AI图片分析服务不可用');
+        }
+        
+        if (typeof this.globalData.aiService.recognizeText === 'function') {
+          console.log('✅ AI文字识别方法可用（兼容接口）');
+        } else {
+          console.error('❌ AI文字识别方法不可用');
+        }
+      } else {
+        console.error('❌ AI服务未加载');
+      }
       
       // 启动性能监控
       this.initPerformanceMonitor();
-    
+      
       // 验证基础功能
       this.verifyBasicFunctions();
       
@@ -33,30 +54,26 @@ App({
 
   onShow() {
     console.log('📱 应用前台显示');
+    // 加载用户信息到store
+    this.loadUserToStore();
   },
 
   onHide() {
     console.log('⏸️ 应用进入后台');
+    // 保存关键数据
+    this.saveAppState();
   },
 
   onError(error) {
     console.error('💥 应用运行时错误:', error);
     
     // 记录错误到本地
-    const errors = wx.getStorageSync('app_errors') || [];
-    errors.push({
+    this.recordError({
       type: 'runtime_error',
-      message: error,
+      message: error.message || error,
       timestamp: Date.now(),
       stack: error.stack
     });
-    
-    // 只保留最近20个错误
-    if (errors.length > 20) {
-      errors.splice(0, errors.length - 20);
-    }
-    
-    wx.setStorageSync('app_errors', errors);
   },
 
   // 初始化云开发
@@ -64,6 +81,7 @@ App({
     try {
       if (wx.cloud) {
         wx.cloud.init({
+          env: 'cloud1-9gms5vr2451418c9',
           traceUser: true
         });
         console.log('☁️ 云开发初始化成功');
@@ -89,16 +107,21 @@ App({
   verifyBasicFunctions() {
     try {
       // 验证存储功能
-      wx.setStorageSync('startup_test', 'ok');
-      const testValue = wx.getStorageSync('startup_test');
-      if (testValue !== 'ok') {
+      const testKey = 'startup_test';
+      const testValue = 'ok';
+      
+      wx.setStorageSync(testKey, testValue);
+      const readValue = wx.getStorageSync(testKey);
+      
+      if (readValue !== testValue) {
         throw new Error('存储功能异常');
       }
-      wx.removeStorageSync('startup_test');
+      
+      wx.removeStorageSync(testKey);
       
       // 验证网络功能
       wx.getNetworkType({
-          success: (res) => {
+        success: (res) => {
           console.log('🌐 网络状态:', res.networkType);
         },
         fail: (error) => {
@@ -127,14 +150,45 @@ App({
     }, 1000);
   },
 
-  // 获取用户信息
-  getUserInfo() {
-    return wx.getStorageSync('userInfo') || null;
+  // 加载用户信息到store
+  loadUserToStore() {
+    try {
+      const userInfo = this.getUserInfo();
+      if (userInfo && this.globalData.store) {
+        this.globalData.store.loadUserFromCache();
+      }
+    } catch (error) {
+      console.error('加载用户信息到store失败:', error);
+    }
   },
 
-  // 设置用户信息
-  setUserInfo(userInfo) {
-    wx.setStorageSync('userInfo', userInfo);
+  // 保存应用状态
+  saveAppState() {
+    try {
+      // 保存store状态
+      if (this.globalData.store && this.globalData.store.userInfo) {
+        wx.setStorageSync('userInfo', this.globalData.store.userInfo);
+      }
+    } catch (error) {
+      console.error('保存应用状态失败:', error);
+    }
+  },
+
+  // 记录错误
+  recordError(errorInfo) {
+    try {
+      const errors = wx.getStorageSync('app_errors') || [];
+      errors.push(errorInfo);
+      
+      // 只保留最近20个错误
+      if (errors.length > 20) {
+        errors.splice(0, errors.length - 20);
+      }
+      
+      wx.setStorageSync('app_errors', errors);
+    } catch (error) {
+      console.error('记录错误失败:', error);
+    }
   },
 
   // 获取应用版本信息
@@ -154,21 +208,39 @@ App({
     }
   },
 
-  // 工具方法：获取用户信息
+  // 用户信息管理方法
   getUserInfo() {
-    return this.globalData.userInfo;
+    try {
+      return wx.getStorageSync('userInfo') || null;
+    } catch (error) {
+      console.error('获取用户信息失败:', error);
+      return null;
+    }
   },
 
-  // 工具方法：设置用户信息
   setUserInfo(userInfo) {
-    this.globalData.userInfo = userInfo;
-    // 持久化存储
-    wx.setStorageSync('userInfo', userInfo);
+    try {
+      this.globalData.userInfo = userInfo;
+      wx.setStorageSync('userInfo', userInfo);
+    } catch (error) {
+      console.error('设置用户信息失败:', error);
+    }
   },
 
-  // 工具方法：清除用户信息
   clearUserInfo() {
-    this.globalData.userInfo = null;
-    wx.removeStorageSync('userInfo');
+    try {
+      this.globalData.userInfo = null;
+      wx.removeStorageSync('userInfo');
+      if (this.globalData.store) {
+        this.globalData.store.logout();
+      }
+    } catch (error) {
+      console.error('清除用户信息失败:', error);
+    }
   }
 }); 
+
+
+
+
+
