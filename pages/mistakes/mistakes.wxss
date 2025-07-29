@@ -248,6 +248,10 @@
   background: #8b5cf6;
 }
 
+.default-icon {
+  background: #6b7280;
+}
+
 .subject-icon-img {
   width: 24rpx;
   height: 24rpx;
@@ -325,12 +329,36 @@
 .mistake-review-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 
 .review-count {
   font-size: 22rpx;
   color: #9ca3af;
   font-weight: 400;
+}
+
+/* 状态徽章 */
+.status-badge {
+  padding: 4rpx 12rpx;
+  border-radius: 10rpx;
+  font-size: 20rpx;
+  font-weight: 500;
+}
+
+.status-badge.new {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.status-badge.reviewing {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.status-badge.mastered {
+  background: #dcfce7;
+  color: #15803d;
 }
 
 /* 空状态 */

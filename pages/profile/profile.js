@@ -1,4 +1,5 @@
 const app = getApp()
+import DatabaseManager from '../../utils/database.js';
 
 Page({
   data: {
@@ -117,18 +118,47 @@ Page({
   },
 
   // 加载用户统计数据
-  loadUserStats() {
-    // 模拟API调用
-    setTimeout(() => {
-      // 这里应该调用实际的API获取用户统计数据
-      const stats = {
-        totalMistakes: Math.floor(Math.random() * 200) + 50,
-        studyDays: Math.floor(Math.random() * 100) + 20,
-        masteryRate: Math.floor(Math.random() * 30) + 70,
-        reviewTasks: Math.floor(Math.random() * 20) + 5
+  async loadUserStats() {
+    try {
+      const userId = wx.getStorageSync('userId') || 'default_user';
+      console.log('加载用户统计数据...');
+      
+      // 从数据库获取真实统计数据
+      const statsResult = await DatabaseManager.getTodayStats(userId);
+      
+      if (statsResult.success) {
+        const stats = {
+          totalMistakes: statsResult.data.totalMistakes || 0,
+          studyDays: Math.max(1, Math.floor((Date.now() - (new Date('2025-07-25')).getTime()) / (1000 * 60 * 60 * 24))), // 计算从第一次使用到现在的天数
+          masteryRate: statsResult.data.masteryRate || 0,
+          reviewTasks: statsResult.data.reviewTasks || 0
+        };
+        
+        this.setData({ stats });
+        console.log('用户统计数据加载完成:', stats);
+      } else {
+        // 设置默认统计数据
+        this.setData({ 
+          stats: {
+            totalMistakes: 0,
+            studyDays: 1,
+            masteryRate: 0,
+            reviewTasks: 0
+          }
+        });
       }
-      this.setData({ stats })
-    }, 500)
+    } catch (error) {
+      console.error('加载用户统计数据失败:', error);
+      // 设置默认统计数据
+      this.setData({ 
+        stats: {
+          totalMistakes: 0,
+          studyDays: 1,
+          masteryRate: 0,
+          reviewTasks: 0
+        }
+      });
+    }
   },
 
   // 编辑个人资料
@@ -262,7 +292,6 @@ Page({
       success: (res) => {
         if (res.confirm) {
           console.log('用户点击确定')
-          // 执行退出登录逻辑，如清除本地存储的用户信息，重置 globalData
           getApp().globalData.userInfo = null
           wx.reLaunch({
             url: '/pages/login/login'
@@ -274,43 +303,20 @@ Page({
 
   // 备份到云端
   backupToCloud() {
-    wx.showLoading({
-      title: '备份中...'
-    })
-    
-    // 模拟备份过程
-    setTimeout(() => {
-      wx.hideLoading()
-      wx.showToast({
-        title: '备份成功',
-        icon: 'success'
-      })
-    }, 2000)
+    wx.showModal({
+      title: '功能开发中',
+      content: '云端备份功能正在开发中，敬请期待！',
+      showCancel: false
+    });
   },
 
   // 从云端恢复
   restoreFromCloud() {
     wx.showModal({
-      title: '恢复数据',
-      content: '恢复数据会覆盖本地数据，确定继续？',
-      success: (res) => {
-        if (res.confirm) {
-          wx.showLoading({
-            title: '恢复中...'
-          })
-          
-          // 模拟恢复过程
-          setTimeout(() => {
-            wx.hideLoading()
-            wx.showToast({
-              title: '恢复成功',
-              icon: 'success'
-            })
-            this.loadUserStats()
-          }, 2000)
-        }
-      }
-    })
+      title: '功能开发中',
+      content: '云端恢复功能正在开发中，敬请期待！',
+      showCancel: false
+    });
   },
 
   // 导出数据

@@ -33,11 +33,11 @@
   margin-bottom: 24rpx;
 }
 
-/* 学科网格 */
+/* 学科网格 - 优化为一排显示 */
 .subjects-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24rpx;
+  display: flex;
+  gap: 16rpx;
+  justify-content: space-between;
 }
 
 .subject-item {
@@ -45,59 +45,80 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 180rpx;
-  border-radius: 24rpx;
-  background-color: var(--bg-tertiary);
-  border: 4rpx solid transparent;
-  transition: all 0.2s ease-in-out;
+  height: 160rpx;
+  flex: 1;
+  border-radius: 20rpx;
+  background-color: var(--bg-primary);
+  border: 2rpx solid var(--border-light);
+  transition: all 0.3s ease;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
 }
 
 .subject-item.active {
   border-color: var(--subject-color);
-  transform: translateY(-8rpx);
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+  transform: translateY(-4rpx);
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.15);
   background-color: var(--subject-color);
   color: #FFFFFF;
 }
 
 .subject-icon {
-  width: 64rpx;
-  height: 64rpx;
-  margin-bottom: 16rpx;
+  width: 48rpx;
+  height: 48rpx;
+  margin-bottom: 12rpx;
 }
+
 .subject-item.active .subject-icon {
   filter: brightness(0) invert(1);
 }
 
-/* 选项组 */
+/* 选项组 - 优化为一排显示 */
 .options-group {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160rpx, 1fr));
-  gap: 24rpx;
+  display: flex;
+  gap: 16rpx;
+  flex-wrap: wrap;
 }
 
 .option-item {
-  padding: 20rpx 0;
+  flex: 1;
+  min-width: 0;
+  padding: 24rpx 16rpx;
   text-align: center;
-  border-radius: 32rpx;
+  border-radius: 20rpx;
   background-color: var(--bg-primary);
   color: var(--text-secondary);
   border: 2rpx solid var(--border-light);
-  transition: all 0.2s ease-in-out;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 28rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  cursor: pointer;
 }
 
 .option-item.active {
-  background-color: var(--bg-primary);
-  color: var(--primary-color);
-  border-color: var(--primary-color);
-  font-weight: bold;
+  background: linear-gradient(135deg, #4A90E2 0%, #357abd 100%);
+  color: #FFFFFF;
+  border-color: #4A90E2;
+  font-weight: 600;
+  transform: translateY(-2rpx);
+  box-shadow: 0 6rpx 16rpx rgba(74, 144, 226, 0.3);
 }
 
-/* 开始按钮 */
-.start-btn-wrapper {
+/* 知识点选择特殊处理 - 允许换行 */
+.config-section:nth-last-child(2) .options-group {
+  flex-wrap: wrap;
+}
+
+.config-section:nth-last-child(2) .option-item {
+  flex: 0 0 auto;
+  min-width: 140rpx;
+  margin-bottom: 16rpx;
+}
+
+/* 开始练习区域 */
+.start-section {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -106,38 +127,49 @@
   padding-bottom: calc(24rpx + constant(safe-area-inset-bottom));
   padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
   background-color: var(--bg-secondary);
-  box-shadow: 0 -4rpx 16rpx rgba(0,0,0,0.04);
+  box-shadow: 0 -4rpx 16rpx rgba(0,0,0,0.08);
   z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.start-btn,
+.exam-btn {
+  flex: 1;
+  height: 88rpx !important;
+  border-radius: 20rpx !important;
+  font-size: 30rpx !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
 }
 
 .start-btn {
-  width: 100%;
-  height: 96rpx;
-  line-height: 96rpx;
-  border-radius: 48rpx;
-  font-size: 32rpx;
-  font-weight: bold;
-  background-color: #4A90E2;
-  color: #FFFFFF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  box-shadow: 0 4rpx 12rpx rgba(74, 144, 226, 0.3);
-  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  border: none !important;
+  box-shadow: 0 4rpx 12rpx rgba(34, 197, 94, 0.3) !important;
 }
 
-.start-btn:hover {
-  background-color: #3A77C2;
-  transform: translateY(-2rpx);
+.start-btn:active {
+  transform: translateY(2rpx) !important;
+  box-shadow: 0 2rpx 8rpx rgba(34, 197, 94, 0.4) !important;
 }
 
-.start-btn::after {
-  border: none;
+.exam-btn {
+  background: linear-gradient(135deg, #4A90E2 0%, #357abd 100%) !important;
+  border: none !important;
+  box-shadow: 0 4rpx 12rpx rgba(74, 144, 226, 0.3) !important;
 }
 
-.btn-icon {
-  margin-right: 16rpx;
+.exam-btn:active {
+  transform: translateY(2rpx) !important;
+  box-shadow: 0 2rpx 8rpx rgba(74, 144, 226, 0.4) !important;
+}
+
+.start-btn::after,
+.exam-btn::after {
+  border: none !important;
 }
 
 .empty-tip {
@@ -145,4 +177,61 @@
   color: var(--text-secondary);
   text-align: center;
   margin-top: 40rpx;
+  padding: 32rpx;
+  background-color: var(--bg-primary);
+  border-radius: 20rpx;
+  border: 2rpx dashed var(--border-medium);
+}
+
+/* 响应式优化 */
+@media (max-width: 375px) {
+  .subjects-grid {
+    gap: 12rpx;
+  }
+  
+  .subject-item {
+    height: 140rpx;
+  }
+  
+  .subject-icon {
+    width: 40rpx;
+    height: 40rpx;
+    margin-bottom: 8rpx;
+  }
+  
+  .options-group {
+    gap: 12rpx;
+  }
+  
+  .option-item {
+    padding: 20rpx 12rpx;
+    font-size: 26rpx;
+  }
+  
+  .start-section {
+    gap: 12rpx;
+    padding: 20rpx 32rpx;
+  }
+  
+  .start-btn,
+  .exam-btn {
+    height: 80rpx !important;
+    font-size: 28rpx !important;
+  }
+}
+
+/* 超小屏幕优化 */
+@media (max-width: 320px) {
+  .config-section:nth-last-child(2) .option-item {
+    min-width: 120rpx;
+    font-size: 24rpx;
+  }
+}
+
+/* 平板适配 */
+@media (min-width: 768px) {
+  .config-container {
+    max-width: 600rpx;
+    margin: 0 auto;
+  }
 } 

@@ -1,941 +1,590 @@
 import Dialog from '@vant/weapp/dialog/dialog';
-import LocalDB from '../../utils/local-db';
-import DatabaseManager from '../../utils/database';
-import AIService from '../../utils/ai-service';
+import DatabaseManager from '../../utils/database.js';
 
 Page({
   data: {
-    isLoading: true,
-    practiceOptions: {}, // 练习参数
-    questions: [], // 所有问题
-    currentQuestionIndex: 0,
-    userAnswers: {}, // { questionId: answer }
-    
-    // --- 衍变数据 ---
+    practiceType: 'ai',
+    questions: [],
+    currentIndex: 0,
     currentQuestion: null,
-    progress: 0,
-    isLastQuestion: false,
-    questionTypeMap: {
-      'single_choice': '单选题',
-      'multiple_choice': '多选题',
-      'fill_blank': '填空题',
-      'solve': '解答题'
-    },
-    
-    // AI相关状态
-    generatingQuestions: false,
-    generationProgress: 0,
-    generationStatus: '',
-    
-    // 批改相关状态
-    isGrading: false,
-    gradingStep: 0,
-    gradingStatus: '',
-    gradedCount: 0,
-    
-    // 弹窗状态
+    userAnswer: null,
+    userAnswerText: '',
+    showResult: false,
+    loading: true,
+    totalQuestions: 0,
     showExitDialog: false,
     showSubmitDialog: false,
-    
-    // 计算属性
-    remainingQuestions: 0,
-    progressPercent: 0,
-    submitMessage: '',
-    progressRotation: 0,
-    fillBlankCharCount: 0,
-    solveCharCount: 0
+    submitMessage: '确定要提交答案吗？',
+    examTitle: '',
+    generatingQuestions: false,
+    isGrading: false,
+    isLoading: false
   },
 
   onLoad(options) {
     console.log('练习页面加载，参数:', options);
-    this.setData({ practiceOptions: options });
-    this.fetchQuestions();
-  },
-
-  async fetchQuestions() {
-    this.setData({ 
-      isLoading: true,
-      generatingQuestions: true,
-      generationProgress: 0,
-      generationStatus: '正在准备生成题目...',
-      progressRotation: 0
-    });
-
-    try {
-      // 使用AI服务生成题目
-      const questionsResult = await this.generateQuestionsWithAI();
-      
-      if (questionsResult.success && questionsResult.questions.length > 0) {
-        this.setData({
-          questions: questionsResult.questions,
-          isLoading: false,
-          generatingQuestions: false,
-          generationStatus: '题目生成完成！'
-        });
+    
+    if (options.type === 'review' && options.mistakes) {
+      try {
+        const mistakesData = JSON.parse(decodeURIComponent(options.mistakes));
+        console.log('解析到的错题数据:', mistakesData);
         
-        this.updateCurrentQuestion();
-        
-        // 显示生成成功提示
-        wx.showToast({
-          title: `成功生成${questionsResult.questions.length}道题目`,
-          icon: 'success',
-          duration: 2000
-        });
-      } else {
-        throw new Error('题目生成失败');
-      }
-      
-    } catch (error) {
-      console.error('生成题目失败:', error);
-      
-      // 降级：使用模拟数据
-      console.log('使用模拟数据作为降级方案');
-      const mockQuestions = this.generateMockQuestions(this.data.practiceOptions);
-      
-      this.setData({
-        questions: mockQuestions,
-        isLoading: false,
-        generatingQuestions: false,
-        generationStatus: '使用样例题目'
-      });
-      
-      this.updateCurrentQuestion();
-      
-      wx.showToast({
-        title: '使用样例题目进行练习',
-        icon: 'none',
-        duration: 2000
-      });
-    }
-  },
-
-  // 使用AI服务生成题目
-  async generateQuestionsWithAI() {
-    const { subject = 'math', count = 5, difficulty = 'medium', knowledge } = this.data.practiceOptions;
-    
-    // 更新生成状态
-    this.setData({
-      generationProgress: 20,
-      generationStatus: '正在分析练习需求...',
-      progressRotation: 20 * 3.6 // 20% * 360度 / 100%
-    });
-    
-    // 准备AI生成参数
-    const generateParams = {
-      subject: this.translateSubject(subject),
-      grade: this.getCurrentGrade(),
-      difficulty: this.translateDifficulty(difficulty),
-      questionType: 'mixed',
-      count: parseInt(count) || 5,
-      knowledgePoints: knowledge ? knowledge.split(',') : []
-    };
-    
-    console.log('AI生成参数:', generateParams);
-    
-    // 模拟生成进度更新
-    this.startGenerationProgress();
-    
-    // 调用AI服务
-    const result = await AIService.generateQuestions(generateParams);
-    
-    // 停止进度更新
-    this.stopGenerationProgress();
-    
-    // 处理生成结果
-    if (result.success && result.questions) {
-      // 转换题目格式以适配现有的答题界面
-      const processedQuestions = result.questions.map((q, index) => ({
-        id: q.id || `ai_${Date.now()}_${index}`,
-        type: this.translateQuestionType(q.type),
-        title: q.content,
-        stem: q.stem || '',
-        options: q.options || [],
-        correct: q.correctAnswer,
-        explanation: q.explanation,
-        knowledgePoints: q.knowledgePoints || [],
-        difficulty: q.difficulty,
-        source: 'ai_generated'
-      }));
-      
-      this.setData({
-        generationProgress: 100,
-        generationStatus: '题目生成完成',
-        progressRotation: 360
-      });
-      
-      return {
-        success: true,
-        questions: processedQuestions,
-        totalGenerated: processedQuestions.length
-      };
-    } else {
-      throw new Error('AI服务返回格式错误');
-    }
-  },
-
-  // 开始生成进度更新
-  startGenerationProgress() {
-    let progress = 20;
-    const steps = [
-      { progress: 40, status: '正在分析知识点结构...', delay: 800 },
-      { progress: 60, status: '正在生成题目内容...', delay: 1200 },
-      { progress: 80, status: '正在优化题目质量...', delay: 1000 },
-      { progress: 95, status: '正在完成最后处理...', delay: 600 }
-    ];
-    
-    let stepIndex = 0;
-          const updateProgress = () => {
-        if (stepIndex < steps.length && this.data.generatingQuestions) {
-          const step = steps[stepIndex];
-          this.setData({
-            generationProgress: step.progress,
-            generationStatus: step.status,
-            progressRotation: (step.progress / 100) * 360
-          });
-          stepIndex++;
-          
-          this.generationTimer = setTimeout(updateProgress, step.delay);
+        // 详细打印第一条数据的结构
+        if (mistakesData.length > 0) {
+          console.log('第一条错题详细数据:', JSON.stringify(mistakesData[0], null, 2));
         }
-      };
-    
-    updateProgress();
-  },
-
-  // 停止生成进度更新
-  stopGenerationProgress() {
-    if (this.generationTimer) {
-      clearTimeout(this.generationTimer);
-      this.generationTimer = null;
+        
+        // 转换错题数据为练习题目格式
+        const questions = this.convertMistakesToQuestions(mistakesData);
+        console.log('转换后的题目数据:', questions);
+        
+        // 详细打印第一条转换后的数据
+        if (questions.length > 0) {
+          console.log('第一条转换后详细数据:', JSON.stringify(questions[0], null, 2));
+        }
+        
+        this.setData({
+          practiceType: 'review',
+          questions: questions,
+          currentQuestion: questions[0] || null,
+          totalQuestions: questions.length,
+          currentIndex: 0,
+          loading: false,
+          userAnswer: null,
+          userAnswerText: ''
+        });
+        
+        // 打印设置后的页面数据
+        console.log('页面数据设置完成:', {
+          currentIndex: this.data.currentIndex,
+          totalQuestions: this.data.totalQuestions,
+          currentQuestion: this.data.currentQuestion
+        });
+        
+      } catch (error) {
+        console.error('解析错题数据失败:', error);
+        this.showError('数据解析失败');
+      }
+    } else if (options.type === 'exam' && options.questions) {
+      // 处理从试卷页面跳转过来的情况
+      try {
+        const questionsData = JSON.parse(decodeURIComponent(options.questions));
+        console.log('解析到的试卷题目数据:', questionsData);
+        
+        // 转换试卷题目格式
+        const questions = this.convertExamQuestionsToSession(questionsData);
+        console.log('转换后的题目数据:', questions);
+        
+        this.setData({
+          practiceType: 'exam',
+          questions: questions,
+          currentQuestion: questions[0] || null,
+          totalQuestions: questions.length,
+          currentIndex: 0,
+          loading: false,
+          examTitle: options.title || 'AI智能练习试卷',
+          userAnswer: null,
+          userAnswerText: ''
+        });
+        
+        console.log('试卷答题页面数据设置完成:', {
+          currentIndex: this.data.currentIndex,
+          totalQuestions: this.data.totalQuestions,
+          currentQuestion: this.data.currentQuestion
+        });
+        
+        // 调试第一题的详细信息
+        if (questions[0]) {
+          console.log('第一题详细信息:', {
+            type: questions[0].type,
+            options: questions[0].options,
+            optionsLength: questions[0].options ? questions[0].options.length : 0,
+            question: questions[0].question
+          });
+        }
+        
+      } catch (error) {
+        console.error('解析试卷题目数据失败:', error);
+        this.showError('试卷数据解析失败');
+      }
+    } else if (options.type === 'ai') {
+      this.loadAIQuestions();
+    } else {
+      // 默认情况，加载示例题目
+      console.log('未知类型或缺少参数，加载示例题目');
+      this.loadAIQuestions();
     }
   },
 
-  // 取消生成
-  cancelGeneration() {
-    this.stopGenerationProgress();
-    
-    wx.showModal({
-      title: '取消生成',
-      content: '确定要取消题目生成吗？',
-      success: (res) => {
-        if (res.confirm) {
-          wx.navigateBack();
+  // 转换错题数据为练习题目格式
+  convertMistakesToQuestions(mistakes) {
+    return mistakes.map((mistake, index) => {
+      console.log(`转换第${index + 1}条错题:`, mistake);
+      
+      // 获取基础题目内容
+      let questionContent = mistake.question || mistake.content || mistake.title || '题目内容缺失';
+      
+      // 清理题目内容
+      let cleanQuestion = this.cleanQuestionContent(questionContent);
+      
+      // 处理选项：首先尝试使用原有选项
+      let processedOptions = [];
+      let questionType = 'input'; // 默认为填空题
+      
+      if (mistake.options && Array.isArray(mistake.options) && mistake.options.length > 0) {
+        // 使用原有选项
+        processedOptions = mistake.options.map(option => {
+          if (typeof option === 'string') {
+            return option.replace(/^[A-Z]\.\s*/, '').trim();
+          }
+          return option;
+        });
+        questionType = 'choice';
+        console.log(`使用原有选项:`, processedOptions);
+      } else if (mistake.choices && Array.isArray(mistake.choices) && mistake.choices.length > 0) {
+        // 使用choices字段
+        processedOptions = mistake.choices;
+        questionType = 'choice';
+        console.log(`使用choices字段:`, processedOptions);
+      } else {
+        // 智能提取选项
+        console.log(`智能提取选项，题目内容:`, cleanQuestion);
+        
+        // 1. 尝试从题目内容中提取选项
+        const extractedOptions = this.extractOptionsFromContent(cleanQuestion);
+        if (extractedOptions.length > 0) {
+          processedOptions = extractedOptions;
+          questionType = 'choice';
+          console.log(`提取到选项:`, extractedOptions);
         } else {
-          // 重新开始生成进度
-          if (this.data.generatingQuestions) {
-            this.startGenerationProgress();
+          // 2. 检测题目类型
+          const detectedType = this.detectQuestionType(cleanQuestion);
+          questionType = detectedType;
+          console.log(`检测题目类型:`, detectedType);
+          
+          // 3. 如果题目暗示是选择题但没有具体选项，生成通用选项
+          if (this.isLikelyChoiceQuestion(cleanQuestion)) {
+            processedOptions = this.generateGenericOptions(cleanQuestion);
+            if (processedOptions.length > 0) {
+              questionType = 'choice';
+              console.log(`生成通用选项:`, processedOptions);
+            }
           }
         }
       }
+      
+      const converted = {
+        id: mistake._id || `question_${index}`,
+        question: cleanQuestion,
+        options: processedOptions,
+        correctAnswer: mistake.correctAnswer || mistake.answer || mistake.solution || '',
+        analysis: mistake.analysis || mistake.explanation || mistake.解析 || '',
+        subject: this.formatSubject(mistake.subject || mistake.学科 || 'unknown'),
+        difficulty: this.formatDifficulty(mistake.difficulty || mistake.难度),
+        type: questionType,
+        userAnswer: mistake.userAnswer || mistake.我的答案 || '',
+        mistakeReason: mistake.mistakeReason || mistake.错误原因 || ''
+      };
+      
+      console.log(`转换结果:`, converted);
+      return converted;
     });
   },
 
-  // 翻译学科名称
-  translateSubject(subject) {
-    const subjectMap = {
-      'math': '数学',
-      'chinese': '语文', 
-      'english': '英语',
-      'physics': '物理',
-      'chemistry': '化学'
-    };
-    return subjectMap[subject] || '数学';
+  // 转换试卷题目格式为答题页面格式
+  convertExamQuestionsToSession(examQuestions) {
+    return examQuestions.map((question, index) => {
+      console.log(`转换第${index + 1}道试卷题目:`, question);
+      
+      // 清理和格式化题目内容
+      let cleanQuestion = this.cleanQuestionContent(question.content || question.question || '题目内容缺失');
+      
+      // 处理选项格式
+      let processedOptions = [];
+      let questionType = 'input'; // 默认为填空题
+      
+              if (question.options && Array.isArray(question.options) && question.options.length > 0) {
+          processedOptions = question.options.map(option => {
+            if (typeof option === 'string') {
+              return option.replace(/^[A-Z]\.\s*/, '').trim();
+            }
+            return option;
+          });
+        questionType = 'choice'; // 有选项的为选择题
+              } else {
+          // 尝试从题目内容中提取选项
+          const extractedOptions = this.extractOptionsFromContent(cleanQuestion);
+          if (extractedOptions.length > 0) {
+            processedOptions = extractedOptions;
+            questionType = 'choice';
+          } else {
+            // 检测题目类型
+            const detectedType = this.detectQuestionType(cleanQuestion);
+            questionType = detectedType;
+            
+            // 如果题目暗示是选择题但没有具体选项，生成通用选项
+            if (this.isLikelyChoiceQuestion(cleanQuestion)) {
+              processedOptions = this.generateGenericOptions(cleanQuestion);
+              if (processedOptions.length > 0) {
+                questionType = 'choice';
+              }
+            }
+          }
+                }
+      
+      // 统一题目格式
+      const converted = {
+        id: question.id || `exam_question_${index}`,
+        question: cleanQuestion,
+        options: processedOptions,
+        correctAnswer: question.correctAnswer || '',
+        analysis: question.explanation || question.analysis || '',
+        subject: this.formatSubject(question.subject || question.sectionName || 'math'),
+        difficulty: this.formatDifficulty(question.difficulty),
+        type: questionType,
+        scorePerQuestion: question.scorePerQuestion || 5,
+        userAnswer: '', // 初始化用户答案
+        sectionName: question.sectionName || '',
+        knowledgePoints: question.knowledgePoints || [],
+        tip: question.tip || ''
+      };
+      
+      console.log(`转换结果:`, converted);
+      return converted;
+    });
   },
 
-  // 翻译难度等级
-  translateDifficulty(difficulty) {
+  // 格式化难度显示
+  formatDifficulty(difficulty) {
     const difficultyMap = {
-      'easy': 2,
-      'medium': 3,
-      'hard': 4
-    };
-    return difficultyMap[difficulty] || 3;
-  },
-
-  // 翻译题目类型
-  translateQuestionType(type) {
-    const typeMap = {
-      'single_choice': 'single_choice',
-      'multiple_choice': 'multiple_choice',
-      'fill_blank': 'fill_blank',
-      'solve': 'solve'
-    };
-    return typeMap[type] || 'single_choice';
-  },
-
-  // 获取难度文本
-  getDifficultyText(difficulty) {
-    const difficultyMap = {
-      1: '很简单',
-      2: '简单',
+      1: '简单',
+      2: '较易', 
       3: '中等',
       4: '较难',
-      5: '很难'
+      5: '困难',
+      'easy': '简单',
+      'medium': '中等',
+      'hard': '困难'
     };
     return difficultyMap[difficulty] || '中等';
   },
 
-  // 获取当前年级
-  getCurrentGrade() {
+  // 格式化题目类型
+  formatQuestionType(type) {
+    const typeMap = {
+      'single_choice': 'choice',
+      'multiple_choice': 'choice',
+      'fill_blank': 'input',
+      'short_answer': 'input',
+      'judge': 'choice'
+    };
+    return typeMap[type] || 'choice';
+  },
+
+  // 格式化学科显示
+  formatSubject(subject) {
+    const subjectMap = {
+      'math': '数学',
+      'chinese': '语文',
+      'english': '英语',
+      'physics': '物理',
+      'chemistry': '化学',
+      'biology': '生物',
+      'history': '历史',
+      'geography': '地理',
+      'politics': '政治'
+    };
+    return subjectMap[subject] || subject || '数学';
+  },
+
+  // 清理题目内容格式
+  cleanQuestionContent(content) {
+    if (!content) return '题目内容缺失';
+    
+    return content
+      // 移除多余的换行符和空白
+      .replace(/\n+/g, '\n')
+      .replace(/\s+/g, ' ')
+      // 移除OCR识别的格式标记
+      .replace(/图片中的文字内容如下：/g, '')
+      .replace(/\*\*题目\*\*：/g, '题目：')
+      .replace(/\*\*图示内容\*\*：/g, '')
+      .replace(/\*\*答案\*\*：/g, '答案：')
+      // 清理多余的标点和空格
+      .replace(/↵+/g, '\n')
+      .replace(/\s*\n\s*/g, '\n')
+      .replace(/^\s+|\s+$/g, '')
+      // 限制题目长度，避免过长影响显示
+      .substring(0, 200);
+  },
+
+  // 从题目内容中提取选项
+  extractOptionsFromContent(content) {
+    const options = [];
+    
+    // 匹配 A、B、C、D 或 A. B. C. D. 格式的选项
+    const optionPattern = /([A-D])[.、：]?\s*([^A-D\n]{1,50}?)(?=[A-D][.、：]|$)/g;
+    let match;
+    
+    while ((match = optionPattern.exec(content)) !== null) {
+      const optionText = match[2].trim();
+      if (optionText && optionText.length > 0 && optionText.length < 50) {
+        options.push(optionText);
+      }
+    }
+    
+    // 如果没找到标准格式，尝试其他模式
+    if (options.length === 0) {
+      // 查找"选项："后的内容
+      const choiceMatch = content.match(/选项[：:]\s*([A-D].*?)(?:\n|$)/);
+      if (choiceMatch) {
+        const choiceText = choiceMatch[1];
+        const choices = choiceText.split(/[A-D][.、：]/).filter(item => item.trim());
+        if (choices.length > 1) {
+          choices.forEach(choice => {
+            const cleaned = choice.trim().substring(0, 30);
+            if (cleaned) options.push(cleaned);
+          });
+        }
+      }
+    }
+    
+    return options.slice(0, 4); // 最多4个选项
+  },
+
+  // 检测题目类型
+  detectQuestionType(content) {
+    const lowerContent = content.toLowerCase();
+    
+    // 包含空白、填空相关关键词
+    if (lowerContent.includes('____') || lowerContent.includes('填空') || 
+        lowerContent.includes('空白') || lowerContent.includes('？') || 
+        lowerContent.includes('多少') || lowerContent.includes('计算')) {
+      return 'input';
+    }
+    
+    // 包含解答、简述等关键词
+    if (lowerContent.includes('简述') || lowerContent.includes('解答') || 
+        lowerContent.includes('说明') || lowerContent.includes('分析') ||
+        lowerContent.includes('解释') || content.length > 150) {
+      return 'short_answer';
+    }
+    
+    // 默认为填空题
+    return 'input';
+  },
+
+  // 判断是否可能是选择题
+  isLikelyChoiceQuestion(content) {
+    const lowerContent = content.toLowerCase();
+    
+    // 包含选择、选项等关键词
+    if (lowerContent.includes('选择') || lowerContent.includes('选项') ||
+        lowerContent.includes('下列') || lowerContent.includes('下面') ||
+        lowerContent.includes('哪个') || lowerContent.includes('哪种') ||
+        lowerContent.includes('正确') || lowerContent.includes('错误')) {
+      return true;
+    }
+    
+    // 包含A、B、C、D字母提示
+    if (content.includes('A') && content.includes('B') && 
+        content.includes('C') && content.includes('D')) {
+      return true;
+    }
+    
+    return false;
+  },
+
+  // 生成通用选项
+  generateGenericOptions(content) {
+    const lowerContent = content.toLowerCase();
+    
+    // 数学题通用选项
+    if (lowerContent.includes('数学') || lowerContent.includes('计算') ||
+        lowerContent.includes('立方体') || lowerContent.includes('图形')) {
+      return [
+        '圆锥体',
+        '圆柱体', 
+        '球体',
+        '棱锥体'
+      ];
+    }
+    
+    // 包含数字的题目
+    if (/\d+/.test(content)) {
+      return [
+        '正确',
+        '错误',
+        '不确定',
+        '无法判断'
+      ];
+    }
+    
+    // 通用选择选项
+    return [
+      '选项A',
+      '选项B',
+      '选项C', 
+      '选项D'
+    ];
+  },
+
+  // 加载AI题目（从错题生成）
+  async loadAIQuestions() {
+    console.log('开始加载AI题目...');
+    this.setData({ loading: true });
+    
     try {
-      const app = getApp();
-      const userInfo = app.getUserInfo ? app.getUserInfo() : null;
-      return userInfo?.grade || 3; // 默认三年级
+      const userId = wx.getStorageSync('userId') || 'default_user';
+      
+      // 从错题库中获取题目
+      const mistakesResult = await DatabaseManager.getMistakes(userId, { 
+        pageSize: 5,
+        filters: { status: 'all' }
+      });
+      
+      if (mistakesResult.success && mistakesResult.data && mistakesResult.data.length > 0) {
+        console.log('从错题库获取到题目:', mistakesResult.data.length);
+        
+        // 转换错题为练习题目格式
+        const questions = this.convertMistakesToQuestions(mistakesResult.data);
+        
+        this.setData({
+          practiceType: 'ai',
+          questions: questions,
+          currentQuestion: questions[0] || null,
+          totalQuestions: questions.length,
+          currentIndex: 0,
+          loading: false,
+          userAnswer: null,
+          userAnswerText: ''
+        });
+        
+        console.log('AI题目加载完成');
+      } else {
+        console.log('暂无错题数据，显示提示');
+        this.showNoQuestionsError();
+      }
     } catch (error) {
-      return 3;
+      console.error('加载AI题目失败:', error);
+      this.showNoQuestionsError();
     }
   },
+  
+  // 显示无题目的错误信息
+  showNoQuestionsError() {
+    this.setData({ loading: false });
+    wx.showModal({
+      title: '暂无题目',
+      content: '您还没有录入错题，请先通过拍照或手动添加一些错题，然后再来练习。',
+      showCancel: true,
+      cancelText: '返回',
+      confirmText: '去添加',
+      success: (res) => {
+        if (res.confirm) {
+          wx.navigateTo({ url: '/pages/camera/camera' });
+        } else {
+          wx.navigateBack();
+        }
+      }
+    });
+  },
 
-  updateCurrentQuestion() {
-    const { questions, currentQuestionIndex, userAnswers } = this.data;
-    if (questions.length > 0) {
-      const current = JSON.parse(JSON.stringify(questions[currentQuestionIndex]));
-      const answer = userAnswers[current.id] || (current.type==='multiple_choice'?[]:'');
-      current.options = current.options.map(opt=>({
-        ...opt,
-        active: current.type==='multiple_choice' ? answer.includes(opt.value) : answer===opt.value
-      }));
-      
-      // 添加难度文本
-      current.difficultyText = this.getDifficultyText(current.difficulty);
-      
-      const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-      
-      // 计算字符数统计
-      const currentAnswer = userAnswers[current.id] || '';
-      const fillBlankCharCount = current.type === 'fill_blank' ? currentAnswer.length : 0;
-      const solveCharCount = current.type === 'solve' ? currentAnswer.length : 0;
-      
-      this.setData({
-        currentQuestion: current,
-        progress: progress,
-        progressPercent: Math.round(progress),
-        isLastQuestion: currentQuestionIndex === questions.length - 1,
-        fillBlankCharCount,
-        solveCharCount
+  // 显示错误信息
+  showError(message) {
+    this.setData({ loading: false });
+    wx.showModal({
+      title: '加载失败',
+      content: message,
+      showCancel: false,
+      success: () => {
+        wx.navigateBack();
+      }
+    });
+  },
+
+  // 选择答案
+  onSelectAnswer(e) {
+    const { index, answer } = e.currentTarget.dataset;
+    if (index !== undefined && answer !== undefined) {
+      this.setData({ 
+        userAnswer: parseInt(index),
+        userAnswerText: answer || ''
       });
     }
   },
 
-  onAnswerChange(e) {
-    const { id } = this.data.currentQuestion;
-    this.setData({
-      [`userAnswers.${id}`]: e.detail
+  // 处理用户输入（填空题和简答题）
+  onAnswerInput(e) {
+    const value = e.detail.value || '';
+    this.setData({ 
+      userAnswer: value,
+      userAnswerText: value
     });
   },
 
-  // 单选题选择
-  onSingleSelect(e) {
-    const value = e.currentTarget.dataset.value;
-    const { id } = this.data.currentQuestion;
-    
-    this.setData({
-      [`userAnswers.${id}`]: value
-    });
-    
-    // 触发震动反馈
-    wx.vibrateShort();
-    
-    this.updateCurrentQuestion();
-  },
-
-  // 多选题选择
-  onMultiSelect(e) {
-    const value = e.currentTarget.dataset.value;
-    const { id } = this.data.currentQuestion;
-    const currentAnswers = this.data.userAnswers[id] || [];
-    
-    let newAnswers;
-    if (currentAnswers.includes(value)) {
-      newAnswers = currentAnswers.filter(v => v !== value);
-    } else {
-      newAnswers = [...currentAnswers, value];
-    }
-    
-    this.setData({
-      [`userAnswers.${id}`]: newAnswers
-    });
-    
-    // 触发震动反馈
-    wx.vibrateShort();
-    
-    this.updateCurrentQuestion();
-  },
-
-  // 填空题输入
-  onFillBlankInput(e) {
-    const { id } = this.data.currentQuestion;
-    const value = e.detail.value;
-    this.setData({
-      [`userAnswers.${id}`]: value,
-      fillBlankCharCount: value.length
-    });
-  },
-
-  // 解答题输入
-  onSolveInput(e) {
-    const { id } = this.data.currentQuestion;
-    const value = e.detail.value;
-    this.setData({
-      [`userAnswers.${id}`]: value,
-      solveCharCount: value.length
-    });
-  },
-
-  prevQuestion() {
-    if (this.data.currentQuestionIndex > 0) {
-      this.setData({
-        currentQuestionIndex: this.data.currentQuestionIndex - 1
-      });
-      this.updateCurrentQuestion();
-      
-      // 滚动到顶部
-      wx.pageScrollTo({
-        scrollTop: 0,
-        duration: 300
-      });
-    }
-  },
-
+  // 下一题 - 修复方法名
   nextQuestion() {
-    if (this.data.isLastQuestion) {
-      this.showSubmitConfirm();
-    } else {
+    const { currentIndex, questions } = this.data;
+    
+    if (currentIndex < questions.length - 1) {
+      const nextIndex = currentIndex + 1;
       this.setData({
-        currentQuestionIndex: this.data.currentQuestionIndex + 1
+        currentIndex: nextIndex,
+        currentQuestion: questions[nextIndex],
+        userAnswer: null,
+        userAnswerText: ''
       });
-      this.updateCurrentQuestion();
-      
-      // 滚动到顶部
-      wx.pageScrollTo({
-        scrollTop: 0,
-        duration: 300
+    } else {
+      // 完成练习
+      this.completePractice();
+    }
+  },
+
+  // 上一题
+  prevQuestion() {
+    const { currentIndex, questions } = this.data;
+    
+    if (currentIndex > 0) {
+      const prevIndex = currentIndex - 1;
+      this.setData({
+        currentIndex: prevIndex,
+        currentQuestion: questions[prevIndex],
+        userAnswer: null,
+        userAnswerText: ''
       });
     }
   },
 
-  // 显示退出确认
-  showExitConfirm() {
-    this.setData({
-      showExitDialog: true
+  // 完成练习
+  completePractice() {
+    wx.redirectTo({
+      url: '/pages/practice/result?type=' + this.data.practiceType
     });
   },
 
-  // 确认退出
+  // 退出确认弹窗相关方法
   confirmExit() {
-    this.setData({
-      showExitDialog: false
-    });
+    this.setData({ showExitDialog: false });
     wx.navigateBack();
   },
 
-  // 取消退出
   cancelExit() {
-    this.setData({
-      showExitDialog: false
-    });
+    this.setData({ showExitDialog: false });
   },
 
-  // 显示提交确认
-  showSubmitConfirm() {
-    // 检查答题完成情况
-    const { questions, userAnswers } = this.data;
-    const unansweredCount = questions.reduce((count, q) => {
-      const answer = userAnswers[q.id];
-      if (!answer || (Array.isArray(answer) && answer.length === 0)) {
-        return count + 1;
-      }
-      return count;
-    }, 0);
-    
-    // 生成提交消息
-    const submitMessage = unansweredCount > 0 
-      ? `您还有${unansweredCount}道题目未作答，确定要提交吗？`
-      : `您已完成所有${questions.length}道题目，确定要提交答案吗？`;
-    
-    if (unansweredCount > 0) {
-      this.setData({
-        showSubmitDialog: true,
-        unansweredCount,
-        submitMessage
-      });
-    } else {
-      this.setData({
-        submitMessage
-      });
-      this.submitPractice();
-    }
-  },
-
-  // 更新剩余题目数量
-  updateRemainingQuestions() {
-    const { questions, gradedCount = 0 } = this.data;
-    const remainingQuestions = Math.max(0, questions.length - gradedCount);
-    this.setData({
-      remainingQuestions
-    });
-  },
-
-  // 获取提交确认消息
-  getSubmitMessage() {
-    const { questions, unansweredCount = 0 } = this.data;
-    if (unansweredCount > 0) {
-      return `您还有${unansweredCount}道题目未作答，确定要提交吗？`;
-    }
-    return `您已完成所有${questions.length}道题目，确定要提交答案吗？`;
-  },
-
-  // 确认提交
+  // 提交确认弹窗相关方法
   confirmSubmit() {
-    this.setData({
-      showSubmitDialog: false
-    });
-    this.submitPractice();
+    this.setData({ showSubmitDialog: false });
+    this.completePractice();
   },
 
-  // 取消提交
   cancelSubmit() {
-    this.setData({
-      showSubmitDialog: false
-    });
+    this.setData({ showSubmitDialog: false });
   },
 
-  async submitPractice() {
-    this.setData({
-      isGrading: true,
-      gradingStep: 0,
-      gradingStatus: '正在准备批改...',
-      gradedCount: 0
-    });
-
-    try {
-          // 开始批改进度更新
-    this.startGradingProgress();
-    
-    // 更新剩余题目数量
-    this.updateRemainingQuestions();
-      
-      // 使用AI智能批改
-      const gradingResults = await this.intelligentGrading();
-      
-      // 停止批改进度更新
-      this.stopGradingProgress();
-      
-      // 计算最终成绩
-      const finalScore = this.calculateFinalScore(gradingResults);
-      
-      // 保存练习记录
-      const record = await this.savePracticeRecord(gradingResults, finalScore);
-      
-      // 跳转到结果页面
-      wx.redirectTo({
-        url: `/pages/practice/result?localId=${record.id}`
-      });
-      
-    } catch (error) {
-      console.error('提交练习失败:', error);
-      
-      // 停止批改进度更新
-      this.stopGradingProgress();
-      
-      this.setData({
-        isGrading: false
-      });
-      
-      // 降级：使用简单批改
-      this.submitWithSimpleGrading();
-    }
-  },
-
-  // 开始批改进度更新
-  startGradingProgress() {
-    const { questions } = this.data;
-    let step = 0;
-    let gradedCount = 0;
-    
-    const steps = [
-      { step: 1, status: '正在分析答案内容...', delay: 800 },
-      { step: 2, status: '正在进行智能评分...', delay: 1500 },
-      { step: 3, status: '正在生成详细报告...', delay: 1000 }
-    ];
-    
-    const updateGradingProgress = () => {
-      if (step < steps.length && this.data.isGrading) {
-        const currentStep = steps[step];
-        this.setData({
-          gradingStep: currentStep.step,
-          gradingStatus: currentStep.status
-        });
-        step++;
-        
-        this.gradingTimer = setTimeout(updateGradingProgress, currentStep.delay);
-      }
-    };
-    
-    // 模拟批改进度
-    const updateGradedCount = () => {
-      if (gradedCount < questions.length && this.data.isGrading) {
-        gradedCount++;
-        this.setData({
-          gradedCount
-        });
-        
-        // 更新剩余题目数量
-        this.updateRemainingQuestions();
-        
-        const delay = 200 + Math.random() * 300; // 随机延迟
-        this.gradingCountTimer = setTimeout(updateGradedCount, delay);
-      }
-    };
-    
-    updateGradingProgress();
-    updateGradedCount();
-  },
-
-  // 停止批改进度更新
-  stopGradingProgress() {
-    if (this.gradingTimer) {
-      clearTimeout(this.gradingTimer);
-      this.gradingTimer = null;
-    }
-    
-    if (this.gradingCountTimer) {
-      clearTimeout(this.gradingCountTimer);
-      this.gradingCountTimer = null;
-    }
-  },
-
-  // AI智能批改
-  async intelligentGrading() {
-    const { questions, userAnswers } = this.data;
-    const gradingResults = [];
-
-    for (let i = 0; i < questions.length; i++) {
-      const question = questions[i];
-      const userAnswer = userAnswers[question.id];
-      const standardAnswer = question.correct;
-
-      try {
-        // 调用AI批改服务
-        const gradingResult = await AIService.intelligentGrading(
-          {
-            type: question.type,
-            content: question.title,
-            subject: this.translateSubject(this.data.practiceOptions.subject)
-          },
-          userAnswer,
-          standardAnswer
-        );
-
-        gradingResults.push({
-          questionId: question.id,
-          userAnswer,
-          standardAnswer,
-          isCorrect: gradingResult.isCorrect,
-          score: gradingResult.score,
-          feedback: gradingResult.feedback,
-          analysis: gradingResult.analysis
-        });
-
-      } catch (error) {
-        console.error(`题目${i+1}批改失败:`, error);
-        
-        // 降级：简单比较
-        const isCorrect = this.simpleCompare(userAnswer, standardAnswer, question.type);
-        gradingResults.push({
-          questionId: question.id,
-          userAnswer,
-          standardAnswer,
-          isCorrect,
-          score: isCorrect ? 100 : 0,
-          feedback: isCorrect ? '回答正确' : '回答错误',
-          analysis: ''
-        });
-      }
-    }
-
-    return gradingResults;
-  },
-
-  // 简单答案比较
-  simpleCompare(userAnswer, standardAnswer, questionType) {
-    if (!userAnswer || !standardAnswer) return false;
-    
-    if (questionType === 'multiple_choice') {
-      if (!Array.isArray(userAnswer)) return false;
-      const userSorted = userAnswer.sort().join(',');
-      const standardSorted = Array.isArray(standardAnswer) ? 
-        standardAnswer.sort().join(',') : standardAnswer;
-      return userSorted === standardSorted;
-    } else {
-      const userClean = userAnswer.toString().toLowerCase().trim();
-      const standardClean = standardAnswer.toString().toLowerCase().trim();
-      return userClean === standardClean;
-    }
-  },
-
-  // 计算最终成绩
-  calculateFinalScore(gradingResults) {
-    if (gradingResults.length === 0) return 0;
-    
-    const correctCount = gradingResults.filter(r => r.isCorrect).length;
-    const totalScore = gradingResults.reduce((sum, r) => sum + r.score, 0);
-    const averageScore = totalScore / gradingResults.length;
-    
-    return {
-      correctAnswers: correctCount,
-      totalQuestions: gradingResults.length,
-      accuracy: Math.round((correctCount / gradingResults.length) * 100),
-      score: Math.round(averageScore),
-      details: gradingResults
-    };
-  },
-
-  // 保存练习记录
-  async savePracticeRecord(gradingResults, finalScore) {
-    const record = {
-      id: `ai_practice_${Date.now()}`,
-      timestamp: Date.now(),
-      options: this.data.practiceOptions,
-      questions: this.data.questions,
-      answers: this.data.userAnswers,
-      gradingResults,
-      correctAnswers: finalScore.correctAnswers,
-      totalQuestions: finalScore.totalQuestions,
-      accuracy: finalScore.accuracy,
-      score: finalScore.score,
-      source: 'ai_generated',
-      synced: false
-    };
-
-    // 保存到本地
-    LocalDB.savePracticeRecord(record);
-
-    // 尝试云端同步
-    try {
-      const app = getApp();
-      const user = app.getUserInfo && app.getUserInfo();
-      await DatabaseManager.savePracticeRecord({
-        userId: user ? user._id : '',
-        subject: this.translateSubject(this.data.practiceOptions.subject),
-        difficulty: this.translateDifficulty(this.data.practiceOptions.difficulty),
-        questionType: 'ai_generated',
-        totalQuestions: finalScore.totalQuestions,
-        correctAnswers: finalScore.correctAnswers,
-        score: finalScore.score,
-        accuracy: finalScore.accuracy,
-        duration: 0,
-        questions: this.data.questions,
-        userAnswers: this.data.userAnswers,
-        gradingDetails: gradingResults
-      });
-      record.synced = true;
-    } catch(err) {
-      console.warn('同步练习记录失败', err);
-    }
-
-    return record;
-  },
-
-  // 降级：简单批改提交
-  async submitWithSimpleGrading() {
-    wx.showLoading({
-      title: '正在批改...',
-      mask: true
-    });
-
-    try {
-      // 计算成绩
-      let correctAnswers = 0;
-      this.data.questions.forEach(q=>{
-        const userAns = this.data.userAnswers[q.id];
-        if (!userAns) return;
-        if (q.type==='single_choice') {
-          if (userAns === q.correct) correctAnswers++;
-        } else if (q.type==='multiple_choice') {
-          if (Array.isArray(userAns) && userAns.sort().toString() === q.correct.sort().toString()) correctAnswers++;
-        }
-      });
-      const total = this.data.questions.length;
-      const score = total>0 ? Math.round((correctAnswers/total)*100) : 0;
-
-      const record = {
-        id: `local_${Date.now()}`,
-        timestamp: Date.now(),
-        options: this.data.practiceOptions,
-        questions: this.data.questions,
-        answers: this.data.userAnswers,
-        correctAnswers,
-        score,
-        synced: false
-      };
-      LocalDB.savePracticeRecord(record);
-
-      // 云端同步（忽略错误）
-      try {
-        const app = getApp();
-        const user = app.getUserInfo && app.getUserInfo();
-        await DatabaseManager.savePracticeRecord({
-          userId: user ? user._id : '',
-          subject: this.translateSubject(this.data.practiceOptions.subject),
-          difficulty: this.translateDifficulty(this.data.practiceOptions.difficulty),
-          questionType: 'mix',
-          totalQuestions: total,
-          correctAnswers: correctAnswers,
-          score: score,
-          duration: 0,
-          questions: this.data.questions,
-          userAnswers: this.data.userAnswers
-        });
-        record.synced = true;
-      } catch(err) {
-        console.warn('同步练习记录失败', err);
-      }
-
-      wx.hideLoading();
-      
-      wx.redirectTo({
-        url: `/pages/practice/result?localId=${record.id}`
-      });
-      
-    } catch (error) {
-      wx.hideLoading();
-      wx.showToast({
-        title: '批改失败，请重试',
-        icon: 'none'
-      });
-    }
-  },
-
-  // 页面卸载时清理定时器
-  onUnload() {
-    this.stopGenerationProgress();
-    this.stopGradingProgress();
-  },
-
-  onHide() {
-    this.stopGenerationProgress();
-    this.stopGradingProgress();
-  },
-
-  // --- Mock数据生成（降级使用）---
-  generateMockQuestions(options) {
-    const { subject = 'math', count = 5 } = options;
-    let mockData = [];
-    
-    const mathQuestions = [
-      { 
-        id: 'm1', 
-        type: 'single_choice', 
-        title: '计算：15 + 27 = ?', 
-        stem: '请选择正确的答案。', 
-        options: [
-          {label: '32', value: 'A'}, 
-          {label: '42', value: 'B'}, 
-          {label: '45', value: 'C'}
-        ], 
-        correct: 'B',
-        explanation: '15 + 27 = 42，这是基础的加法运算。',
-        knowledgePoints: ['加法运算', '两位数加法'],
-        difficulty: 2
-      },
-      { 
-        id: 'm2', 
-        type: 'single_choice', 
-        title: '一个正方形有几条边？', 
-        stem: '', 
-        options: [
-          {label: '3', value: 'A'}, 
-          {label: '4', value: 'B'}, 
-          {label: '5', value: 'C'}
-        ], 
-        correct: 'B',
-        explanation: '正方形有4条边，这是基本的几何知识。',
-        knowledgePoints: ['几何图形', '正方形'],
-        difficulty: 1
-      },
-      { 
-        id: 'm3', 
-        type: 'multiple_choice', 
-        title: '以下哪些是偶数？', 
-        stem: '请选择所有符合条件的答案。', 
-        options: [
-          {label: '2', value: 'A'}, 
-          {label: '7', value: 'B'}, 
-          {label: '10', value: 'C'}, 
-          {label: '13', value: 'D'}
-        ], 
-        correct: ['A','C'],
-        explanation: '偶数是能被2整除的数，2和10都是偶数。',
-        knowledgePoints: ['奇偶数', '数的性质'],
-        difficulty: 2
-      },
-      { 
-        id: 'm4', 
-        type: 'fill_blank', 
-        title: '9 × 8 = ___', 
-        stem: '请计算乘法结果。', 
-        options: [], 
-        correct: '72',
-        explanation: '9 × 8 = 72，这是乘法口诀表中的内容。',
-        knowledgePoints: ['乘法口诀', '乘法运算'],
-        difficulty: 2
-      },
-      { 
-        id: 'm5', 
-        type: 'solve', 
-        title: '小明有15个苹果，吃了3个，又买了8个，现在有多少个苹果？', 
-        stem: '请写出完整的解题过程。', 
-        options: [], 
-        correct: '20个苹果',
-        explanation: '解题过程：15 - 3 + 8 = 20，答：现在有20个苹果。',
-        knowledgePoints: ['应用题', '加减混合运算'],
-        difficulty: 3
-      },
-    ];
-
-    const chineseQuestions = [
-      {
-        id: 'c1',
-        type: 'single_choice',
-        title: '下面哪个字的读音是正确的？',
-        stem: '请选择正确答案。',
-        options: [
-          {label: '读(dú)书', value: 'A'},
-          {label: '读(dòu)书', value: 'B'},
-          {label: '读(tú)书', value: 'C'}
-        ],
-        correct: 'A',
-        explanation: '"读"字读作"dú"，是常用的读音。',
-        knowledgePoints: ['拼音', '字音'],
-        difficulty: 2
-      }
-    ];
-
-    const englishQuestions = [
-      {
-        id: 'e1',
-        type: 'single_choice',
-        title: 'What color is the apple?',
-        stem: 'Choose the correct answer.',
-        options: [
-          {label: 'Red', value: 'A'},
-          {label: 'Blue', value: 'B'},
-          {label: 'Yellow', value: 'C'}
-        ],
-        correct: 'A',
-        explanation: 'Apple is usually red in color.',
-        knowledgePoints: ['颜色词汇', '基础对话'],
-        difficulty: 1
-      }
-    ];
-
-    switch(subject) {
-      case 'math': mockData = mathQuestions; break;
-      case 'chinese': mockData = chineseQuestions; break;
-      case 'english': mockData = englishQuestions; break;
-      default: mockData = mathQuestions;
-    }
-
-    return mockData.slice(0, parseInt(count, 10));
+  // 显示退出弹窗
+  showExitDialog() {
+    this.setData({ showExitDialog: true });
   }
 }); 

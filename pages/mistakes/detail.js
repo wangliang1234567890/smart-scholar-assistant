@@ -1,8 +1,12 @@
+import DatabaseManager from '../../utils/database.js';
+
+// 或者如果使用 CommonJS 方式
+// const DatabaseManager = require('../../utils/database.js');
+
 // pages/mistakes/detail.js
 const { formatTime } = require("../../utils/util.js");
 
 Page({
-
   /**
    * 页面的初始数据
    */
@@ -16,12 +20,15 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    console.log('错题详情页面加载，参数:', options);
     if (options.id) {
+      console.log('接收到错题ID:', options.id);
       this.setData({
         mistakeId: options.id,
       });
       this.fetchMistakeDetail();
     } else {
+      console.error('缺少错题ID参数');
       this.setData({ isLoading: false });
       wx.showToast({
         title: '无效的题目ID',
@@ -80,39 +87,62 @@ Page({
 
   },
 
-  fetchMistakeDetail() {
+  async fetchMistakeDetail() {
     this.setData({ isLoading: true });
-    // TODO: 调用真实API获取数据
-    // 模拟API调用
-    setTimeout(() => {
-      const mockData = this.getMockMistake(this.data.mistakeId);
-      this.setData({
-        mistake: mockData,
-        isLoading: false,
-      });
-    }, 500);
+    
+    try {
+      // 替换模拟数据，使用真实的数据库调用
+      const result = await DatabaseManager.getMistakeById(this.data.mistakeId);
+      
+      if (result.success) {
+        this.setData({
+          mistake: result.data,
+          isLoading: false,
+        });
+      } else {
+        throw new Error(result.error || '加载失败');
+      }
+      
+    } catch (error) {
+      console.error('获取错题详情失败:', error);
+      this.setData({ isLoading: false });
+      wx.showToast({ title: '加载失败', icon: 'none' });
+    }
   },
 
-  handleDelete() {
+  async handleDelete() {
     wx.showModal({
       title: '确认删除',
       content: '删除后将无法恢复，确定要删除这条错题吗？',
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
-          console.log('用户点击确定');
-          // TODO: 调用API删除
-          wx.showLoading({ title: '删除中...' });
-          setTimeout(() => {
+          try {
+            wx.showLoading({ title: '删除中...' });
+            
+            // 使用真实的数据库删除
+            const result = await DatabaseManager.deleteMistake(this.data.mistakeId);
+            
             wx.hideLoading();
-            wx.showToast({ title: '删除成功' });
-            // 返回上一页并通知刷新
-            const pages = getCurrentPages();
-            const prevPage = pages[pages.length - 2];
-            if (prevPage && prevPage.route === 'pages/mistakes/mistakes') {
-              prevPage.refreshData();
+            
+            if (result.success) {
+              wx.showToast({ title: '删除成功' });
+              
+              // 通知上一页刷新数据
+              const pages = getCurrentPages();
+              const prevPage = pages[pages.length - 2];
+              if (prevPage && prevPage.route === 'pages/mistakes/mistakes') {
+                prevPage.refreshData && prevPage.refreshData();
+              }
+              
+              setTimeout(() => wx.navigateBack(), 1500);
+            } else {
+              throw new Error(result.error);
             }
-            wx.navigateBack();
-          }, 500);
+            
+          } catch (error) {
+            wx.hideLoading();
+            wx.showToast({ title: '删除失败', icon: 'none' });
+          }
         }
       },
     });
@@ -126,8 +156,11 @@ Page({
   },
 
   handleAddToReview() {
+    console.log('点击加入复习计划按钮');
     const mistake = this.data.mistake;
+    
     if (!mistake) {
+      console.error('错题数据为空:', mistake);
       wx.showToast({
         title: '错题信息错误',
         icon: 'error'
@@ -135,13 +168,17 @@ Page({
       return;
     }
 
+    console.log('当前错题信息:', mistake);
+
     // 检查错题状态
     if (mistake.status === 'mastered') {
+      console.log('错题已掌握，询问是否重新加入');
       wx.showModal({
         title: '已掌握题目',
         content: '该错题已标记为已掌握，是否要重新加入复习计划？',
         success: (res) => {
           if (res.confirm) {
+            console.log('用户确认重新加入复习计划');
             this.showReviewPlanOptions();
           }
         }
@@ -153,22 +190,28 @@ Page({
     const now = new Date();
     const nextReviewTime = mistake.nextReviewTime ? new Date(mistake.nextReviewTime) : null;
     
+    console.log('检查复习时间:', { nextReviewTime, now });
+    
     if (nextReviewTime && nextReviewTime > now) {
+      console.log('错题已在复习计划中，询问是否重新安排');
       wx.showModal({
         title: '已在复习计划中',
         content: `该错题已安排在 ${mistake.nextReviewTime} 复习，是否要重新安排复习时间？`,
         success: (res) => {
           if (res.confirm) {
+            console.log('用户确认重新安排复习时间');
             this.showReviewPlanOptions();
           }
         }
       });
     } else {
+      console.log('显示复习计划选项');
       this.showReviewPlanOptions();
     }
   },
 
   showReviewPlanOptions() {
+    console.log('显示复习计划选项弹窗');
     // 显示复习计划选择弹窗
     wx.showActionSheet({
       itemList: [
@@ -179,15 +222,16 @@ Page({
         '1个月后复习'
       ],
       success: (res) => {
+        console.log('用户选择了复习计划:', res.tapIndex);
         this.addToReviewPlan(res.tapIndex);
       },
-      fail: () => {
-        console.log('用户取消选择');
+      fail: (error) => {
+        console.log('用户取消选择或弹窗失败:', error);
       }
     });
   },
 
-  addToReviewPlan(planIndex) {
+  async addToReviewPlan(planIndex) {
     const mistake = this.data.mistake;
     const reviewTimes = [
       0,           // 立即复习
@@ -198,82 +242,162 @@ Page({
     ];
     
     const days = reviewTimes[planIndex];
-    const reviewTime = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
     
     wx.showLoading({ title: '加入复习计划...' });
+    console.log('开始添加复习计划:', { mistakeId: mistake._id, days });
     
-    // TODO: 调用真实API更新复习时间
-    setTimeout(() => {
+    try {
+      // 调用真实的数据库API
+      const result = await DatabaseManager.addToReviewPlan(mistake._id, { days });
+      
       wx.hideLoading();
       
-      // 更新本地数据
-      const updatedMistake = {
-        ...mistake,
-        nextReviewTime: formatTime(reviewTime),
-        status: days === 0 ? 'reviewing' : mistake.status,
-        lastReviewTime: days === 0 ? formatTime(new Date()) : mistake.lastReviewTime
-      };
-      
-      this.setData({
-        mistake: updatedMistake
-      });
-      
-      const timeText = days === 0 ? '今日复习计划' : 
-                      days === 3 ? '3天后' :
-                      days === 7 ? '1周后' :
-                      days === 14 ? '2周后' : '1个月后';
-      
-      wx.showToast({
-        title: `已加入${timeText}`,
-        icon: 'success'
-      });
-      
-      // 如果是立即复习，可以跳转到复习页面
-      if (days === 0) {
-        setTimeout(() => {
-          wx.showModal({
-            title: '开始复习',
-            content: '是否立即开始复习这道错题？',
-            success: (res) => {
-              if (res.confirm) {
-                // 跳转到复习页面
-                wx.navigateTo({
-                  url: `/pages/practice/config?type=review&mistakeId=${mistake._id}`
-                });
+      if (result.success) {
+        console.log('复习计划添加成功:', result);
+        
+        // 重新获取最新数据
+        await this.fetchMistakeDetail();
+        
+        const timeText = days === 0 ? '今日复习计划' : 
+                        days === 3 ? '3天后' :
+                        days === 7 ? '1周后' :
+                        days === 14 ? '2周后' : '1个月后';
+        
+        wx.showToast({
+          title: `已加入${timeText}`,
+          icon: 'success'
+        });
+        
+        // 如果是立即复习，询问是否开始复习
+        if (days === 0) {
+          setTimeout(() => {
+            wx.showModal({
+              title: '开始复习',
+              content: '是否立即开始复习这道错题？',
+              success: (res) => {
+                if (res.confirm) {
+                  // 跳转到复习页面
+                  wx.navigateTo({
+                    url: `/pages/practice/config?type=review&mistakeId=${mistake._id}`
+                  });
+                }
               }
-            }
-          });
-        }, 1500);
+            });
+          }, 1500);
+        }
+      } else {
+        throw new Error(result.error || '添加复习计划失败');
       }
-    }, 500);
+      
+    } catch (error) {
+      console.error('添加复习计划失败:', error);
+      wx.hideLoading();
+      wx.showToast({ 
+        title: '操作失败: ' + (error.message || '未知错误'), 
+        icon: 'none',
+        duration: 3000
+      });
+    }
   },
 
-  // --- Mock数据生成 ---
-  getMockMistake(id) {
-    // 模拟难度和状态的文本转换
-    const difficultyMap = {1: '简单', 2: '中等', 3: '困难'};
-    const statusMap = {new: '新录入', reviewing: '复习中', mastered: '已掌握'};
+
+
+  startReview() {
+    const { mistake } = this.data;
+    if (!mistake) return;
     
-    // 模拟一条详细数据
-    const detail = {
-      _id: id,
-      question: `这是题目ID为 ${id} 的模拟错题。题目内容是关于二次函数 y = ax^2 + bx + c 的性质判断，请找出下列描述中错误的一项。`,
-      imageUrl: 'https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2c13b73cde894371a39a046c82334888~tplv-k3u1fbpfcp-jj-mark:0:0:0:0:q75.image#?w=1080&h=1080&s=134887&e=png&f=1080',
-      answer: '选项C是错误的。因为当 a > 0 时，抛物线开口向上，函数有最小值，没有最大值。',
-      analysis: '本题考查二次函数的基本性质。需要掌握开口方向、对称轴、顶点坐标以及单调性等核心知识点。根据题目给出的函数，可以逐一判断选项的正确性。',
-      subject: '数学',
-      difficulty: 2,
-      status: 'reviewing',
-      createTime: formatTime(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)), // 模拟2天前创建
-      reviewCount: 3,
-      lastReviewTime: formatTime(new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)), // 模拟1天前复习
-      nextReviewTime: formatTime(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)), // 模拟3天后复习
-    };
+    wx.showModal({
+      title: '开始复习',
+      content: '请在心中默答这道题，然后点击确定查看答案',
+      success: (res) => {
+        if (res.confirm) {
+          this.showAnswer();
+        }
+      }
+    });
+  },
 
-    // 添加转换后的文本
-    detail.difficultyText = difficultyMap[detail.difficulty];
-    detail.statusText = statusMap[detail.status];
+  showAnswer() {
+    const { mistake } = this.data;
+    wx.showModal({
+      title: '正确答案',
+      content: `答案：${mistake.answer}\n\n${mistake.analysis ? '解析：' + mistake.analysis : ''}`,
+      confirmText: '答对了',
+      cancelText: '答错了',
+      success: (res) => {
+        this.recordReviewResult(res.confirm);
+      }
+    });
+  },
 
-    return detail;
+  async recordReviewResult(isCorrect) {
+    try {
+      // 更新复习记录
+      const reviewData = {
+        mistakeId: this.data.mistakeId,
+        isCorrect,
+        reviewTime: new Date().toISOString()
+      };
+      
+      await DatabaseManager.addReviewRecord(reviewData);
+      
+      // 如果答对了，更新错题状态
+      if (isCorrect) {
+        const newStatus = this.data.mistake.reviewCount >= 2 ? 'mastered' : 'reviewing';
+        await DatabaseManager.updateMistakeStatus(this.data.mistakeId, newStatus);
+        
+        wx.showToast({ 
+          title: isCorrect ? '很棒！继续加油' : '再接再厉', 
+          icon: 'success' 
+        });
+        
+        // 重新加载数据
+        this.fetchMistakeDetail();
+      }
+      
+    } catch (error) {
+      console.error('记录复习结果失败:', error);
+    }
+  },
+
+  // 备用方法：直接加入今日复习计划
+  async addToTodayReviewPlan() {
+    const mistake = this.data.mistake;
+    if (!mistake || !mistake._id) {
+      wx.showToast({ title: '错题信息错误', icon: 'error' });
+      return;
+    }
+    
+    wx.showModal({
+      title: '加入复习计划',
+      content: '将此题目加入今日复习计划？',
+      success: async (res) => {
+        if (res.confirm) {
+          wx.showLoading({ title: '加入复习计划...' });
+          console.log('直接加入今日复习计划:', mistake._id);
+          
+          try {
+            const result = await DatabaseManager.addToReviewPlan(mistake._id, { days: 0 });
+            wx.hideLoading();
+            
+            if (result.success) {
+              console.log('今日复习计划添加成功:', result);
+              await this.fetchMistakeDetail(); // 重新获取最新数据
+              wx.showToast({ title: '已加入今日复习计划', icon: 'success' });
+            } else {
+              throw new Error(result.error || '添加失败');
+            }
+          } catch (error) {
+            console.error('加入今日复习计划失败:', error);
+            wx.hideLoading();
+            wx.showToast({ 
+              title: '操作失败: ' + (error.message || '未知错误'), 
+              icon: 'none',
+              duration: 3000 
+            });
+          }
+        }
+      }
+    });
   }
 })

@@ -334,24 +334,21 @@ export function promisifyWxApi(wxApi) {
  * @param {number} delay - 重试延迟（毫秒）
  * @returns {Function} 包装后的函数
  */
-export function withRetry(fn, maxRetries = 3, delay = 1000) {
-  return async function(...args) {
-    let lastError;
-    
-    for (let i = 0; i <= maxRetries; i++) {
-      try {
-        return await fn.apply(this, args);
-      } catch (error) {
-        lastError = error;
-        
-        if (i < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
-        }
+export async function withRetry(fn, maxRetries = 3, delay = 1000) {
+  let lastError;
+  
+  for (let i = 0; i <= maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (i < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
-    
-    throw lastError;
-  };
+  }
+  
+  throw lastError;
 }
 
 /**

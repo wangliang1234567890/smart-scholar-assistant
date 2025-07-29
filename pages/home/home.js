@@ -1,11 +1,34 @@
-import DatabaseManager from '../../utils/database';
-import { SUBJECTS } from '../../utils/constants';
-import { createStoreBindings } from 'mobx-miniprogram-bindings';
-import { store } from '../../store/index';
-import errorHandler from '../../utils/error-handler';
-import { debounce, formatNumber, loadingManager, promisifyWxApi } from '../../utils/common';
+import DatabaseManager from '../../utils/database.js';
+import { debounce } from '../../utils/common.js';
 
-const app = getApp();
+// 添加缺失的常量定义
+const SUBJECTS = ['数学', '英语', '语文', '物理', '化学', '生物', '历史', '地理', '政治'];
+
+// 简单的工具函数实现
+const loadingManager = {
+  loadingStates: new Map(),
+  isLoading(key) {
+    return this.loadingStates.get(key) || false;
+  },
+  setLoading(key, state) {
+    this.loadingStates.set(key, state);
+  },
+  clearLoading(key) {
+    this.loadingStates.delete(key);
+  }
+};
+
+const errorHandler = {
+  handle(error, options = {}) {
+    console.error(`[${options.scene || 'unknown'}]`, error);
+    if (options.showToast) {
+      wx.showToast({
+        title: error.message || '操作失败',
+        icon: 'none'
+      });
+    }
+  }
+};
 
 Page({
   data: {
@@ -36,7 +59,7 @@ Page({
       {
         icon: 'ai-practice',
         title: 'AI练习',
-        path: '/pages/practice/config'
+        path: '/pages/practice/practice'
       },
       {
         icon: 'clock',
@@ -58,27 +81,16 @@ Page({
 
   onShow() {
     console.log('首页显示');
-    
-    // 更新tabBar状态
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setActiveTab(0);
-    }
-    
-    // 更新页面数据
-    this.updatePageData();
-    
-    // 刷新数据（防抖处理）
-    this.debouncedRefresh();
+    this.refreshData();
   },
 
   onReady() {
     console.log('首页准备完成');
-    this.initStoreBinding();
+    // 移除不存在的方法调用
   },
 
   onUnload() {
     console.log('首页卸载');
-    this.destroyStoreBinding();
     loadingManager.clearLoading('home_data');
   },
 
@@ -88,19 +100,28 @@ Page({
     });
   },
 
+  // 添加缺失的简单防抖函数
+  createSimpleDebounce(func, delay) {
+    let timeoutId;
+    return function(...args) {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func.apply(this, args), delay);
+    };
+  },
+
   /**
    * 初始化页面
    */
-  initPage() {
-    this.setData({
-      greeting: this.getGreeting()
-    });
-
-    // 创建防抖刷新函数
-    this.debouncedRefresh = debounce(this.refreshData.bind(this), 500);
-    
-    // 初始加载数据
-    this.loadInitialData();
+  async initPage() {
+    try {
+      this.debouncedRefresh = this.createSimpleDebounce(() => {
+        this.loadRealStudyStats();
+      }, 1000);
+      
+      await this.loadRealStudyStats();
+    } catch (error) {
+      console.error('初始化页面失败:', error);
+    }
   },
 
   /**
@@ -167,29 +188,15 @@ Page({
   /**
    * 刷新数据
    */
-  async refreshData() {
-    if (loadingManager.isLoading('home_refresh')) return;
-    
-    loadingManager.setLoading('home_refresh', true);
-    this.setData({ refreshing: true });
-
+  refreshData() {
     try {
-      await this.loadDashboardData();
-      
-      // 显示刷新成功提示
-      wx.showToast({
-        title: '刷新成功',
-        icon: 'success',
-        duration: 1000
-      });
+      if (this.debouncedRefresh) {
+        this.debouncedRefresh();
+      } else {
+        this.loadRealStudyStats();
+      }
     } catch (error) {
-      errorHandler.handle(error, {
-        scene: 'home_refresh_data',
-        showToast: true
-      });
-    } finally {
-      loadingManager.setLoading('home_refresh', false);
-      this.setData({ refreshing: false });
+      console.error('刷新数据失败:', error);
     }
   },
 
@@ -471,5 +478,169 @@ Page({
 
   viewReport() {
     this.navigateToPage('/pages/report/report');
+  },
+
+  // 新增：加载真实学习统计（使用现有的DatabaseManager）
+  async loadRealStudyStats() {
+    try {
+      loadingManager.setLoading('home_data', true);
+      
+      const userId = wx.getStorageSync('userId') || 'default_user';
+      
+      // 获取今日数据
+      const today = new Date();
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      // 并行获取各种统计数据
+      const [mistakesResult, reviewResult, todayResult] = await Promise.all([
+        DatabaseManager.getMistakes(userId, { pageSize: 1000 }),
+        DatabaseManager.getReviewRecords(userId, { pageSize: 100 }),
+        DatabaseManager.getTodayMistakes(userId, todayStart)
+      ]);
+      
+      // 处理错题统计
+      const allMistakes = mistakesResult.success ? mistakesResult.data : [];
+      const todayMistakes = todayResult.success ? todayResult.data : [];
+      
+      // 计算各种统计指标
+      const stats = {
+        todayMistakes: todayMistakes.length,
+        totalMistakes: allMistakes.length,
+        reviewTasks: allMistakes.filter(m => m.status === 'reviewing').length,
+        masteredCount: allMistakes.filter(m => m.status === 'mastered').length,
+        masteryRate: allMistakes.length > 0 ? 
+          Math.round((allMistakes.filter(m => m.status === 'mastered').length / allMistakes.length) * 100) : 0,
+        latestMistakes: allMistakes.slice(0, 5) // 最新5道错题
+      };
+      
+      // 学科统计
+      const subjectStats = this.calculateSubjectStats(allMistakes);
+      
+      this.setData({
+        studyStats: stats,
+        subjectStats,
+        hasMistakes: allMistakes.length > 0,
+        loading: false
+      });
+      
+      console.log('学习统计加载完成:', stats);
+      
+    } catch (error) {
+      console.error('加载学习统计失败:', error);
+      this.setDefaultData();
+    } finally {
+      loadingManager.clearLoading('home_data');
+    }
+  },
+
+  // 计算学科统计
+  calculateSubjectStats(mistakes) {
+    const subjectMap = {};
+    
+    mistakes.forEach(mistake => {
+      const subject = mistake.subject || '未分类';
+      if (!subjectMap[subject]) {
+        subjectMap[subject] = {
+          name: subject,
+          total: 0,
+          mastered: 0,
+          reviewing: 0,
+          new: 0
+        };
+      }
+      
+      subjectMap[subject].total++;
+      if (mistake.status === 'mastered') subjectMap[subject].mastered++;
+      else if (mistake.status === 'reviewing') subjectMap[subject].reviewing++;
+      else subjectMap[subject].new++;
+    });
+    
+    return Object.values(subjectMap).map(subject => ({
+      ...subject,
+      masteryRate: subject.total > 0 ? Math.round((subject.mastered / subject.total) * 100) : 0
+    }));
+  },
+
+  // 添加快速操作优化
+  async handleQuickAction(actionType) {
+    try {
+      switch (actionType) {
+        case 'camera':
+          wx.navigateTo({ url: '/pages/camera/camera' });
+          break;
+          
+        case 'manual':
+          wx.navigateTo({ url: '/pages/mistakes/add' });
+          break;
+          
+        case 'review':
+          await this.startQuickReview();
+          break;
+          
+        case 'practice':
+          wx.navigateTo({ url: '/pages/practice/config' });
+          break;
+          
+        default:
+          wx.showToast({ title: '功能开发中', icon: 'none' });
+      }
+    } catch (error) {
+      errorHandler.handle(error, {
+        scene: 'home_quick_action',
+        showToast: true
+      });
+    }
+  },
+
+  // 快速复习功能
+  async startQuickReview() {
+    try {
+      const userId = wx.getStorageSync('userId') || 'default_user';
+      const result = await DatabaseManager.getMistakes(userId, {
+        status: 'reviewing',
+        pageSize: 5
+      });
+      
+      if (result.success && result.data.length > 0) {
+        // 跳转到复习页面，传递错题数据
+        const mistakesData = encodeURIComponent(JSON.stringify(result.data));
+        wx.navigateTo({
+          url: `/pages/review/review?type=quick&data=${mistakesData}`
+        });
+      } else {
+        wx.showToast({ title: '暂无需要复习的题目', icon: 'none' });
+      }
+      
+    } catch (error) {
+      console.error('启动快速复习失败:', error);
+      wx.showToast({ title: '启动失败', icon: 'none' });
+    }
+  },
+
+  // 优化首页的复习入口
+  async startTodayReview() {
+    try {
+      const dbManager = DatabaseManager;  // 确保这里也是正确的
+      const reviewTasks = await dbManager.getTodayReviewTasks();
+      
+      if (reviewTasks.length === 0) {
+        wx.showModal({
+          title: '暂无复习任务',
+          content: '今日暂无需要复习的题目，是否查看错题本？',
+          success: (res) => {
+            if (res.confirm) {
+              wx.switchTab({ url: '/pages/mistakes/mistakes' });
+            }
+          }
+        });
+        return;
+      }
+      
+      wx.navigateTo({
+        url: `/pages/review/session?tasks=${encodeURIComponent(JSON.stringify(reviewTasks))}`
+      });
+    } catch (error) {
+      console.error('启动复习失败:', error);
+    }
   }
 }); 

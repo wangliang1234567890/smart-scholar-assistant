@@ -68,11 +68,27 @@
     </view>
   </view>
 
-  <!-- 5. 开始按钮 -->
-  <view class="start-btn-wrapper">
-    <button class="start-btn" bind:tap="startPractice">
-      <van-icon name="play-circle-o" class="btn-icon"/>
+  <!-- 开始练习按钮 -->
+  <view class="start-section">
+    <van-button 
+      type="primary" 
+      size="large" 
+      bind:click="startPractice"
+      loading="{{loading}}"
+      custom-class="start-btn"
+    >
       开始练习
-    </button>
+    </van-button>
+    
+    <!-- 新增：生成试卷按钮 -->
+    <van-button 
+      type="info" 
+      size="large" 
+      bind:click="generateExamPaper"
+      loading="{{loading}}"
+      custom-class="exam-btn"
+    >
+      生成试卷
+    </van-button>
   </view>
 </view>

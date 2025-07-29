@@ -1,13 +1,71 @@
 {
   "pages": [
     "pages/home/home",
-    "pages/camera/camera", 
-    "pages/result/result",
     "pages/mistakes/mistakes",
+    "pages/mistakes/detail",
+    "pages/mistakes/add",
+    "pages/mistakes/analysis",
+    "pages/camera/camera",
     "pages/practice/practice",
+    "pages/practice/config",
+    "pages/practice/session",
+    "pages/practice/exam",
+    "pages/practice/result",
     "pages/schedule/schedule",
+    "pages/schedule/add",
+    "pages/schedule/detail",
     "pages/profile/profile",
-    "pages/index/index",
-    "pages/logs/logs"
-  ]
-} 
+    "pages/login/login",
+    "pages/settings/settings",
+    "pages/review/review",
+    "pages/report/report",
+    "pages/about/about",
+    "pages/help/help"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTitleText": "智能学霸小助手",
+    "navigationBarTextStyle": "black"
+  },
+  "tabBar": {
+    "color": "#7A7E83",
+    "selectedColor": "#4F46E5",
+    "borderStyle": "black",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "首页",
+        "iconPath": "images/tab/home.png",
+        "selectedIconPath": "images/tab/home_active.png"
+      },
+      {
+        "pagePath": "pages/mistakes/mistakes",
+        "text": "错题本",
+        "iconPath": "images/tab/mistakes.png",
+        "selectedIconPath": "images/tab/mistakes_active.png"
+      },
+      {
+        "pagePath": "pages/practice/practice",
+        "text": "练习",
+        "iconPath": "images/tab/practice.png",
+        "selectedIconPath": "images/tab/practice_active.png"
+      },
+      {
+        "pagePath": "pages/schedule/schedule",
+        "text": "课程表",
+        "iconPath": "images/tab/schedule.png",
+        "selectedIconPath": "images/tab/schedule_active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "images/tab/profile.png",
+        "selectedIconPath": "images/tab/profile_active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

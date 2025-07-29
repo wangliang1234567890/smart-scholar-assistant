@@ -16,7 +16,23 @@ App({
     
     try {
       // 初始化云开发
-      this.initCloud();
+      if (!wx.cloud) {
+        console.error('请使用 2.2.3 或以上的基础库以使用云能力');
+      } else {
+        wx.cloud.init({
+          env: 'cloud1-9gms5vr2451418c9', // 修正为正确的环境ID
+          traceUser: true,
+        });
+      }
+      
+      // 🔧 确保数据库管理器初始化
+      try {
+        const DatabaseManager = require('./utils/database');
+        console.log('✅ 数据库管理器初始化成功');
+        this.globalData.DatabaseManager = DatabaseManager;
+      } catch (error) {
+        console.error('❌ 数据库管理器初始化失败:', error);
+      }
       
       // 确保AI服务正确初始化
       if (this.globalData.aiService) {
@@ -239,6 +255,8 @@ App({
     }
   }
 }); 
+
+
 
 
 

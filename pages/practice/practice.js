@@ -1,4 +1,5 @@
 const app = getApp()
+import DatabaseManager from '../../utils/database.js';
 
 Page({
   data: {
@@ -54,121 +55,133 @@ Page({
 
   // 加载练习数据
   async loadPracticeData() {
-    this.setData({ loading: true })
-    // In a real app, you would fetch data from an API here.
-    // We'll use mock data for now.
-    await this.loadMockData();
-    this.setData({ loading: false })
+    this.setData({ loading: true });
+    console.log('加载练习页面数据...');
+    
+    try {
+      // 加载真实的统计数据
+      await this.loadRealData();
+    } catch (error) {
+      console.error('加载练习数据失败:', error);
+      // 如果加载失败，设置默认值
+      this.setDefaultData();
+    }
+    
+    this.setData({ loading: false });
   },
 
-  loadMockData() {
-    // Mock data based on V0 design
-    const todayStats = {
-      practiced: 9,
-      correct: 6,
-      accuracy: 67,
-      total: 9
-    };
+  async loadRealData() {
+    const userId = wx.getStorageSync('userId') || 'default_user';
+    
+    // 1. 获取今日统计
+    const statsResult = await DatabaseManager.getTodayStats(userId);
+    let todayStats = { practiced: 0, correct: 0, accuracy: 0, total: 0 };
+    
+    if (statsResult.success) {
+      const stats = statsResult.data;
+      todayStats = {
+        practiced: stats.todayMistakes || 0,
+        correct: stats.masteredCount || 0, 
+        accuracy: stats.masteryRate || 0,
+        total: stats.totalMistakes || 0
+      };
+      console.log('今日统计数据:', todayStats);
+    }
 
-    const recentRecords = [
-      {
-        type: "AI智能练习",
-        subject: "数学",
-        time: "今天 14:30",
-        duration: "用时25分钟",
-        score: 80,
-        icon: "/images/icons/white/maths.svg",
-        gradient: "bg-grad-blue",
-      },
-      {
+    // 2. 获取错题数量（用于复习计数）
+    const mistakesResult = await DatabaseManager.getMistakes(userId, { 
+      pageSize: 100,
+      filters: { status: 'all' }
+    });
+    
+    let reviewCount = 0;
+    if (mistakesResult.success && mistakesResult.data) {
+      reviewCount = mistakesResult.data.length;
+      console.log('错题数量:', reviewCount);
+    }
+
+    // 3. 获取复习记录（用于显示最近记录）
+    const reviewResult = await DatabaseManager.getReviewRecords(userId, { pageSize: 3 });
+    let recentRecords = [];
+    
+    if (reviewResult.success && reviewResult.data) {
+      recentRecords = reviewResult.data.map((record, index) => ({
         type: "错题复习",
-        subject: "语文",
-        time: "昨天 16:45",
-        duration: "用时15分钟",
-        score: 62,
-        icon: "/images/icons/white/chinese.svg",
-        gradient: "bg-grad-orange",
-      },
-      {
-        type: "分科练习",
-        subject: "英语",
-        time: "昨天 10:20",
-        duration: "用时30分钟",
-        score: 80,
-        icon: "/images/icons/white/english.svg",
-        gradient: "bg-grad-green",
-      },
-    ];
+        subject: record.subject || "未知",
+        time: this.formatRecentTime(record.reviewTime || record.createTime),
+        duration: "已完成",
+        score: record.isCorrect ? 100 : 0,
+        icon: this.getSubjectIcon(record.subject),
+        gradient: index % 3 === 0 ? "bg-grad-blue" : index % 3 === 1 ? "bg-grad-orange" : "bg-grad-green"
+      }));
+      console.log('最近复习记录:', recentRecords);
+    }
 
-    const reviewCount = 44;
-
+    // 更新页面数据
     this.setData({
       todayStats: todayStats,
       recentRecords: recentRecords,
       reviewCount: reviewCount,
-      'practiceOptions[1].subtitle': `${reviewCount} 道错题等你复习`,
-      'practiceOptions[1].count': `${reviewCount}题`,
+      'practiceOptions[1].subtitle': reviewCount > 0 ? `${reviewCount} 道错题等你复习` : '暂无错题需要复习',
+      'practiceOptions[1].count': reviewCount > 0 ? `${reviewCount}题` : '0题',
     });
     
-    return Promise.resolve();
+    console.log('练习页面数据加载完成');
   },
 
-  // 加载今日统计
-  loadTodayStats() {
-    return new Promise((resolve) => {
-      // 模拟API调用
-      setTimeout(() => {
-        const stats = {
-          practiced: Math.floor(Math.random() * 15) + 5,
-          correct: Math.floor(Math.random() * 10) + 5,
-          accuracy: Math.floor(Math.random() * 30) + 70
-        }
-        this.setData({ todayStats: stats })
-        resolve(stats)
-      }, 300)
-    })
+  setDefaultData() {
+    // 设置默认空数据
+    this.setData({
+      todayStats: { practiced: 0, correct: 0, accuracy: 0, total: 0 },
+      recentRecords: [],
+      reviewCount: 0,
+      'practiceOptions[1].subtitle': '暂无错题需要复习',
+      'practiceOptions[1].count': '0题',
+    });
   },
 
-  // 加载学科数据
-  loadSubjectData() {
-    return new Promise((resolve) => {
-      // 模拟API调用，这里应该从后端获取实际数据
-      setTimeout(() => {
-        const subjects = this.data.subjectData.map(subject => ({
-          ...subject,
-          mistakeCount: Math.floor(Math.random() * 50) + 10,
-          masteryRate: Math.floor(Math.random() * 40) + 60
-        }))
-        
-        this.setData({ 
-          subjectData: subjects,
-          reviewCount: subjects.reduce((sum, s) => sum + Math.floor(s.mistakeCount * 0.3), 0)
-        })
-        resolve(subjects)
-      }, 500)
-    })
+  // 格式化时间显示
+  formatRecentTime(timeString) {
+    if (!timeString) return '未知时间';
+    
+    const time = new Date(timeString);
+    const now = new Date();
+    const diffMs = now - time;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return `今天 ${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`;
+    } else if (diffDays === 1) {
+      return `昨天 ${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`;
+    } else if (diffDays < 7) {
+      return `${diffDays}天前`;
+    } else {
+      return `${time.getMonth() + 1}月${time.getDate()}日`;
+    }
   },
 
-  // 加载最近记录
-  loadRecentRecords() {
-    return new Promise((resolve) => {
-      // 模拟API调用
-      setTimeout(() => {
-        const records = this.data.recentRecords
-        this.setData({ recentRecords: records })
-        resolve(records)
-      }, 400)
-    })
+  // 获取学科图标
+  getSubjectIcon(subject) {
+    const iconMap = {
+      '数学': '/images/icons/white/maths.svg',
+      '语文': '/images/icons/white/chinese.svg', 
+      '英语': '/images/icons/white/english.svg'
+    };
+    return iconMap[subject] || '/images/icons/white/maths.svg';
   },
+
+
 
   // 跳转到练习配置页
   goToConfig(e) {
     const type = e.currentTarget.dataset.type;
-    // 'review' type should also go to config, but might have specific settings
     const url = `/pages/practice/config?type=${type}`;
     console.log(`准备跳转到: ${url}`);
     wx.navigateTo({
       url: url,
+      success: () => {
+        console.log(`跳转成功: ${url}`);
+      },
       fail: (err) => {
         console.error(`跳转失败: ${url}`, err);
         wx.showToast({

@@ -1,4 +1,5 @@
 const app = getApp()
+import DatabaseManager from '../../utils/database.js';
 
 Page({
   data: {
@@ -96,19 +97,8 @@ Page({
     ]
   },
 
-  onLoad(options) {
-    // 获取系统信息设置导航栏高度
-    const systemInfo = wx.getSystemInfoSync()
-    const statusBarHeight = systemInfo.statusBarHeight
-    const navBarHeight = 44 // iOS导航栏标准高度
-    
-    this.setData({
-      statusBarHeight,
-      navBarHeight,
-      totalNavHeight: statusBarHeight + navBarHeight
-    })
-    
-    this.loadReviewData()
+  async onLoad() {
+    this.loadReviewData();
   },
 
   onShow() {
@@ -150,17 +140,27 @@ Page({
     })
   },
 
-  // 加载复习数据
-  loadReviewData() {
-    this.setData({ loading: true })
+  // 新增：加载真实复习数据
+  async loadReviewData() {
+    this.setData({ loading: true });
     
-    Promise.all([
-      this.loadReviewStats(),
-      this.loadSubjectProgress(),
-      this.loadRecentReviews()
-    ]).then(() => {
-      this.setData({ loading: false })
-    })
+    try {
+      const dbManager = DatabaseManager;  // 直接使用单例对象
+      const reviewMistakes = await dbManager.getMistakes({ needReview: true });
+      const todayStats = await dbManager.getStudyStats('today');
+      
+      this.setData({
+        'reviewStats.pending': reviewMistakes.length,
+        'reviewStats.completed': todayStats.practiceCount,
+        'reviewStats.accuracy': todayStats.correctRate,
+        loading: false
+      });
+      
+      this.updateSubjectProgress(reviewMistakes);
+    } catch (error) {
+      console.error('加载复习数据失败:', error);
+      this.setData({ loading: false });
+    }
   },
 
   // 加载复习统计
@@ -214,42 +214,66 @@ Page({
     }
   },
 
-  // 快速复习
-  onQuickReview() {
-    if (this.data.reviewStats.pending === 0) {
+  // 增强：快速复习功能
+  async onQuickReview() {
+    try {
+      const dbManager = DatabaseManager;  // 修复这里
+      const reviewMistakes = await dbManager.getMistakes({ needReview: true });
+      
+      if (reviewMistakes.length === 0) {
+        wx.showToast({
+          title: '暂无需要复习的题目',
+          icon: 'none'
+        });
+        return;
+      }
+
+      const quickReviewMistakes = reviewMistakes.slice(0, 5);
+      
+      wx.navigateTo({
+        url: `/pages/practice/session?type=review&mistakes=${encodeURIComponent(JSON.stringify(quickReviewMistakes))}`
+      });
+    } catch (error) {
+      console.error('启动快速复习失败:', error);
       wx.showToast({
-        title: '暂无待复习题目',
-        icon: 'none'
-      })
-      return
+        title: '启动失败，请重试',
+        icon: 'error'
+      });
     }
-    
-    wx.navigateTo({
-      url: '/pages/practice/config?type=review&mode=quick'
-    })
   },
 
-  // 分科复习
-  onSubjectReview() {
-    const subjects = this.data.subjectProgress.filter(s => s.progress < s.total)
-    
-    if (subjects.length === 0) {
-      wx.showToast({
-        title: '所有学科都已复习完成',
-        icon: 'none'
-      })
-      return
+  // 增强：分科复习
+  async onSubjectReview() {
+    try {
+      const dbManager = DatabaseManager;  // 修复这里
+      const mistakes = await dbManager.getMistakes();
+      const subjects = [...new Set(mistakes.map(m => m.subject))];
+      
+      wx.showActionSheet({
+        itemList: subjects,
+        success: async (res) => {
+          const selectedSubject = subjects[res.tapIndex];
+          const subjectMistakes = await dbManager.getMistakes({ 
+            subject: selectedSubject,
+            needReview: true 
+          });
+          
+          if (subjectMistakes.length === 0) {
+            wx.showToast({
+              title: `${selectedSubject}暂无需复习题目`,
+              icon: 'none'
+            });
+            return;
+          }
+          
+          wx.navigateTo({
+            url: `/pages/practice/session?type=review&subject=${selectedSubject}&mistakes=${encodeURIComponent(JSON.stringify(subjectMistakes))}`
+          });
+        }
+      });
+    } catch (error) {
+      console.error('启动分科复习失败:', error);
     }
-    
-    wx.showActionSheet({
-      itemList: subjects.map(s => `${s.name} (${s.total - s.progress}题)`),
-      success: (res) => {
-        const subject = subjects[res.tapIndex]
-        wx.navigateTo({
-          url: `/pages/practice/config?type=review&mode=subject&subject=${subject.name}`
-        })
-      }
-    })
   },
 
   // 系统复习
@@ -257,11 +281,6 @@ Page({
     wx.navigateTo({
       url: '/pages/practice/config?type=review&mode=systematic'
     })
-  },
-
-  // 查看所有学科
-  onViewAllSubjects() {
-    wx.showToast({ title: '功能开发中', icon: 'none' })
   },
 
   // 学科进度点击

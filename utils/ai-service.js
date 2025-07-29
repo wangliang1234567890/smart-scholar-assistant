@@ -952,11 +952,464 @@ class AIService {
       return imagePath; // 降级使用原图
     }
   }
+
+  /**
+   * 基于已保存的错题生成AI练习题
+   * @param {string} mistakeId - 错题ID
+   * @param {Object} options - 生成选项
+   */
+  async generatePracticeFromMistake(mistakeId, options = {}) {
+    const requestId = this.generateRequestId();
+    
+    try {
+      console.log(`[${requestId}] 基于错题生成练习题:`, mistakeId);
+      
+      // 1. 获取错题详情
+      const mistakeResult = await this.getMistakeDetails(mistakeId);
+      if (!mistakeResult.success) {
+        throw new Error('获取错题详情失败');
+      }
+      
+      const mistake = mistakeResult.data;
+      
+      // 2. 调用豆包AI题目生成云函数
+      const result = await this.callCloudFunction('ai-question-generator', {
+        errorQuestion: {
+          content: mistake.question || mistake.content,
+          subject: mistake.subject,
+          difficulty: mistake.difficulty || 3,
+          type: mistake.type || 'single_choice',
+          keyPoints: mistake.keyPoints || [],
+          concepts: mistake.concepts || [],
+          wrongAnswer: mistake.userAnswer,
+          correctAnswer: mistake.correctAnswer,
+          mistakeReason: mistake.mistakeReason
+        },
+        generateCount: options.count || 5,
+        difficulty: options.difficulty || mistake.difficulty,
+        questionTypes: options.types || ['single_choice', 'multiple_choice', 'fill_blank'],
+        requestId: requestId,
+        useDoubao: true // 明确使用豆包AI
+      });
+      
+      if (result.success && result.questions) {
+        // 为生成的题目添加元数据
+        const enhancedQuestions = result.questions.map((q, index) => ({
+          ...q,
+          sourceId: mistakeId,
+          generatedAt: new Date().toISOString(),
+          practiceType: 'ai_generated',
+          relatedConcepts: mistake.concepts || [],
+          targetWeakness: mistake.mistakeReason
+        }));
+        
+        return {
+          success: true,
+          questions: enhancedQuestions,
+          sourceError: mistake,
+          metadata: {
+            generatedCount: enhancedQuestions.length,
+            targetSubject: mistake.subject,
+            difficulty: options.difficulty,
+            processingTime: result.metadata?.processingTime || 0
+          }
+        };
+      }
+      
+      throw new Error('AI生成失败');
+      
+    } catch (error) {
+      console.error(`[${requestId}] 基于错题生成练习题失败:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 批量基于多个错题生成综合练习题
+   */
+  async generateComprehensivePractice(mistakeIds, options = {}) {
+    const requestId = this.generateRequestId();
+    
+    try {
+      console.log(`[${requestId}] 批量生成综合练习题:`, mistakeIds.length);
+      
+      const allQuestions = [];
+      const sourceErrors = [];
+      
+      // 并发生成，但限制并发数
+      const maxConcurrency = 3;
+      for (let i = 0; i < mistakeIds.length; i += maxConcurrency) {
+        const batch = mistakeIds.slice(i, i + maxConcurrency);
+        const batchPromises = batch.map(id => 
+          this.generatePracticeFromMistake(id, {
+            count: options.questionsPerError || 2,
+            difficulty: options.difficulty
+          })
+        );
+        
+        const batchResults = await Promise.all(batchPromises);
+        
+        batchResults.forEach(result => {
+          if (result.success) {
+            allQuestions.push(...result.questions);
+            sourceErrors.push(result.sourceError);
+          }
+        });
+      }
+      
+      return {
+        success: true,
+        questions: allQuestions,
+        sourceErrors: sourceErrors,
+        metadata: {
+          totalQuestions: allQuestions.length,
+          sourceErrorCount: mistakeIds.length,
+          subjects: [...new Set(sourceErrors.map(e => e.subject))]
+        }
+      };
+      
+    } catch (error) {
+      console.error(`[${requestId}] 批量生成练习题失败:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 生成试卷
+   */
+  async generateExamPaper(questions, options = {}) {
+    const requestId = this.generateRequestId();
+    
+    try {
+      console.log(`[${requestId}] 生成试卷:`, questions.length);
+      
+      const paperConfig = {
+        title: options.title || '智能练习试卷',
+        subtitle: options.subtitle || `基于错题生成 - ${new Date().toLocaleDateString()}`,
+        totalScore: options.totalScore || 100,
+        timeLimit: options.timeLimit || 60, // 分钟
+        instructions: options.instructions || [
+          '1. 请仔细阅读题目，选择最佳答案',
+          '2. 填空题请填写准确答案',
+          '3. 注意答题时间，合理分配'
+        ]
+      };
+      
+      // 按题型分组并分配分值
+      const groupedQuestions = this.groupQuestionsByType(questions);
+      const scoredQuestions = this.assignScores(groupedQuestions, paperConfig.totalScore);
+      
+      const examPaper = {
+        id: `exam_${Date.now()}`,
+        config: paperConfig,
+        sections: scoredQuestions,
+        metadata: {
+          questionCount: questions.length,
+          subjects: [...new Set(questions.map(q => q.subject || '未知'))],
+          difficulty: this.calculateAverageDifficulty(questions),
+          generatedAt: new Date().toISOString(),
+          estimatedTime: this.estimateCompletionTime(questions)
+        }
+      };
+      
+      return {
+        success: true,
+        examPaper: examPaper,
+        printData: this.formatForPrint(examPaper)
+      };
+      
+    } catch (error) {
+      console.error(`[${requestId}] 生成试卷失败:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取错题详情（从数据库）
+   */
+  async getMistakeDetails(mistakeId) {
+    try {
+      const db = getApp().globalData.databaseManager;
+      return await db.getMistakeById(mistakeId);
+    } catch (error) {
+      console.error('获取错题详情失败:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * 按题型分组并分配分值
+   */
+  groupQuestionsByType(questions) {
+    const groups = {
+      single_choice: { name: '单选题', questions: [], scorePerQuestion: 5 },
+      multiple_choice: { name: '多选题', questions: [], scorePerQuestion: 8 },
+      fill_blank: { name: '填空题', questions: [], scorePerQuestion: 6 },
+      short_answer: { name: '简答题', questions: [], scorePerQuestion: 10 }
+    };
+    
+    questions.forEach(q => {
+      const type = q.type || 'single_choice';
+      if (groups[type]) {
+        groups[type].questions.push(q);
+      } else {
+        groups.single_choice.questions.push(q);
+      }
+    });
+    
+    return Object.entries(groups)
+      .filter(([type, group]) => group.questions.length > 0)
+      .map(([type, group]) => ({
+        type,
+        name: group.name,
+        questions: group.questions,
+        scorePerQuestion: group.scorePerQuestion,
+        totalScore: group.questions.length * group.scorePerQuestion
+      }));
+  }
+
+  /**
+   * 分配题目分值
+   */
+  assignScores(sections, totalScore) {
+    const totalQuestions = sections.reduce((sum, section) => sum + section.questions.length, 0);
+    
+    if (totalQuestions === 0) return sections;
+    
+    let remainingScore = totalScore;
+    
+    return sections.map((section, index) => {
+      if (index === sections.length - 1) {
+        // 最后一个部分分配剩余分数
+        section.totalScore = remainingScore;
+        section.scorePerQuestion = Math.round(remainingScore / section.questions.length);
+      } else {
+        const sectionScore = Math.round((section.questions.length / totalQuestions) * totalScore);
+        section.totalScore = sectionScore;
+        section.scorePerQuestion = Math.round(sectionScore / section.questions.length);
+        remainingScore -= sectionScore;
+      }
+      
+      return section;
+    });
+  }
+
+  /**
+   * 计算平均难度
+   */
+  calculateAverageDifficulty(questions) {
+    if (questions.length === 0) return 3;
+    
+    const totalDifficulty = questions.reduce((sum, q) => sum + (q.difficulty || 3), 0);
+    return Math.round(totalDifficulty / questions.length * 10) / 10;
+  }
+
+  /**
+   * 估算完成时间
+   */
+  estimateCompletionTime(questions) {
+    const timePerType = {
+      single_choice: 1.5,    // 1.5分钟/题
+      multiple_choice: 2.5,  // 2.5分钟/题
+      fill_blank: 2,         // 2分钟/题
+      short_answer: 5        // 5分钟/题
+    };
+    
+    const totalMinutes = questions.reduce((sum, q) => {
+      const timePerQuestion = timePerType[q.type] || 2;
+      return sum + timePerQuestion;
+    }, 0);
+    
+    return Math.round(totalMinutes);
+  }
+
+  /**
+   * 格式化试卷用于打印
+   */
+  formatForPrint(examPaper) {
+    return {
+      header: {
+        title: examPaper.config.title,
+        subtitle: examPaper.config.subtitle,
+        info: [
+          `总分：${examPaper.config.totalScore}分`,
+          `时间：${examPaper.config.timeLimit}分钟`,
+          `题目数：${examPaper.metadata.questionCount}道`
+        ]
+      },
+      instructions: examPaper.config.instructions,
+      sections: examPaper.sections.map(section => ({
+        title: `${section.name}（共${section.questions.length}题，每题${section.scorePerQuestion}分）`,
+        questions: section.questions.map((q, index) => ({
+          number: index + 1,
+          content: q.content,
+          options: q.options || [],
+          type: q.type,
+          score: section.scorePerQuestion
+        }))
+      })),
+      answerSheet: this.generateAnswerSheet(examPaper)
+    };
+  }
+
+  /**
+   * 生成答题卡
+   */
+  generateAnswerSheet(examPaper) {
+    const answers = [];
+    let questionNumber = 1;
+    
+    examPaper.sections.forEach(section => {
+      section.questions.forEach(q => {
+        answers.push({
+          number: questionNumber++,
+          type: q.type,
+          correctAnswer: q.correctAnswer || '',
+          explanation: q.explanation || ''
+        });
+      });
+    });
+    
+    return answers;
+  }
+
+  /**
+   * 测试豆包AI题目生成服务
+   */
+  async testQuestionGeneration() {
+    try {
+      console.log('开始测试豆包AI题目生成服务...');
+      
+      const result = await this.callCloudFunction('ai-question-generator', {
+        test: true
+      });
+      
+      console.log('豆包AI题目生成测试结果:', result);
+      return result;
+      
+    } catch (error) {
+      console.error('豆包AI题目生成测试失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 生成练习报告
+   */
+  async generatePracticeReport(practiceData) {
+    const { questions, userAnswers, timeSpent, startTime, endTime } = practiceData;
+    
+    let correctCount = 0;
+    let totalScore = 0;
+    let maxScore = 0;
+    
+    const detailedResults = questions.map((question, index) => {
+      const userAnswer = userAnswers[index];
+      const isCorrect = this.checkAnswer(question, userAnswer);
+      const score = isCorrect ? (question.score || 5) : 0;
+      
+      if (isCorrect) correctCount++;
+      totalScore += score;
+      maxScore += (question.score || 5);
+      
+      return {
+        questionId: question.id,
+        question: question.content,
+        userAnswer: userAnswer,
+        correctAnswer: question.correctAnswer,
+        isCorrect: isCorrect,
+        score: score,
+        explanation: question.explanation,
+        knowledgePoints: question.knowledgePoints || []
+      };
+    });
+    
+    const accuracy = questions.length > 0 ? Math.round((correctCount / questions.length) * 100) : 0;
+    const scorePercentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+    
+    return {
+      summary: {
+        totalQuestions: questions.length,
+        correctCount: correctCount,
+        wrongCount: questions.length - correctCount,
+        accuracy: accuracy,
+        totalScore: totalScore,
+        maxScore: maxScore,
+        scorePercentage: scorePercentage,
+        timeSpent: timeSpent,
+        averageTimePerQuestion: questions.length > 0 ? Math.round(timeSpent / questions.length) : 0
+      },
+      detailedResults: detailedResults,
+      weaknessAnalysis: this.analyzeWeaknesses(detailedResults),
+      recommendations: this.generateRecommendations(detailedResults),
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  /**
+   * 检查答案是否正确
+   */
+  checkAnswer(question, userAnswer) {
+    if (!userAnswer || !question.correctAnswer) return false;
+    
+    const normalizeAnswer = (answer) => {
+      return String(answer).trim().toLowerCase();
+    };
+    
+    return normalizeAnswer(userAnswer) === normalizeAnswer(question.correctAnswer);
+  }
+
+  /**
+   * 分析薄弱环节
+   */
+  analyzeWeaknesses(results) {
+    const wrongAnswers = results.filter(r => !r.isCorrect);
+    const knowledgePointErrors = {};
+    
+    wrongAnswers.forEach(result => {
+      result.knowledgePoints.forEach(point => {
+        knowledgePointErrors[point] = (knowledgePointErrors[point] || 0) + 1;
+      });
+    });
+    
+    return Object.entries(knowledgePointErrors)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([point, count]) => ({
+        knowledgePoint: point,
+        errorCount: count,
+        errorRate: Math.round((count / wrongAnswers.length) * 100)
+      }));
+  }
+
+  /**
+   * 生成学习建议
+   */
+  generateRecommendations(results) {
+    const accuracy = results.filter(r => r.isCorrect).length / results.length;
+    const recommendations = [];
+    
+    if (accuracy < 0.6) {
+      recommendations.push('建议重新学习相关基础知识点');
+      recommendations.push('可以先从简单题目开始练习');
+    } else if (accuracy < 0.8) {
+      recommendations.push('基础掌握较好，建议加强易错知识点的练习');
+      recommendations.push('可以尝试一些中等难度的题目');
+    } else {
+      recommendations.push('掌握情况良好，建议挑战更高难度的题目');
+      recommendations.push('可以尝试综合性较强的题目');
+    }
+    
+    return recommendations;
+  }
 }
 
 // 创建并导出AI服务实例
 const aiService = new AIService();
 export default aiService;
+
+
+
 
 
 

@@ -2,12 +2,9 @@
   "navigationBarTitleText": "AI 智能练习",
   "usingComponents": {
     "van-progress": "@vant/weapp/progress/index",
-    "van-radio-group": "@vant/weapp/radio-group/index",
-    "van-radio": "@vant/weapp/radio/index",
-    "van-checkbox-group": "@vant/weapp/checkbox-group/index",
-    "van-checkbox": "@vant/weapp/checkbox/index",
-    "van-button": "@vant/weapp/button/index",
     "van-icon": "@vant/weapp/icon/index",
-    "van-dialog": "@vant/weapp/dialog/index"
+    "van-dialog": "@vant/weapp/dialog/index",
+    "van-field": "@vant/weapp/field/index",
+    "van-loading": "@vant/weapp/loading/index"
   }
 } 

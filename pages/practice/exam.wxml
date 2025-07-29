@@ -1,0 +1,176 @@
+<view class="exam-container">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <text class="page-title">AI智能练习</text>
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading-card card">
+    <view class="loading-content">
+      <van-loading type="spinner" size="24px" color="#4A90E2">正在生成智能试卷...</van-loading>
+      <text class="loading-text">AI正在根据您的错题生成个性化练习</text>
+    </view>
+  </view>
+
+  <!-- 试卷内容 -->
+  <view wx:elif="{{examPaper}}" class="exam-content {{printMode ? 'print-mode' : ''}}">
+    
+    <!-- 试卷信息卡片 -->
+    <view class="exam-info-card card">
+      <view class="card-header">
+        <view class="card-title">
+          <image class="card-icon" src="/images/icons/white/brain.svg"></image>
+          {{examPaper.config.title}}
+        </view>
+        <text class="card-subtitle">{{examPaper.config.subtitle}}</text>
+      </view>
+      
+      <view class="exam-stats">
+        <view class="stat-item">
+          <text class="stat-value">{{examPaper.config.totalScore}}</text>
+          <text class="stat-label">总分</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-value">{{examPaper.config.timeLimit}}</text>
+          <text class="stat-label">分钟</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-value">{{examPaper.metadata.questionCount}}</text>
+          <text class="stat-label">题目</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 操作按钮卡片 -->
+    <view wx:if="{{!printMode}}" class="action-card card">
+      <view class="action-buttons">
+        <view class="action-btn-item" bind:tap="toggleAnswers">
+          <view class="action-btn-icon {{showAnswers ? 'active' : ''}}">👁</view>
+          <text class="action-btn-text">{{showAnswers ? '隐藏答案' : '显示答案'}}</text>
+        </view>
+        
+        <view class="action-btn-item" bind:tap="enterPrintMode">
+          <view class="action-btn-icon">📄</view>
+          <text class="action-btn-text">打印试卷</text>
+        </view>
+        
+        <view class="action-btn-item primary" bind:tap="startAnswering">
+          <view class="action-btn-icon">✏️</view>
+          <text class="action-btn-text">开始答题</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 试卷主体 -->
+    <view class="exam-body">
+      <view wx:for="{{examPaper.sections}}" wx:key="type" class="section-card card">
+        <view class="section-header">
+          <view class="section-title">{{item.name}}</view>
+          <view class="section-info">
+            共{{item.questions.length}}题，每题{{item.scorePerQuestion}}分
+          </view>
+        </view>
+
+        <view class="questions-list">
+          <view wx:for="{{item.questions}}" wx:for-item="question" wx:for-index="qIndex" wx:key="id" class="question-item">
+            
+            <!-- 题目标题 -->
+            <view class="question-header">
+              <view class="question-number">{{qIndex + 1}}</view>
+              <view class="question-content">
+                <text class="question-text">{{question.content}}</text>
+                <text class="question-score">（{{item.scorePerQuestion}}分）</text>
+              </view>
+            </view>
+
+            <!-- 选择题选项 -->
+            <view wx:if="{{question.options}}" class="question-options">
+              <view wx:for="{{question.options}}" wx:for-item="option" wx:key="index" class="option-item {{showAnswers && option.charAt(0) === question.correctAnswer ? 'correct' : ''}}">
+                <text class="option-text">{{option}}</text>
+                <view wx:if="{{showAnswers && option.charAt(0) === question.correctAnswer}}" class="correct-mark">✓</view>
+              </view>
+            </view>
+
+            <!-- 填空题答题区 -->
+            <view wx:elif="{{question.type === 'fill_blank'}}" class="answer-area">
+              <view class="answer-input-line"></view>
+              <view wx:if="{{showAnswers}}" class="correct-answer">
+                <text class="answer-label">参考答案：</text>
+                <text class="answer-text">{{question.correctAnswer}}</text>
+              </view>
+            </view>
+
+            <!-- 简答题答题区 -->
+            <view wx:elif="{{question.type === 'short_answer'}}" class="answer-area large">
+              <view class="answer-input-area">
+                <view class="answer-line" wx:for="{{[1,2,3,4,5]}}" wx:key="*this"></view>
+              </view>
+              <view wx:if="{{showAnswers}}" class="correct-answer">
+                <text class="answer-label">参考答案：</text>
+                <text class="answer-text">{{question.correctAnswer}}</text>
+              </view>
+            </view>
+
+            <!-- 题目解析 -->
+            <view wx:if="{{showAnswers && question.explanation}}" class="question-explanation">
+              <view class="explanation-header">
+                <text class="explanation-icon">💡</text>
+                <text class="explanation-title">解析</text>
+              </view>
+              <text class="explanation-content">{{question.explanation}}</text>
+            </view>
+
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 打印模式操作 -->
+    <view wx:if="{{printMode}}" class="print-actions card">
+      <van-button 
+        type="default" 
+        size="large" 
+        bind:click="exitPrintMode"
+        custom-class="print-btn"
+      >
+        返回
+      </van-button>
+      
+      <van-button 
+        type="primary" 
+        size="large" 
+        bind:click="printExam"
+        custom-class="print-btn"
+      >
+        保存到相册
+      </van-button>
+    </view>
+
+  </view>
+
+  <!-- 错误状态 -->
+  <view wx:else class="error-card card">
+    <view class="error-content">
+      <image class="error-icon" src="/images/empty-state-practice.svg" mode="widthFix"></image>
+      <text class="error-title">试卷生成失败</text>
+      <text class="error-desc">请检查网络连接或重新尝试</text>
+      <van-button 
+        type="primary" 
+        size="large" 
+        bind:click="generateSampleExam"
+        custom-class="retry-btn"
+      >
+        重新生成
+      </van-button>
+    </view>
+  </view>
+
+  <!-- 隐藏的canvas用于生成图片 -->
+  <canvas 
+    wx:if="{{printMode}}" 
+    id="examCanvas" 
+    type="2d" 
+    class="hidden-canvas"
+  ></canvas>
+
+</view>

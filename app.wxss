@@ -488,4 +488,13 @@ view {
 
 .z-50 {
   z-index: 50;
-} 
+}
+
+/* 移除或更新失效的字体链接 */
+@font-face {
+  font-family: 'iconfont';
+  /* 使用本地字体文件或更新的CDN链接 */
+  src: url('https://at.alicdn.com/t/c/font_2553510_kfwma2yq1rs.woff2?t=1694918397022') format('woff2'),
+       url('/fonts/iconfont.woff') format('woff'); /* 备用本地字体 */
+  font-display: swap; /* 优化字体加载 */
+}

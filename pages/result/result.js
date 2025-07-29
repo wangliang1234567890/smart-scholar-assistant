@@ -332,5 +332,71 @@ Page({
    */
   goBack() {
     wx.navigateBack();
+  },
+
+  /**
+   * 保存到错题本 - 修复版
+   */
+  async saveToMistakes() {
+    if (this.data.isSaving) return;
+    
+    this.setData({ isSaving: true });
+    
+    try {
+      wx.showLoading({
+        title: '正在保存...',
+        mask: true
+      });
+      
+      // 构建错题数据
+      const mistakeData = {
+        question: this.data.ocrResult.text,
+        subject: this.data.ocrResult.subject || '未知',
+        difficulty: this.data.ocrResult.difficulty || 3,
+        myAnswer: '', // 用户可以后续编辑
+        correctAnswer: '', // 用户可以后续编辑
+        analysis: this.data.ocrResult.analysis || '',
+        imageUrl: this.data.originalImagePath,
+        tags: [],
+        source: 'camera_result',
+        questionType: this.data.ocrResult.questionType || 'unknown',
+        confidence: this.data.ocrResult.confidence || 0
+      };
+      
+      // 🔧 修复：使用正确的数据库管理器
+      const DatabaseManager = require('../../utils/database');
+      const result = await DatabaseManager.saveMistake(mistakeData);
+      
+      wx.hideLoading();
+      
+      if (result.success) {
+        wx.showModal({
+          title: '保存成功',
+          content: '题目已保存到错题本',
+          showCancel: false,
+          success: () => {
+            // 跳转到错题详情页面
+            wx.redirectTo({
+              url: `/pages/mistakes/detail?id=${result.data._id}`
+            });
+          }
+        });
+      } else {
+        throw new Error(result.message || '保存失败');
+      }
+      
+    } catch (error) {
+      wx.hideLoading();
+      console.error('保存到错题本失败:', error);
+      
+      wx.showModal({
+        title: '保存失败',
+        content: `错误信息: ${error.message}`,
+        showCancel: false
+      });
+    } finally {
+      this.setData({ isSaving: false });
+    }
   }
 });
+

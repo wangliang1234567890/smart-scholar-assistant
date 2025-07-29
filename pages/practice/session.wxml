@@ -121,181 +121,150 @@
 
   <!-- 正常答题页面 -->
   <view wx:elif="{{!isLoading}}" class="practice-container">
-    <!-- 顶部进度条和信息 -->
-    <view class="progress-section">
-      <view class="progress-header">
-      <view class="progress-info">
-          <view class="question-number">
-            <text class="current-number">{{currentQuestionIndex + 1}}</text>
-            <text class="total-number">/{{questions.length}}</text>
+    <!-- 加载状态 -->
+    <view wx:if="{{loading}}" class="loading-container">
+      <van-loading type="spinner" size="32px" color="#4F46E5">加载中...</van-loading>
+    </view>
+
+    <!-- 练习内容 -->
+    <view wx:else class="practice-content">
+      <!-- 顶部进度区域 -->
+      <view class="progress-section">
+        <view class="progress-header">
+          <view class="progress-info">
+            <view class="question-number">
+              <text class="current-number">{{currentIndex + 1}}</text>
+              <text class="total-number">/{{totalQuestions}}</text>
+            </view>
+            <view class="subject-badge">{{currentQuestion.subject}}</view>
           </view>
-          <view class="subject-badge">{{practiceOptions.subject || '数学'}}</view>
+          <view class="header-actions">
+            <view class="exit-button" bindtap="showExitDialog">
+              <van-icon name="cross" size="16px" color="#6B7280" />
+            </view>
+          </view>
         </view>
-        <view class="header-actions">
-          <view class="exit-button" bind:tap="showExitConfirm">
-            <van-icon name="cross" size="20px" color="#6B7280" />
+        
+        <!-- 进度条 -->
+        <view class="progress-bar-container">
+          <van-progress 
+            percentage="{{(currentIndex + 1) / totalQuestions * 100}}" 
+            stroke-width="6" 
+            color="#4F46E5"
+            track-color="#F3F4F6"
+          />
+          <view class="progress-label">已完成 {{currentIndex + 1}}/{{totalQuestions}} 题</view>
+        </view>
+      </view>
+
+      <!-- 题目卡片 -->
+      <view class="question-section">
+        <!-- 题目头部信息 -->
+        <view class="question-header">
+          <view class="question-type-badge {{currentQuestion.type || 'single_choice'}}">
+            <block wx:if="{{currentQuestion.type === 'choice' || currentQuestion.type === 'single_choice'}}">单选题</block>
+            <block wx:elif="{{currentQuestion.type === 'multiple_choice'}}">多选题</block>
+            <block wx:elif="{{currentQuestion.type === 'input' || currentQuestion.type === 'fill_blank'}}">填空题</block>
+            <block wx:elif="{{currentQuestion.type === 'short_answer' || currentQuestion.type === 'solve'}}">解答题</block>
+            <block wx:else>选择题</block>
+          </view>
+        </view>
+
+        <!-- 题目内容 -->
+        <view class="question-content">
+          <view class="question-title">{{currentQuestion.question}}</view>
+          <view wx:if="{{currentQuestion.stem}}" class="question-stem">{{currentQuestion.stem}}</view>
+        </view>
+
+        <!-- 题目提示（如果有） -->
+        <view wx:if="{{currentQuestion.tip}}" class="question-tip">
+          <van-icon name="info" size="16px" color="#F59E0B" />
+          <text class="tip-text">{{currentQuestion.tip}}</text>
+        </view>
+      </view>
+
+      <!-- 选择题选项 -->
+      <view wx:if="{{(currentQuestion.type === 'choice' || currentQuestion.type === 'single_choice' || currentQuestion.type === 'multiple_choice') && currentQuestion.options && currentQuestion.options.length > 0}}" class="options-section">
+        <view 
+          wx:for="{{currentQuestion.options}}" 
+          wx:key="index"
+          class="option-wrapper {{userAnswer === index ? 'active' : ''}}"
+          data-index="{{index}}"
+          data-answer="{{item}}"
+          bindtap="onSelectAnswer"
+        >
+          <view class="option-indicator">
+            <view class="radio-circle {{userAnswer === index ? 'checked' : ''}}">
+              <view wx:if="{{userAnswer === index}}" class="radio-dot"></view>
+            </view>
+          </view>
+          <view class="option-content">
+            <text class="option-label">{{String.fromCharCode(65 + index)}}</text>
+            <text class="option-text">{{item}}</text>
           </view>
         </view>
       </view>
-      
-      <view class="progress-bar-container">
-        <van-progress 
-          percentage="{{progress}}" 
-          stroke-width="8" 
-          color="#4F46E5" 
-          track-color="#E5E7EB" 
-          pivot-text="" 
-          show-pivot="{{false}}"
+
+      <!-- 填空题输入 -->
+      <view wx:elif="{{currentQuestion.type === 'input' || currentQuestion.type === 'fill_blank'}}" class="fill-blank-container">
+        <van-field
+          value="{{userAnswerText}}"
+          placeholder="💡 请在此输入答案"
+          type="textarea"
+          autosize="{{true}}"
+          border="{{false}}"
+          class="fill-blank-input"
+          bind:change="onAnswerInput"
         />
-        <view class="progress-label">
-          完成度 {{progressPercent}}%
+        <view class="input-footer">
+          <text class="char-count">{{userAnswerText ? userAnswerText.length : 0}}/200字</text>
         </view>
       </view>
-    </view>
 
-    <!-- 题目区域 -->
-    <view class="question-section" wx:if="{{currentQuestion}}">
-      <view class="question-header">
-        <view class="question-type-badge {{currentQuestion.type}}">
-          {{questionTypeMap[currentQuestion.type]}}
+      <!-- 解答题输入 -->
+      <view wx:elif="{{currentQuestion.type === 'solve' || currentQuestion.type === 'short_answer' || (currentQuestion.type === 'input' && currentQuestion.question.length > 100)}}" class="solve-container">
+        <van-field
+          value="{{userAnswerText}}"
+          placeholder="📝 请在此详细写出解答过程..."
+          type="textarea"
+          autosize="{{true}}"
+          border="{{false}}"
+          class="solve-input"
+          bind:change="onAnswerInput"
+        />
+        <view class="input-footer">
+          <text class="char-count">{{userAnswerText ? userAnswerText.length : 0}}/500字</text>
         </view>
-        <view wx:if="{{currentQuestion.difficulty}}" class="difficulty-badge">
-          难度：{{currentQuestion.difficultyText}}
+      </view>
+
+      <!-- 知识点提示 -->
+      <view wx:if="{{currentQuestion.knowledgePoints && currentQuestion.knowledgePoints.length > 0}}" class="knowledge-points">
+        <view class="knowledge-header">
+          <van-icon name="star" size="16px" color="#F59E0B" />
+          <text class="knowledge-title">相关知识点</text>
+        </view>
+        <view class="knowledge-tags">
+          <text wx:for="{{currentQuestion.knowledgePoints}}" wx:key="*this" class="knowledge-tag">{{item}}</text>
         </view>
       </view>
-      
-      <view class="question-content">
-      <view class="question-title">{{currentQuestion.title}}</view>
-        <view wx:if="{{currentQuestion.stem}}" class="question-stem">{{currentQuestion.stem}}</view>
-      </view>
-      
-      <!-- 题目提示 -->
-      <view wx:if="{{currentQuestion.type === 'multiple_choice'}}" class="question-tip">
-        <van-icon name="info-o" size="16px" color="#6B7280" />
-        <text class="tip-text">可选择多个答案</text>
-      </view>
-    </view>
-    
-    <!-- 选项区域 -->
-    <view class="options-section">
-      <!-- 单选题 -->
-      <block wx:if="{{currentQuestion.type === 'single_choice'}}">
+
+      <!-- 底部导航按钮 -->
+      <view class="navigation-section">
         <view 
-          wx:for="{{currentQuestion.options}}" 
-          wx:key="value" 
-          class="option-wrapper single-choice {{item.active ? 'active' : ''}}" 
-          data-value="{{item.value}}" 
-          bind:tap="onSingleSelect"
+          wx:if="{{currentIndex > 0}}"
+          class="nav-btn prev-btn"
+          bindtap="prevQuestion"
         >
-          <view class="option-indicator">
-            <view class="radio-circle {{item.active ? 'checked' : ''}}">
-              <view wx:if="{{item.active}}" class="radio-dot"></view>
-            </view>
-          </view>
-          <view class="option-content">
-            <view class="option-label">{{item.value}}.</view>
-            <view class="option-text">{{item.label}}</view>
-          </view>
+          上一题
         </view>
-      </block>
-
-      <!-- 多选题 -->
-      <block wx:if="{{currentQuestion.type === 'multiple_choice'}}">
+        
         <view 
-          wx:for="{{currentQuestion.options}}" 
-          wx:key="value" 
-          class="option-wrapper multiple-choice {{item.active ? 'active' : ''}}" 
-          data-value="{{item.value}}" 
-          bind:tap="onMultiSelect"
+          class="nav-btn next-btn"
+          bindtap="nextQuestion"
         >
-          <view class="option-indicator">
-            <view class="checkbox-square {{item.active ? 'checked' : ''}}">
-              <van-icon wx:if="{{item.active}}" name="success" size="12px" color="white" />
-            </view>
-          </view>
-          <view class="option-content">
-            <view class="option-label">{{item.value}}.</view>
-            <view class="option-text">{{item.label}}</view>
-          </view>
-        </view>
-      </block>
-
-      <!-- 填空题 -->
-      <block wx:if="{{currentQuestion.type === 'fill_blank'}}">
-        <view class="fill-blank-container">
-          <textarea
-            class="fill-blank-input"
-            placeholder="请在此输入您的答案..."
-            value="{{userAnswers[currentQuestion.id] || ''}}"
-            bind:input="onFillBlankInput"
-            auto-height
-            maxlength="200"
-          />
-          <view class="input-footer">
-            <text class="char-count">{{fillBlankCharCount}}/200</text>
-          </view>
-        </view>
-      </block>
-
-      <!-- 解答题 -->
-      <block wx:if="{{currentQuestion.type === 'solve'}}">
-        <view class="solve-container">
-          <textarea
-            class="solve-input"
-            placeholder="请写出详细的解题过程和答案..."
-            value="{{userAnswers[currentQuestion.id] || ''}}"
-            bind:input="onSolveInput"
-            auto-height
-            maxlength="500"
-          />
-          <view class="input-footer">
-            <text class="char-count">{{solveCharCount}}/500</text>
-          </view>
-        </view>
-      </block>
-    </view>
-
-    <!-- 知识点提示 -->
-    <view wx:if="{{currentQuestion.knowledgePoints && currentQuestion.knowledgePoints.length > 0}}" class="knowledge-points">
-      <view class="knowledge-header">
-        <van-icon name="star-o" size="16px" color="#F59E0B" />
-        <text class="knowledge-title">涉及知识点</text>
-      </view>
-      <view class="knowledge-tags">
-        <view 
-          wx:for="{{currentQuestion.knowledgePoints}}" 
-          wx:key="*this"
-          class="knowledge-tag"
-        >
-          {{item}}
+          {{currentIndex < totalQuestions - 1 ? '下一题' : '完成答题'}}
         </view>
       </view>
-    </view>
-
-    <!-- 导航按钮 -->
-    <view class="navigation-section">
-      <van-button 
-        round 
-        type="default" 
-        size="large"
-        class="nav-btn prev-btn" 
-        bind:tap="prevQuestion" 
-        disabled="{{currentQuestionIndex === 0}}"
-      >
-        <van-icon name="arrow-left" size="16px" />
-        上一题
-      </van-button>
-      
-      <van-button 
-        round 
-        type="primary" 
-        size="large"
-        class="nav-btn next-btn" 
-        bind:tap="nextQuestion"
-      >
-        {{isLastQuestion ? '提交答案' : '下一题'}}
-        <van-icon name="{{isLastQuestion ? 'completed' : 'arrow'}}" size="16px" />
-      </van-button>
     </view>
   </view>
 
@@ -322,7 +291,7 @@
   <van-dialog
     show="{{showSubmitDialog}}"
     title="提交答案"
-    message="{{submitMessage}}"
+    message="{{submitMessage ? submitMessage : '确定要提交答案吗？'}}"
     show-cancel-button
     confirm-button-text="确认提交"
     cancel-button-text="继续答题"

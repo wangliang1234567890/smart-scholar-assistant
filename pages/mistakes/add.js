@@ -3,8 +3,9 @@ import {
   SUBJECTS,
   DIFFICULTY_LABELS
 } from '../../utils/constants';
-import DatabaseManager from '../../utils/database';
+import DatabaseManager from '../../utils/database'; // 使用现有的数据库模块
 import LocalDB from '../../utils/local-db';
+// 移除错误引用：import databaseManager from '../../utils/database-manager.js';
 
 Page({
 
@@ -55,24 +56,46 @@ Page({
     }
   },
 
-  loadMistakeData(id) {
-    // TODO: 调用真实API获取错题数据
-    wx.showLoading({ title: '加载中...' });
-    setTimeout(() => {
-      const mockData = { // 模拟返回的数据
-        question: `这是题目ID为 ${id} 的模拟错题。`,
-        answer: '这是模拟的答案。',
-        analysis: '这是模拟的解析。',
-        subject: '数学',
-        difficulty: 2,
-        imageUrl: 'https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2c13b73cde894371a39a046c82334888~tplv-k3u1fbpfcp-jj-mark:0:0:0:0:q75.image'
-      };
-      this.setData({
-        formData: mockData,
-        fileList: mockData.imageUrl ? [{ url: mockData.imageUrl }] : []
-      });
+  async loadMistakeData(mistakeId) {
+    try {
+      wx.showLoading({ title: '加载中...', mask: true });
+      
+      const result = await DatabaseManager.getMistakeById(mistakeId);
+      
+      if (result.success) {
+        const mistake = result.data;
+        this.setData({
+          formData: {
+            question: mistake.question || '',
+            answer: mistake.answer || '',
+            analysis: mistake.analysis || '',
+            subject: mistake.subject || '数学',
+            difficulty: mistake.difficulty || 2,
+            imageUrl: mistake.imageUrl || ''
+          }
+        });
+        
+        // 如果有图片，更新fileList
+        if (mistake.imageUrl) {
+          this.setData({
+            fileList: [{
+              url: mistake.imageUrl,
+              name: '题目图片'
+            }]
+          });
+        }
+      } else {
+        throw new Error(result.error || '加载失败');
+      }
+      
       wx.hideLoading();
-    }, 500);
+      
+    } catch (error) {
+      wx.hideLoading();
+      console.error('加载错题数据失败:', error);
+      wx.showToast({ title: '加载失败', icon: 'none' });
+      setTimeout(() => wx.navigateBack(), 1500);
+    }
   },
 
   onFieldChange(e) {
@@ -83,25 +106,35 @@ Page({
   },
 
   // 图片上传
-  afterRead(event) {
-    const { file } = event.detail;
-    // TODO: 实现真实的上传逻辑
-    wx.showLoading({ title: '上传中...' });
-    setTimeout(() => {
-      wx.hideLoading();
-      // 模拟上传成功
-      const mockUrl = file.url; // 暂时用本地路径代替
-      this.setData({ 
-        'formData.imageUrl': mockUrl,
-        fileList: [{ url: mockUrl }]
-      });
-    }, 1000);
+  onImageUpload() {
+    wx.chooseImage({
+      count: 1,
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
+      success: (res) => {
+        const tempFilePath = res.tempFilePaths[0];
+        
+        // 更新fileList显示
+        this.setData({
+          fileList: [{
+            url: tempFilePath,
+            name: '题目图片'
+          }],
+          'formData.imageUrl': tempFilePath
+        });
+      },
+      fail: (error) => {
+        console.error('选择图片失败:', error);
+        wx.showToast({ title: '选择图片失败', icon: 'none' });
+      }
+    });
   },
 
-  deleteImage() {
+  // 删除图片
+  onImageDelete() {
     this.setData({
-      'formData.imageUrl': '',
-      fileList: []
+      fileList: [],
+      'formData.imageUrl': ''
     });
   },
 
@@ -188,5 +221,99 @@ Page({
    */
   onShareAppMessage() {
 
+  },
+
+  // 增强：保存错题到数据库
+  async saveMistake() {
+    const { formData } = this.data;
+    
+    // 验证必填字段
+    if (!formData.question.trim()) {
+      wx.showToast({
+        title: '请输入题目内容',
+        icon: 'none'
+      });
+      return;
+    }
+    
+    wx.showLoading({ title: '保存中...' });
+    
+    try {
+      // 使用现有的DatabaseManager保存
+      const result = await DatabaseManager.saveMistake({
+        question: formData.question,
+        subject: formData.subject,
+        difficulty: formData.difficulty,
+        myAnswer: formData.myAnswer || formData.answer, // 兼容现有字段
+        correctAnswer: formData.correctAnswer || formData.answer,
+        analysis: formData.analysis,
+        imageUrl: formData.imageUrl,
+        tags: formData.tags || [],
+        source: 'manual'
+      });
+      
+      if (result.success) {
+        // 本地持久化（保持现有逻辑）
+        LocalDB.saveMistake({ _id: result.data._id, ...formData });
+        
+        wx.hideLoading();
+        wx.showToast({
+          title: '保存成功',
+          icon: 'success'
+        });
+        
+        // 返回错题本页面
+        setTimeout(() => {
+          wx.navigateBack();
+        }, 1500);
+      } else {
+        throw new Error(result.message || '保存失败');
+      }
+      
+    } catch (error) {
+      wx.hideLoading();
+      console.error('保存错题失败:', error);
+      wx.showToast({
+        title: '保存失败，请重试',
+        icon: 'error'
+      });
+    }
+  },
+
+  // 添加AI辅助功能
+  async getAIHelp() {
+    const { question } = this.data.formData;
+    
+    if (!question.trim()) {
+      wx.showToast({ title: '请先输入题目', icon: 'none' });
+      return;
+    }
+    
+    try {
+      wx.showLoading({ title: 'AI分析中...', mask: true });
+      
+      // 调用AI服务获取解析
+      const app = getApp();
+      if (app.globalData.aiService) {
+        const result = await app.globalData.aiService.analyzeQuestion(question);
+        
+        if (result.success) {
+          this.setData({
+            'formData.analysis': result.analysis,
+            'formData.subject': result.subject || this.data.formData.subject,
+            'formData.difficulty': result.difficulty || this.data.formData.difficulty
+          });
+          
+          wx.showToast({ title: 'AI分析完成', icon: 'success' });
+        }
+      }
+      
+      wx.hideLoading();
+      
+    } catch (error) {
+      wx.hideLoading();
+      console.error('AI分析失败:', error);
+      wx.showToast({ title: 'AI分析失败', icon: 'none' });
+    }
   }
 })

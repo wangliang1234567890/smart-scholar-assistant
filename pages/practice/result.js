@@ -34,14 +34,36 @@ Page({
 
   fetchReport() {
     this.setData({ isLoading: true });
-    // 模拟网络请求获取报告详情
-    setTimeout(() => {
-      const mockReport = this.generateMockReport(this.data.reportId);
-      this.setData({
-        report: mockReport,
-        isLoading: false
-      });
-    }, 1200);
+    
+    try {
+      console.log('加载练习报告，报告ID:', this.data.reportId);
+      
+      // 目前没有真实的报告数据，显示简单的完成提示
+      setTimeout(() => {
+        this.setData({
+          report: {
+            id: this.data.reportId,
+            accuracy: 0,
+            score: 0,
+            correctCount: 0,
+            incorrectCount: 0,
+            totalCount: 0,
+            summaryText: '练习已完成',
+            questions: []
+          },
+          isLoading: false
+        });
+        
+        wx.showToast({
+          title: '练习已完成',
+          icon: 'success',
+          duration: 2000
+        });
+      }, 500);
+    } catch (error) {
+      console.error('加载练习报告失败:', error);
+      this.setData({ isLoading: false });
+    }
   },
 
   reviewMistakes() {
@@ -78,39 +100,7 @@ Page({
     return total;
   },
 
-  // --- Mock数据生成 ---
-  generateMockReport(reportId) {
-    // 实际应用中，这里会用 reportId 去请求后端数据
-    // 我们这里简单模拟一个固定的结果
-    const questions = [
-      { id: 'q1', title: '计算：15 + 27 = ?', isCorrect: true },
-      { id: 'q2', title: '一个正方形有几条边？', isCorrect: true },
-      { id: 'q3', title: '以下哪些是偶数？', isCorrect: false },
-      { id: 'q4', title: '9 x 8 = ?', isCorrect: true },
-      { id: 'q5', title: '100 - 55 = ?', isCorrect: false },
-    ];
-    
-    const correctCount = questions.filter(q => q.isCorrect).length;
-    const totalCount = questions.length;
-    const accuracy = totalCount > 0 ? (correctCount / totalCount) * 100 : 0;
-    
-    let summaryText = '';
-    if (accuracy === 100) summaryText = '太棒了，全部正确！';
-    else if (accuracy >= 80) summaryText = '表现不错，继续努力！';
-    else if (accuracy >= 60) summaryText = '及格了，再接再厉！';
-    else summaryText = '要加油哦，错题需要重点复习！';
 
-    return {
-      id: reportId,
-      accuracy: accuracy,
-      score: Math.round(accuracy),
-      correctCount: correctCount,
-      incorrectCount: totalCount - correctCount,
-      totalCount: totalCount,
-      summaryText: summaryText,
-      questions: questions,
-    };
-  },
 
   /**
    * 生命周期函数--监听页面初次渲染完成

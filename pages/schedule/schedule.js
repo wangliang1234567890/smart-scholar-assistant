@@ -54,7 +54,7 @@ Page({
     });
     
     this.generateCurrentWeek(today);
-    this.initMockData();
+    this.loadScheduleData();
   },
 
   // 生成当前周的日期数据
@@ -97,68 +97,33 @@ Page({
     });
   },
 
-  // 初始化模拟数据
-  initMockData() {
-    const today = new Date();
-    const mockCourses = [
-      {
-        id: 1,
-        name: '数学辅导',
-        subject: 'math',
-        subjectShort: '数',
-        teacher: '张老师',
-        teacherAvatar: '/images/default-avatar.png',
-        location: '教室A101',
-        startTime: '09:00',
-        endTime: '10:30',
-        duration: 90,
-        date: this.formatDate(today),
-        courseType: '线下课程',
-        description: '小学数学基础知识复习，包括加减乘除运算、分数计算、几何图形认识等内容。通过练习题和互动游戏的方式，帮助学生巩固数学基础。',
-        hasReminder: true
-      },
-      {
-        id: 2,
-        name: '英语口语',
-        subject: 'english',
-        subjectShort: '英',
-        teacher: 'Lisa老师',
-        teacherAvatar: '/images/default-avatar.png',
-        location: '在线教室',
-        startTime: '14:00',
-        endTime: '15:00',
-        duration: 60,
-        date: this.formatDate(today),
-        courseType: '在线课程',
-        description: '英语口语练习和对话',
-        hasReminder: true
-      },
-      // 明天的课程
-      {
-        id: 3,
-        name: '语文阅读',
-        subject: 'chinese',
-        subjectShort: '语',
-        teacher: '王老师',
-        teacherAvatar: '/images/default-avatar.png',
-        location: '教室B102',
-        startTime: '10:00',
-        endTime: '11:30',
-        duration: 90,
-        date: this.formatDate(new Date(today.getTime() + 24 * 60 * 60 * 1000)),
-        courseType: '线下课程',
-        description: '语文阅读理解训练',
-        hasReminder: false
-      }
-    ];
+  // 加载课程表数据
+  async loadScheduleData() {
+    console.log('加载课程表数据...');
     
-    this.setData({ 
-      allCourses: mockCourses,
-      todayCourses: this.getCoursesByDate(this.data.selectedDate)
-    });
-    
-    // 重新生成周视图以显示课程标记
-    this.generateCurrentWeek(today);
+    try {
+      // 这里应该从真实的数据库或API加载课程数据
+      // 目前没有课程数据库，所以设置为空数组
+      const allCourses = [];
+      
+      this.setData({ 
+        allCourses: allCourses,
+        todayCourses: this.getCoursesByDate(this.data.selectedDate)
+      });
+      
+      // 重新生成周视图以显示课程标记
+      this.generateCurrentWeek(this.data.selectedDate);
+      
+      console.log('课程表数据加载完成（当前为空数据）');
+    } catch (error) {
+      console.error('加载课程表数据失败:', error);
+      
+      // 设置空数据
+      this.setData({ 
+        allCourses: [],
+        todayCourses: []
+      });
+    }
   },
 
   // 格式化日期

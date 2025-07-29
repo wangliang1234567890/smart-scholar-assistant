@@ -1,6 +1,7 @@
 // pages/camera/camera.js
 import AIService from '../../utils/ai-service';
 import { formatTime } from '../../utils/util';
+import DatabaseManager from '../../utils/database.js';
 
 Page({
   data: {
@@ -381,12 +382,13 @@ Page({
       await this.processOCRResult(ocrResult);
       
       this.updateProgress(4, '识别完成！');
-      
-      // 延迟后显示确认页面
+
       setTimeout(() => {
         this.setData({
           showAnalyzing: false,
-          showPreview: true
+          showPreview: true,  // 显示预览确认页面
+          recognizedQuestion: ocrResult.text,
+          hasValidQuestion: true
         });
       }, 1000);
       
@@ -418,7 +420,7 @@ Page({
   },
 
   /**
-   * 处理OCR识别结果
+   * 处理OCR识别结果 - 修复版
    */
   async processOCRResult(result) {
     console.log('📝 处理OCR结果:', result);
@@ -433,32 +435,99 @@ Page({
       throw new Error('未识别到文字内容');
     }
     
-    // 强制上传到云存储
-    const uploadRes = await wx.cloud.uploadFile({
-      cloudPath: `ocr-images/${Date.now()}.jpg`,
-      filePath: this.data.croppedImagePath || this.data.originalImagePath
-    });
-    
-    // 保存结果到全局数据
-    const app = getApp();
-    app.globalData.lastOCRResult = {
-      ocrResult: {
-        text: recognizedText,
-        confidence: result.confidence || 0,
+    try {
+      // 上传图片到云存储
+      const uploadRes = await wx.cloud.uploadFile({
+        cloudPath: `ocr-images/${Date.now()}.jpg`,
+        filePath: this.data.croppedImagePath || this.data.originalImagePath
+      });
+      
+      // 🔧 修复：直接保存到错题本，而不是只跳转
+      const mistakeData = {
+        question: recognizedText,
+        subject: result.subject || '未知',
+        difficulty: result.difficulty || 3,
+        myAnswer: '', // 用户可以后续编辑
+        correctAnswer: '', // 用户可以后续编辑
+        analysis: result.analysis || '',
+        imageUrl: uploadRes.fileID,
+        tags: [],
+        source: 'camera_ocr',
         questionType: result.questionType || 'unknown',
-        subject: result.subject || 'unknown',
-        difficulty: result.difficulty || 1
-      },
-      imagePath: uploadRes.fileID,
-      sourceType: 'camera'
-    };
-    
-    // 强制跳转到结果页，使用云存储fileID
-    wx.navigateTo({
-      url: `/pages/result/result?fileID=${uploadRes.fileID}`
-    });
-    
-    console.log('✅ OCR结果处理完成，已跳转到结果页面');
+        confidence: result.confidence || 0
+      };
+      
+      // 保存到数据库
+      console.log('💾 开始保存错题数据:', mistakeData);
+      const saveResult = await DatabaseManager.saveMistake(mistakeData);
+
+      if (saveResult.success) {
+        console.log('✅ 错题保存成功:', saveResult.data._id);
+        console.log('📋 保存结果详情:', saveResult);
+        
+        // 显示成功提示
+        wx.showToast({
+          title: '识别并保存成功',
+          icon: 'success',
+          duration: 2000
+        });
+        
+        // 🔧 添加详细的跳转调试
+        const targetUrl = `/pages/mistakes/detail?id=${saveResult.data._id}&source=camera`;
+        console.log('🚀 准备跳转，完整路径:', targetUrl);
+        console.log('🚀 错题ID:', saveResult.data._id);
+        console.log('🚀 当前时间:', new Date().toISOString());
+        
+        // 优化：保存成功后提供更好的用户引导
+        wx.showModal({
+          title: '保存成功',
+          content: '题目已添加到错题本，是否立即查看详情？',
+          confirmText: '查看详情',
+          cancelText: '继续拍照',
+          success: (res) => {
+            if (res.confirm) {
+              wx.redirectTo({
+                url: targetUrl
+              });
+            } else {
+              this.resetToCamera();
+            }
+          }
+        });
+        
+      } else {
+        console.error('❌ 保存失败:', saveResult);
+        throw new Error(saveResult.message || '保存失败');
+      }
+      
+    } catch (error) {
+      console.error('❌ 保存错题失败:', error);
+      
+      // 保存失败时，仍然跳转到结果页面让用户手动保存
+      const app = getApp();
+      app.globalData.lastOCRResult = {
+        ocrResult: {
+          text: recognizedText,
+          confidence: result.confidence || 0,
+          questionType: result.questionType || 'unknown',
+          subject: result.subject || 'unknown',
+          difficulty: result.difficulty || 1
+        },
+        imagePath: this.data.croppedImagePath || this.data.originalImagePath,
+        sourceType: 'camera'
+      };
+      
+      wx.showModal({
+        title: '自动保存失败',
+        content: '识别成功但保存失败，将跳转到结果页面，您可以手动保存',
+        showCancel: false,
+        success: () => {
+          wx.navigateTo({
+            url: `/pages/result/result?manual=true`
+          });
+        }
+      });
+    }
   },
 
   /**
@@ -2135,6 +2204,15 @@ Page({
     }
   }
 }); 
+
+
+
+
+
+
+
+
+
 
 
 
