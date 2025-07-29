@@ -485,41 +485,48 @@ Page({
     try {
       loadingManager.setLoading('home_data', true);
       
-      const userId = wx.getStorageSync('userId') || 'default_user';
+      const userId = DatabaseManager.getCurrentUserId();
       
-      // 获取今日数据
-      const today = new Date();
-      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      
-      // 并行获取各种统计数据
-      const [mistakesResult, reviewResult, todayResult] = await Promise.all([
-        DatabaseManager.getMistakes(userId, { pageSize: 1000 }),
-        DatabaseManager.getReviewRecords(userId, { pageSize: 100 }),
-        DatabaseManager.getTodayMistakes(userId, todayStart)
+      // 使用优化后的数据库方法
+      const [todayStatsResult, mistakesResult, reviewResult] = await Promise.all([
+        DatabaseManager.getTodayStats(userId),
+        DatabaseManager.getMistakes(userId, { pageSize: 100 }),
+        DatabaseManager.getReviewRecords(userId, { pageSize: 50 })
       ]);
       
-      // 处理错题统计
-      const allMistakes = mistakesResult.success ? mistakesResult.data : [];
-      const todayMistakes = todayResult.success ? todayResult.data : [];
-      
-      // 计算各种统计指标
-      const stats = {
-        todayMistakes: todayMistakes.length,
-        totalMistakes: allMistakes.length,
-        reviewTasks: allMistakes.filter(m => m.status === 'reviewing').length,
-        masteredCount: allMistakes.filter(m => m.status === 'mastered').length,
-        masteryRate: allMistakes.length > 0 ? 
-          Math.round((allMistakes.filter(m => m.status === 'mastered').length / allMistakes.length) * 100) : 0,
-        latestMistakes: allMistakes.slice(0, 5) // 最新5道错题
+      // 处理统计数据
+      let stats = {
+        todayMistakes: 0,
+        totalMistakes: 0,
+        reviewTasks: 0,
+        masteredCount: 0,
+        masteryRate: 0,
+        latestMistakes: []
       };
       
+      if (todayStatsResult.success) {
+        // 使用 getTodayStats 的返回结果
+        const todayData = todayStatsResult.data;
+        stats.todayMistakes = todayData.todayMistakes;
+        stats.totalMistakes = todayData.totalMistakes;
+        stats.reviewTasks = todayData.reviewTasks;
+        stats.masteredCount = todayData.masteredCount;
+        stats.masteryRate = todayData.masteryRate;
+      }
+      
+      // 获取最新错题用于显示
+      if (mistakesResult.success && mistakesResult.data.length > 0) {
+        stats.latestMistakes = mistakesResult.data.slice(0, 5);
+      }
+      
       // 学科统计
-      const subjectStats = this.calculateSubjectStats(allMistakes);
+      const subjectStats = mistakesResult.success ? 
+        this.calculateSubjectStats(mistakesResult.data) : [];
       
       this.setData({
         studyStats: stats,
         subjectStats,
-        hasMistakes: allMistakes.length > 0,
+        hasMistakes: stats.totalMistakes > 0,
         loading: false
       });
       
@@ -538,26 +545,26 @@ Page({
     const subjectMap = {};
     
     mistakes.forEach(mistake => {
-      const subject = mistake.subject || '未分类';
+      const subject = mistake.subject || '其他';
       if (!subjectMap[subject]) {
         subjectMap[subject] = {
           name: subject,
           total: 0,
           mastered: 0,
-          reviewing: 0,
-          new: 0
+          reviewing: 0
         };
       }
-      
       subjectMap[subject].total++;
-      if (mistake.status === 'mastered') subjectMap[subject].mastered++;
-      else if (mistake.status === 'reviewing') subjectMap[subject].reviewing++;
-      else subjectMap[subject].new++;
+      if (mistake.status === 'mastered') {
+        subjectMap[subject].mastered++;
+      } else if (mistake.status === 'reviewing') {
+        subjectMap[subject].reviewing++;
+      }
     });
     
-    return Object.values(subjectMap).map(subject => ({
-      ...subject,
-      masteryRate: subject.total > 0 ? Math.round((subject.mastered / subject.total) * 100) : 0
+    return Object.values(subjectMap).map(stat => ({
+      ...stat,
+      masteryRate: stat.total > 0 ? Math.round((stat.mastered / stat.total) * 100) : 0
     }));
   },
 
@@ -592,24 +599,34 @@ Page({
     }
   },
 
-  // 快速复习功能
+  // 启动快速复习（修复方法调用）
   async startQuickReview() {
     try {
-      const userId = wx.getStorageSync('userId') || 'default_user';
-      const result = await DatabaseManager.getMistakes(userId, {
+      const userId = DatabaseManager.getCurrentUserId();
+      
+      // 获取需要复习的错题
+      const mistakesResult = await DatabaseManager.getMistakes(userId, { 
         status: 'reviewing',
-        pageSize: 5
+        pageSize: 10 
       });
       
-      if (result.success && result.data.length > 0) {
-        // 跳转到复习页面，传递错题数据
-        const mistakesData = encodeURIComponent(JSON.stringify(result.data));
-        wx.navigateTo({
-          url: `/pages/review/review?type=quick&data=${mistakesData}`
+      if (!mistakesResult.success || mistakesResult.data.length === 0) {
+        wx.showModal({
+          title: '暂无复习任务',
+          content: '今日暂无需要复习的题目，是否查看错题本？',
+          success: (res) => {
+            if (res.confirm) {
+              wx.switchTab({ url: '/pages/mistakes/mistakes' });
+            }
+          }
         });
-      } else {
-        wx.showToast({ title: '暂无需要复习的题目', icon: 'none' });
+        return;
       }
+      
+      // 跳转到复习页面
+      wx.navigateTo({
+        url: `/pages/practice/session?type=review&mistakes=${encodeURIComponent(JSON.stringify(mistakesResult.data))}`
+      });
       
     } catch (error) {
       console.error('启动快速复习失败:', error);
@@ -617,11 +634,27 @@ Page({
     }
   },
 
-  // 优化首页的复习入口
+  // 优化首页的复习入口（修复方法调用）
   async startTodayReview() {
     try {
-      const dbManager = DatabaseManager;  // 确保这里也是正确的
-      const reviewTasks = await dbManager.getTodayReviewTasks();
+      const userId = DatabaseManager.getCurrentUserId();
+      
+      // 获取今日需要复习的错题
+      const now = new Date();
+      const mistakesResult = await DatabaseManager.getMistakes(userId, { 
+        pageSize: 50 
+      });
+      
+      if (!mistakesResult.success) {
+        throw new Error('获取错题失败');
+      }
+      
+      // 筛选需要复习的错题
+      const reviewTasks = mistakesResult.data.filter(mistake => {
+        if (!mistake.nextReviewTime) return false;
+        const reviewTime = new Date(mistake.nextReviewTime);
+        return reviewTime <= now && mistake.status !== 'mastered';
+      });
       
       if (reviewTasks.length === 0) {
         wx.showModal({
@@ -637,10 +670,14 @@ Page({
       }
       
       wx.navigateTo({
-        url: `/pages/review/session?tasks=${encodeURIComponent(JSON.stringify(reviewTasks))}`
+        url: `/pages/practice/session?type=review&mistakes=${encodeURIComponent(JSON.stringify(reviewTasks))}`
       });
     } catch (error) {
       console.error('启动复习失败:', error);
+      wx.showToast({
+        title: '启动失败，请重试',
+        icon: 'none'
+      });
     }
   }
 }); 
