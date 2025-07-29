@@ -1,7 +1,7 @@
 import DatabaseManager from '../../utils/database.js';
 import { debounce } from '../../utils/common.js';
 
-// 添加缺失的常量定义
+// 常量定义
 const SUBJECTS = ['数学', '英语', '语文', '物理', '化学', '生物', '历史', '地理', '政治'];
 const DIFFICULTY_LABELS = { 
   1: '简单', 
@@ -11,71 +11,47 @@ const DIFFICULTY_LABELS = {
   5: '很难'
 };
 
-// 简单的工具函数实现
-const loadingManager = {
-  loadingStates: new Map(),
-  isLoading(key) { 
-    return this.loadingStates.get(key) || false;
-  },
-  setLoading(key, state) {
-    this.loadingStates.set(key, state);
-  },
-  clearLoading(key) {
-    this.loadingStates.delete(key);
-  }
-};
-
-const errorHandler = {
-  handle(error, options = {}) {
-    console.error(`[${options.scene || 'unknown'}]`, error);
-    if (options.showToast) {
-      wx.showToast({
-        title: error.message || '操作失败',
-        icon: 'none'
-      });
-    }
-  }
-};
-
-const uxManager = {
-  clearPageStates() {
-    // 简单实现，清理页面状态
-    console.log('清理页面状态');
-  }
-};
+// 排序选项
+const SORT_OPTIONS = [
+  { label: '按时间排序', value: 'createTime', order: 'desc' },
+  { label: '按难度排序', value: 'difficulty', order: 'desc' },
+  { label: '按复习次数', value: 'reviewCount', order: 'asc' },
+  { label: '按掌握程度', value: 'reviewLevel', order: 'asc' }
+];
 
 Page({
   data: {
-    // 错题列表
+    // 错题数据
     mistakes: [],
     filteredMistakes: [],
-    loading: true,
+    selectedMistakes: [], // 选中的错题ID列表
+    isSelectionMode: false, // 是否处于选择模式
+    
+    // 页面状态
+    loading: false,
     refreshing: false,
+    searching: false,
     hasMore: true,
     page: 1,
     pageSize: 20,
     
-    // 筛选条件
+    // 筛选和搜索
     filters: {
       subject: 'all',
-      status: 'all',     // 确保默认显示所有状态
-      difficulty: 'all'
+      status: 'all',
+      difficulty: 'all',
+      sortBy: 'createTime',
+      sortOrder: 'desc'
     },
+    searchKeyword: '',
+    showAdvancedSearch: false,
     
     // 界面控制
-    showFilterTags: true,
-    showActionSheet: false,
-    currentMistakeId: '',
-    searchKeyword: '',
+    showFilterPanel: false,
+    showSortPanel: false,
+    showBatchActions: false,
     
-    // 操作弹窗选项
-    actionSheetActions: [
-      { name: '编辑', color: '#1890ff' },
-      { name: '加入复习计划', color: '#52c41a' },
-      { name: '删除', color: '#f5222d' }
-    ],
-    
-    // 筛选选项
+    // 选项数据
     subjects: ['全部', ...SUBJECTS],
     statuses: [
       { label: '全部', value: 'all' },
@@ -87,6 +63,7 @@ Page({
       { label: '全部', value: 'all' },
       ...Object.entries(DIFFICULTY_LABELS).map(([value, label]) => ({ label, value: parseInt(value) }))
     ],
+    sortOptions: SORT_OPTIONS,
     
     // 统计数据
     statistics: {
@@ -96,301 +73,370 @@ Page({
       mastered: 0
     },
     
-    // 用户信息
-    userInfo: null,
+    // 批量操作选项
+    batchActions: [
+      { id: 'addToReview', name: '加入复习计划', icon: 'play-circle-o', color: '#52c41a' },
+      { id: 'updateStatus', name: '更新状态', icon: 'edit', color: '#1890ff' },
+      { id: 'delete', name: '批量删除', icon: 'delete-o', color: '#f5222d' }
+    ],
     
-    // 错误状态
-    hasError: false,
-    errorMessage: '',
-    
-    // 空状态
+    // 状态
     isEmpty: false,
-    emptyMessage: ''
+    hasError: false,
+    errorMessage: ''
   },
 
-  // 防抖搜索
+  // 防抖搜索函数
   debouncedSearch: null,
 
-  onLoad(options) {
+  async onLoad(options) {
     console.log('错题本页面加载');
     
-    // 确保数据完整性
-    this.setData({
-      mistakes: [],
-      filteredMistakes: [],
-      searchKeyword: '',
-      statistics: {
-        total: 0,
-        new: 0,
-        reviewing: 0,
-        mastered: 0
-      }
-    });
-    
     // 初始化防抖搜索
-    this.debouncedSearch = debounce(this.performSearch.bind(this), 500);
+    this.debouncedSearch = debounce(this.performSearch.bind(this), 300);
     
-    try {
-      // 检查是否有从其他页面传来的筛选条件
-      if (options && options.subject) {
-        this.setData({
-          'filters.subject': String(options.subject)
-        });
-      }
-
-      this.initializePage();
-    } catch (error) {
-      this.handlePageError(error, '页面初始化失败');
+    // 处理传入的筛选参数
+    if (options && options.subject) {
+      this.setData({
+        'filters.subject': String(options.subject)
+      });
     }
+
+    await this.initializeData();
   },
 
-  onShow() {
+  async onShow() {
     console.log('错题本页面显示');
-    this.refreshData();
+    // 每次显示时刷新数据，确保最新状态
+    await this.refreshData();
   },
 
-  onReady() {
-    console.log('错题本页面准备完成');
-  },
-
-  onUnload() {
-    console.log('错题本页面卸载');
-    this.cleanup();
-  },
-
-  onPullDownRefresh() {
-    this.refreshData().finally(() => {
-      wx.stopPullDownRefresh();
-    });
+  async onPullDownRefresh() {
+    await this.refreshData();
+    wx.stopPullDownRefresh();
   },
 
   onReachBottom() {
     this.loadMoreMistakes();
   },
 
-  async initializePage() {
+  /**
+   * 初始化数据
+   */
+  async initializeData() {
+    this.setData({ loading: true });
+    
     try {
-      wx.showLoading({ title: '加载错题数据...', mask: true });
+      // 并行加载数据
+      await Promise.all([
+        this.loadMistakes(),
+        this.loadStatistics()
+      ]);
       
-      // 简化初始化，先设置基本数据，避免立即查询数据库
-      this.setData({
-        loading: false,
-        mistakes: [],
-        filteredMistakes: [],
-        statistics: {
-          total: 0,
-          new: 0,
-          reviewing: 0,
-          mastered: 0
-        }
-      });
-      
-      wx.hideLoading();
-      
-      // 延迟加载数据，给页面渲染时间
-      setTimeout(() => {
-        this.loadMistakes().catch(error => {
-          console.warn('延迟加载错题失败:', error);
-        });
-      }, 500);
+      console.log('错题本数据初始化完成');
       
     } catch (error) {
-      wx.hideLoading();
-      this.handlePageError(error, '初始化页面失败');
+      console.error('初始化数据失败:', error);
+      this.showError('数据加载失败', error);
+    } finally {
+      this.setData({ loading: false });
     }
   },
 
+  /**
+   * 刷新数据
+   */
   async refreshData() {
     if (this.data.refreshing) return;
     
+    this.setData({ 
+      refreshing: true,
+      page: 1,
+      hasMore: true,
+      selectedMistakes: [],
+      isSelectionMode: false
+    });
+    
     try {
-      this.setData({ 
-        refreshing: true,
-        page: 1,
-        hasMore: true
-      });
-      
-      await this.loadMistakes();
-      await this.loadStatistics();
-      
+      await Promise.all([
+        this.loadMistakes(),
+        this.loadStatistics()
+      ]);
     } catch (error) {
-      this.handlePageError(error, '刷新数据失败', true);
+      console.error('刷新数据失败:', error);
+      this.showError('刷新失败', error);
     } finally {
       this.setData({ refreshing: false });
     }
   },
 
+  /**
+   * 加载错题列表 - 使用优化后的数据库方法
+   */
   async loadMistakes() {
     try {
-      const userId = wx.getStorageSync('userId') || 'default_user';
+      const userId = DatabaseManager.getCurrentUserId();
       const { page, pageSize, filters } = this.data;
       
-      console.log('错题本查询参数:', {
-        userId,
-        page,
-        pageSize,
-        filters
-      });
-      
+      // 构建查询参数
       const queryOptions = {
         page,
         pageSize,
-        subject: filters.subject,
-        status: filters.status,
-        difficulty: filters.difficulty
+        subject: filters.subject === 'all' ? '' : filters.subject,
+        status: filters.status === 'all' ? '' : filters.status,
+        difficulty: filters.difficulty === 'all' ? '' : filters.difficulty,
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder
       };
       
+      console.log('加载错题，查询参数:', queryOptions);
+      
       const result = await DatabaseManager.getMistakes(userId, queryOptions);
-      console.log('错题本查询结果:', result);
       
       if (result.success) {
-        const newMistakes = Array.isArray(result.data) ? result.data : [];
-        console.log('获取到错题数量:', newMistakes.length);
-        
-        // 为错题数据添加默认状态和其他缺失字段
-        const processedMistakes = newMistakes.map((mistake, index) => ({
-          ...mistake,
-          _id: mistake._id || mistake.id || `mistake_${Date.now()}_${index}`, // 确保有唯一ID
-          status: mistake.status || 'new', // 默认状态为新错题
-          reviewCount: mistake.reviewCount || 0, // 默认复习次数为0
-          difficulty: mistake.difficulty || 2, // 默认难度为中等
-          subject: mistake.subject || '数学', // 默认学科为数学
-          question: mistake.question || mistake.content || '题目内容', // 统一题目字段
-          createTime: this.formatDateTime(mistake.createTime || mistake.date) // 统一时间字段
-        }));
-        
-        console.log('处理后的错题数据:', processedMistakes);
-        
-        // 如果是第一页且没有数据，尝试查询所有数据
-        if (page === 1 && processedMistakes.length === 0) {
-          console.log('第一页无数据，尝试查询所有错题...');
-          const allResult = await DatabaseManager.getMistakes(userId, {
-            page: 1,
-            pageSize: 100,
-            subject: 'all',
-            status: 'all'
-          });
-          console.log('所有错题查询结果:', allResult);
-        }
-        
-        const mistakes = page === 1 ? processedMistakes : [...this.data.mistakes, ...processedMistakes];
+        const newMistakes = this.processMistakesData(result.data);
+        const mistakes = page === 1 ? newMistakes : [...this.data.mistakes, ...newMistakes];
         
         this.setData({
           mistakes,
-          hasMore: processedMistakes.length === pageSize,
-          loading: false,
+          hasMore: newMistakes.length === pageSize,
           isEmpty: mistakes.length === 0
         });
         
-        this.applyFilters();
+        // 应用客户端筛选
+        this.applyClientFilters();
+        
+        console.log(`加载错题成功: ${newMistakes.length} 条，总计: ${mistakes.length} 条`);
+      } else {
+        throw new Error(result.error || '获取错题失败');
       }
+      
     } catch (error) {
       console.error('加载错题失败:', error);
-      this.handlePageError(error, '加载错题失败');
+      this.showError('加载错题失败', error);
     }
   },
 
+  /**
+   * 处理错题数据，确保格式统一
+   */
+  processMistakesData(rawMistakes) {
+    return rawMistakes.map((mistake, index) => ({
+      ...mistake,
+      _id: mistake._id || mistake.id || `mistake_${Date.now()}_${index}`,
+      status: mistake.status || 'new',
+      reviewCount: mistake.reviewCount || 0,
+      reviewLevel: mistake.reviewLevel || 0,
+      difficulty: mistake.difficulty || 2,
+      subject: mistake.subject || '数学',
+      question: mistake.question || mistake.content || '题目内容',
+      createTime: mistake.createTime || new Date().toISOString(),
+      updateTime: mistake.updateTime || mistake.createTime || new Date().toISOString(),
+      // 添加计算字段
+      displayTime: this.formatDisplayTime(mistake.createTime),
+      difficultyLabel: DIFFICULTY_LABELS[mistake.difficulty] || '中等',
+      needReview: this.shouldReview(mistake),
+      masteryRate: this.calculateMasteryRate(mistake)
+    }));
+  },
+
+  /**
+   * 判断是否需要复习
+   */
+  shouldReview(mistake) {
+    if (!mistake.nextReviewTime) return mistake.status === 'new';
+    const reviewTime = new Date(mistake.nextReviewTime);
+    const now = new Date();
+    return reviewTime <= now && mistake.status !== 'mastered';
+  },
+
+  /**
+   * 计算掌握程度
+   */
+  calculateMasteryRate(mistake) {
+    const level = mistake.reviewLevel || 0;
+    return Math.min(100, level * 20); // 每级20%
+  },
+
+  /**
+   * 加载统计数据 - 使用缓存优化
+   */
   async loadStatistics() {
     try {
-      const userId = wx.getStorageSync('userId') || 'default_user';
+      const userId = DatabaseManager.getCurrentUserId();
+      const statsResult = await DatabaseManager.getTodayStats(userId);
       
-      // 初始化统计数据
-      const statistics = {
-        total: 0,
-        new: 0,
-        reviewing: 0,
-        mastered: 0
-      };
-
-      // 获取所有错题进行统计
-      const allMistakes = await DatabaseManager.getMistakes(userId, {
-        pageSize: 1000 // 获取足够多的数据用于统计
-      });
-
-      if (allMistakes.success) {
-        const allData = Array.isArray(allMistakes.data) ? allMistakes.data : [];
-        statistics.total = allData.length;
+      if (statsResult.success) {
+        const todayStats = statsResult.data;
         
-        // 按状态统计
-        allData.forEach(item => {
-          if (item && item.status) {
-            if (statistics.hasOwnProperty(item.status)) {
-              statistics[item.status]++;
-            }
-          }
-        });
-      }
-
-      this.setData({ statistics });
-      console.log('统计数据加载成功:', statistics);
-
-    } catch (error) {
-      console.warn('统计数据加载失败:', error);
-      // 统计数据失败不影响主要功能，设置默认值
-      this.setData({
-        statistics: {
-          total: 0,
-          new: 0,
-          reviewing: 0,
-          mastered: 0
+        // 获取详细的状态统计
+        const mistakesResult = await DatabaseManager.getMistakes(userId, { pageSize: 1000 });
+        
+        if (mistakesResult.success) {
+          const allMistakes = mistakesResult.data;
+          const statistics = {
+            total: todayStats.totalMistakes,
+            new: allMistakes.filter(m => m.status === 'new').length,
+            reviewing: allMistakes.filter(m => m.status === 'reviewing').length,
+            mastered: allMistakes.filter(m => m.status === 'mastered').length
+          };
+          
+          this.setData({ statistics });
+          console.log('统计数据加载成功:', statistics);
         }
+      }
+      
+    } catch (error) {
+      console.error('加载统计数据失败:', error);
+      // 设置默认统计数据
+      this.setData({
+        statistics: { total: 0, new: 0, reviewing: 0, mastered: 0 }
       });
     }
   },
 
-  applyFilters() {
+  /**
+   * 智能搜索 - 使用数据库搜索方法
+   */
+  async performSearch() {
+    const { searchKeyword } = this.data;
+    
+    if (!searchKeyword || searchKeyword.trim() === '') {
+      this.applyClientFilters();
+      return;
+    }
+    
+    this.setData({ searching: true });
+    
+    try {
+      const userId = DatabaseManager.getCurrentUserId();
+      const result = await DatabaseManager.searchMistakes(userId, searchKeyword.trim(), {
+        pageSize: 100
+      });
+      
+      if (result.success) {
+        const searchResults = this.processMistakesData(result.data);
+        this.setData({
+          filteredMistakes: searchResults,
+          isEmpty: searchResults.length === 0
+        });
+        
+        console.log(`搜索完成: "${searchKeyword}" 找到 ${searchResults.length} 条结果`);
+      }
+      
+    } catch (error) {
+      console.error('搜索失败:', error);
+      this.showError('搜索失败', error);
+    } finally {
+      this.setData({ searching: false });
+    }
+  },
+
+  /**
+   * 应用客户端筛选（非搜索情况下）
+   */
+  applyClientFilters() {
     const { mistakes, filters, searchKeyword } = this.data;
+    
+    // 如果有搜索关键词，则不应用客户端筛选
+    if (searchKeyword && searchKeyword.trim()) {
+      return;
+    }
+    
     let filtered = [...mistakes];
     
-    console.log('筛选前数据:', mistakes.length);
-    console.log('当前筛选条件:', filters);
+    // 状态筛选
+    if (filters.status !== 'all') {
+      filtered = filtered.filter(item => item.status === filters.status);
+    }
     
-    // 打印每条记录的状态，用于调试
-    mistakes.forEach((item, index) => {
-      console.log(`错题${index + 1} 状态:`, item.status, typeof item.status);
-    });
-    
-    // 学科筛选
+    // 学科筛选（数据库级别已筛选，这里主要是兜底）
     if (filters.subject !== 'all') {
       filtered = filtered.filter(item => item.subject === filters.subject);
-      console.log('学科筛选后:', filtered.length);
     }
     
-    // 状态筛选 - 临时注释掉进行测试
-    // if (filters.status !== 'all') {
-    //   filtered = filtered.filter(item => item.status === filters.status);
-    //   console.log('状态筛选后:', filtered.length);
-    // }
-    
-    // 搜索筛选
-    if (searchKeyword && searchKeyword.trim()) {
-      const keyword = searchKeyword.trim().toLowerCase();
-      filtered = filtered.filter(item => 
-        (item.question && item.question.toLowerCase().includes(keyword)) ||
-        (item.analysis && item.analysis.toLowerCase().includes(keyword))
-      );
-      console.log('搜索筛选后:', filtered.length);
+    // 难度筛选（数据库级别已筛选，这里主要是兜底）
+    if (filters.difficulty !== 'all') {
+      filtered = filtered.filter(item => item.difficulty === filters.difficulty);
     }
+    
+    // 客户端排序（增强数据库排序）
+    filtered = this.applySorting(filtered);
     
     this.setData({
       filteredMistakes: filtered,
       isEmpty: filtered.length === 0
     });
+  },
+
+  /**
+   * 应用排序
+   */
+  applySorting(mistakes) {
+    const { sortBy, sortOrder } = this.data.filters;
     
-    console.log('最终显示数量:', filtered.length);
+    return mistakes.sort((a, b) => {
+      let aValue = a[sortBy];
+      let bValue = b[sortBy];
+      
+      // 特殊排序逻辑
+      if (sortBy === 'createTime' || sortBy === 'updateTime') {
+        aValue = new Date(aValue).getTime();
+        bValue = new Date(bValue).getTime();
+      }
+      
+      const result = aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      return sortOrder === 'desc' ? -result : result;
+    });
   },
 
-  performSearch() {
-    this.applyFilters();
+  /**
+   * 加载更多错题
+   */
+  async loadMoreMistakes() {
+    if (!this.data.hasMore || this.data.loading) return;
+    
+    this.setData({
+      page: this.data.page + 1,
+      loading: true
+    });
+    
+    try {
+      await this.loadMistakes();
+    } catch (error) {
+      console.error('加载更多失败:', error);
+      this.showError('加载更多失败', error);
+    } finally {
+      this.setData({ loading: false });
+    }
   },
 
-  onSearchChange(e) {
+  // ======== 搜索和筛选相关方法 ========
+
+  onSearchInput(e) {
     const keyword = e.detail || '';
     this.setData({ searchKeyword: keyword });
     
     if (this.debouncedSearch) {
       this.debouncedSearch();
     }
+  },
+
+  onSearchConfirm(e) {
+    const keyword = e.detail || '';
+    this.setData({ searchKeyword: keyword });
+    this.performSearch();
+  },
+
+  onSearchClear() {
+    this.setData({ searchKeyword: '' });
+    this.applyClientFilters();
+  },
+
+  toggleAdvancedSearch() {
+    this.setData({
+      showAdvancedSearch: !this.data.showAdvancedSearch
+    });
   },
 
   onFilterChange(e) {
@@ -402,171 +448,313 @@ Page({
       hasMore: true
     });
     
-    this.loadMistakes();
+    this.refreshData();
   },
 
-  // 新增统一的筛选方法
-  setFilter(e) {
-    const { type, value } = e.currentTarget.dataset;
-    
-    this.setData({
-      [`filters.${type}`]: value,
-      page: 1,
-      hasMore: true
-    });
-    
-    this.applyFilters();
-  },
-
-  // 按状态筛选
   filterByStatus(e) {
     const { status } = e.currentTarget.dataset;
     
     this.setData({
       'filters.status': status,
       page: 1,
+      hasMore: true,
+      showFilterPanel: false
+    });
+    
+    this.refreshData();
+  },
+
+  onSortChange(e) {
+    const { sort, order } = e.currentTarget.dataset;
+    
+    this.setData({
+      'filters.sortBy': sort,
+      'filters.sortOrder': order,
+      showSortPanel: false,
+      page: 1,
       hasMore: true
     });
     
-    this.applyFilters();
+    this.refreshData();
   },
 
-  // 搜索相关方法
-  onSearchConfirm(e) {
-    const keyword = e.detail || '';
-    this.setData({ searchKeyword: keyword });
-    this.applyFilters();
+  toggleFilterPanel() {
+    this.setData({
+      showFilterPanel: !this.data.showFilterPanel
+    });
   },
 
-  onSearchInput(e) {
-    const keyword = e.detail || '';
-    this.setData({ searchKeyword: keyword });
+  toggleSortPanel() {
+    this.setData({
+      showSortPanel: !this.data.showSortPanel
+    });
+  },
+
+  // ======== 选择和批量操作相关方法 ========
+
+  toggleSelectionMode() {
+    const isSelectionMode = !this.data.isSelectionMode;
+    this.setData({
+      isSelectionMode,
+      selectedMistakes: [],
+      showBatchActions: isSelectionMode
+    });
+  },
+
+  onMistakeSelect(e) {
+    const { id } = e.currentTarget.dataset;
+    const { selectedMistakes } = this.data;
     
-    if (this.debouncedSearch) {
-      this.debouncedSearch();
+    let newSelected = [...selectedMistakes];
+    const index = newSelected.indexOf(id);
+    
+    if (index > -1) {
+      newSelected.splice(index, 1);
+    } else {
+      newSelected.push(id);
     }
-  },
-
-  onSearchClear() {
-    this.setData({ searchKeyword: '' });
-    this.applyFilters();
-  },
-
-  updateStatistics() {
-    const { mistakes } = this.data;
-    const stats = {
-      total: mistakes.length,
-      new: mistakes.filter(m => m.reviewLevel === 0).length,
-      reviewing: mistakes.filter(m => m.reviewLevel > 0 && m.reviewLevel < 5).length,
-      mastered: mistakes.filter(m => m.reviewLevel >= 5).length
-    };
     
-    this.setData({ statistics: stats });
+    this.setData({
+      selectedMistakes: newSelected,
+      showBatchActions: newSelected.length > 0
+    });
   },
 
-  async loadMoreMistakes() {
-    if (!this.data.hasMore || this.data.loading) {
+  selectAll() {
+    const { filteredMistakes } = this.data;
+    const allIds = filteredMistakes.map(item => item._id);
+    
+    this.setData({
+      selectedMistakes: allIds,
+      showBatchActions: allIds.length > 0
+    });
+  },
+
+  clearSelection() {
+    this.setData({
+      selectedMistakes: [],
+      showBatchActions: false,
+      isSelectionMode: false
+    });
+  },
+
+  async onBatchAction(e) {
+    const { action } = e.currentTarget.dataset;
+    const { selectedMistakes } = this.data;
+    
+    if (selectedMistakes.length === 0) {
+      wx.showToast({ title: '请先选择错题', icon: 'none' });
       return;
     }
-
-    try {
-      wx.showLoading({ title: '加载更多...', mask: true });
-      
-      this.setData({
-        page: this.data.page + 1,
-        loading: true
-      });
-
-      await this.loadMistakes();
-      
-      wx.hideLoading();
-      
-    } catch (error) {
-      wx.hideLoading();
-      this.handlePageError(error, '加载更多失败', true);
-    }
-  },
-
-  onMistakeItemTap(e) {
-    const { mistakeId } = e.currentTarget.dataset;
     
-    if (!mistakeId) {
-      wx.showToast({ title: '错题信息无效', icon: 'none' });
-      return;
-    }
-
-    try {
-      wx.navigateTo({
-        url: `/pages/mistakes/detail?id=${mistakeId}`
-      });
-    } catch (error) {
-      this.handlePageError(error, '打开错题详情失败');
+    switch (action) {
+      case 'addToReview':
+        await this.batchAddToReview();
+        break;
+      case 'updateStatus':
+        this.showStatusSelector();
+        break;
+      case 'delete':
+        this.confirmBatchDelete();
+        break;
     }
   },
+
+  /**
+   * 批量加入复习计划
+   */
+  async batchAddToReview() {
+    const { selectedMistakes } = this.data;
+    
+    try {
+      wx.showLoading({ title: '处理中...', mask: true });
+      
+      const result = await DatabaseManager.batchUpdateMistakes(selectedMistakes, {
+        status: 'reviewing',
+        nextReviewTime: new Date().toISOString()
+      });
+      
+      if (result.success) {
+        wx.showToast({ title: `${result.data.updated} 道题已加入复习计划`, icon: 'success' });
+        this.clearSelection();
+        await this.refreshData();
+      } else {
+        throw new Error(result.error);
+      }
+      
+    } catch (error) {
+      console.error('批量加入复习计划失败:', error);
+      this.showError('操作失败', error);
+    } finally {
+      wx.hideLoading();
+    }
+  },
+
+  showStatusSelector() {
+    const statusOptions = this.data.statuses.filter(s => s.value !== 'all');
+    
+    wx.showActionSheet({
+      itemList: statusOptions.map(s => s.label),
+      success: async (res) => {
+        const selectedStatus = statusOptions[res.tapIndex];
+        await this.batchUpdateStatus(selectedStatus.value);
+      }
+    });
+  },
+
+  async batchUpdateStatus(status) {
+    const { selectedMistakes } = this.data;
+    
+    try {
+      wx.showLoading({ title: '更新中...', mask: true });
+      
+      const result = await DatabaseManager.batchUpdateMistakes(selectedMistakes, {
+        status: status
+      });
+      
+      if (result.success) {
+        wx.showToast({ title: `${result.data.updated} 道题状态已更新`, icon: 'success' });
+        this.clearSelection();
+        await this.refreshData();
+      } else {
+        throw new Error(result.error);
+      }
+      
+    } catch (error) {
+      console.error('批量更新状态失败:', error);
+      this.showError('更新失败', error);
+    } finally {
+      wx.hideLoading();
+    }
+  },
+
+  confirmBatchDelete() {
+    const { selectedMistakes } = this.data;
+    
+    wx.showModal({
+      title: '确认删除',
+      content: `确定要删除选中的 ${selectedMistakes.length} 道错题吗？此操作不可恢复！`,
+      confirmColor: '#f5222d',
+      success: (res) => {
+        if (res.confirm) {
+          this.batchDelete();
+        }
+      }
+    });
+  },
+
+  async batchDelete() {
+    const { selectedMistakes } = this.data;
+    
+    try {
+      wx.showLoading({ title: '删除中...', mask: true });
+      
+      // 逐个删除（数据库管理器暂时不支持批量删除）
+      let deletedCount = 0;
+      for (const mistakeId of selectedMistakes) {
+        const result = await DatabaseManager.deleteMistake(mistakeId);
+        if (result.success) {
+          deletedCount++;
+        }
+      }
+      
+      wx.showToast({ title: `已删除 ${deletedCount} 道错题`, icon: 'success' });
+      this.clearSelection();
+      await this.refreshData();
+      
+    } catch (error) {
+      console.error('批量删除失败:', error);
+      this.showError('删除失败', error);
+    } finally {
+      wx.hideLoading();
+    }
+  },
+
+  // ======== 单个错题操作相关方法 ========
 
   onMistakeClick(e) {
-    console.log('点击错题:', e.currentTarget.dataset);
     const { id } = e.currentTarget.dataset;
     
+    // 如果处于选择模式，则选择/取消选择
+    if (this.data.isSelectionMode) {
+      this.onMistakeSelect(e);
+      return;
+    }
+    
+    // 正常模式下跳转到详情页
     if (!id) {
-      console.log('错题ID为空:', id);
       wx.showToast({ title: '错题信息无效', icon: 'none' });
       return;
     }
+    
+    wx.navigateTo({
+      url: `/pages/mistakes/detail?id=${id}`,
+      fail: (error) => {
+        console.error('跳转失败:', error);
+        this.showError('跳转失败', error);
+      }
+    });
+  },
 
-    console.log('准备跳转到错题详情:', id);
+  async addSingleToReview(e) {
+    const { id } = e.currentTarget.dataset;
     
     try {
-      const url = `/pages/mistakes/detail?id=${id}`;
-      console.log('跳转URL:', url);
+      wx.showLoading({ title: '加入复习计划...', mask: true });
       
-      wx.navigateTo({
-        url: url,
-        success: (res) => {
-          console.log('跳转成功:', res);
-        },
-        fail: (err) => {
-          console.error('跳转失败:', err);
-          wx.showToast({
-            title: '跳转失败: ' + (err.errMsg || '未知错误'),
-            icon: 'none',
-            duration: 3000
-          });
-        }
-      });
+      const result = await DatabaseManager.addToReviewPlan(id);
+      
+      if (result.success) {
+        wx.showToast({ title: '已加入复习计划', icon: 'success' });
+        await this.refreshData();
+      } else {
+        throw new Error(result.error);
+      }
+      
     } catch (error) {
-      console.error('跳转异常:', error);
-      this.handlePageError(error, '打开错题详情失败');
+      console.error('加入复习计划失败:', error);
+      this.showError('操作失败', error);
+    } finally {
+      wx.hideLoading();
     }
   },
 
+  editMistake(e) {
+    const { id } = e.currentTarget.dataset;
+    
+    wx.navigateTo({
+      url: `/pages/mistakes/add?id=${id}&mode=edit`,
+      fail: (error) => {
+        console.error('跳转编辑页面失败:', error);
+        this.showError('跳转失败', error);
+      }
+    });
+  },
+
+  // ======== 导航和其他方法 ========
+
   onAddMistake() {
-    try {
-      wx.navigateTo({
-        url: '/pages/mistakes/add'
-      });
-    } catch (error) {
-      this.handlePageError(error, '打开添加页面失败');
-    }
+    wx.navigateTo({
+      url: '/pages/mistakes/add'
+    });
   },
 
   goToCamera() {
-    try {
-      wx.navigateTo({
-        url: '/pages/camera/camera'
-      });
-    } catch (error) {
-      this.handlePageError(error, '打开拍照页面失败');
-    }
+    wx.navigateTo({
+      url: '/pages/camera/camera'
+    });
   },
 
   viewAnalysis() {
-    const { statistics } = this.data;
+    const { statistics, filteredMistakes } = this.data;
+    
+    // 生成分析数据
     const analysisData = {
-      totalMistakes: statistics.total,
+      ...statistics,
       masteryRate: statistics.total > 0 ? Math.round((statistics.mastered / statistics.total) * 100) : 0,
-      needReview: statistics.new + statistics.reviewing,
-      subjects: this.getSubjectAnalysis()
+      subjectStats: this.generateSubjectStats(filteredMistakes),
+      difficultyStats: this.generateDifficultyStats(filteredMistakes),
+      weeklyProgress: this.generateWeeklyProgress(filteredMistakes)
     };
     
     wx.navigateTo({
@@ -574,145 +762,98 @@ Page({
     });
   },
 
-  getSubjectAnalysis() {
-    const { mistakes } = this.data;
-    const subjectStats = {};
-    
+  generateSubjectStats(mistakes) {
+    const stats = {};
     mistakes.forEach(mistake => {
       const subject = mistake.subject || '未分类';
-      if (!subjectStats[subject]) {
-        subjectStats[subject] = { total: 0, mastered: 0 };
+      if (!stats[subject]) {
+        stats[subject] = { total: 0, mastered: 0 };
       }
-      subjectStats[subject].total++;
-      if (mistake.reviewLevel >= 5) {
-        subjectStats[subject].mastered++;
+      stats[subject].total++;
+      if (mistake.status === 'mastered') {
+        stats[subject].mastered++;
       }
     });
     
-    return Object.entries(subjectStats).map(([subject, stats]) => ({
+    return Object.entries(stats).map(([subject, data]) => ({
       subject,
-      total: stats.total,
-      masteryRate: Math.round((stats.mastered / stats.total) * 100)
+      total: data.total,
+      mastered: data.mastered,
+      masteryRate: Math.round((data.mastered / data.total) * 100)
     }));
   },
 
-  // 操作相关方法
-  onMistakeAction(e) {
-    const { mistakeId } = e.currentTarget.dataset;
-    this.setData({
-      currentMistakeId: mistakeId,
-      showActionSheet: true
+  generateDifficultyStats(mistakes) {
+    const stats = {};
+    mistakes.forEach(mistake => {
+      const difficulty = mistake.difficulty || 2;
+      if (!stats[difficulty]) {
+        stats[difficulty] = { total: 0, mastered: 0 };
+      }
+      stats[difficulty].total++;
+      if (mistake.status === 'mastered') {
+        stats[difficulty].mastered++;
+      }
     });
-  },
-
-  onActionSheetClose() {
-    this.setData({ showActionSheet: false });
-  },
-
-  onActionSheetSelect(e) {
-    const { name } = e.detail;
-    const { currentMistakeId } = this.data;
     
-    this.setData({ showActionSheet: false });
-    
-    switch (name) {
-      case '编辑':
-        this.editMistake(currentMistakeId);
-        break;
-      case '加入复习计划':
-        this.addToReviewPlan(currentMistakeId);
-        break;
-      case '删除':
-        this.deleteMistake(currentMistakeId);
-        break;
-    }
+    return Object.entries(stats).map(([difficulty, data]) => ({
+      difficulty: parseInt(difficulty),
+      label: DIFFICULTY_LABELS[difficulty] || '中等',
+      total: data.total,
+      mastered: data.mastered,
+      masteryRate: Math.round((data.mastered / data.total) * 100)
+    }));
   },
 
-  editMistake(mistakeId) {
-    try {
-      wx.navigateTo({
-        url: `/pages/mistakes/add?id=${mistakeId}&mode=edit`
+  generateWeeklyProgress(mistakes) {
+    // 简单的周进度统计，实际应该从数据库获取
+    const now = new Date();
+    const weekDays = [];
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+      const dayMistakes = mistakes.filter(m => {
+        const createDate = new Date(m.createTime);
+        return createDate.toDateString() === date.toDateString();
       });
-    } catch (error) {
-      this.handlePageError(error, '打开编辑页面失败');
+      
+      weekDays.push({
+        date: date.toISOString().split('T')[0],
+        count: dayMistakes.length
+      });
     }
-  },
-
-  async addToReviewPlan(mistakeId) {
-    try {
-      wx.showLoading({ title: '加入复习计划...', mask: true });
-
-      const result = await DatabaseManager.updateMistakeStatus(mistakeId, 'reviewing');
-
-      wx.hideLoading();
-
-      if (result.success) {
-        wx.showToast({ title: '已加入复习计划', icon: 'success' });
-        this.refreshData();
-      } else {
-        throw new Error(result.error || '操作失败');
-      }
-
-    } catch (error) {
-      wx.hideLoading();
-      this.handlePageError(error, '加入复习计划失败', true);
-    }
-  },
-
-  deleteMistake(mistakeId) {
-    wx.showModal({
-      title: '确认删除',
-      content: '确定要删除这道错题吗？',
-      success: (res) => {
-        if (res.confirm) {
-          this.performDelete(mistakeId);
-        }
-      }
-    });
-  },
-
-  async performDelete(mistakeId) {
-    try {
-      wx.showLoading({ title: '删除中...', mask: true });
-
-      const result = await DatabaseManager.deleteMistake(mistakeId);
-
-      wx.hideLoading();
-
-      if (result.success) {
-        wx.showToast({ title: '删除成功', icon: 'success' });
-        this.refreshData();
-      } else {
-        throw new Error(result.error || '删除失败');
-      }
-
-    } catch (error) {
-      wx.hideLoading();
-      this.handlePageError(error, '删除失败', true);
-    }
-  },
-
-  handlePageError(error, message = '操作失败', allowRetry = false) {
-    console.error('错题本页面错误:', error);
     
-    // 更新页面状态 - 确保数据完整性
+    return weekDays;
+  },
+
+  // ======== 工具方法 ========
+
+  formatDisplayTime(dateStr) {
+    if (!dateStr) return '未知时间';
+    
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffTime = now - date;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return '今天';
+    } else if (diffDays === 1) {
+      return '昨天';
+    } else if (diffDays < 7) {
+      return `${diffDays}天前`;
+    } else {
+      return `${date.getMonth() + 1}月${date.getDate()}日`;
+    }
+  },
+
+  showError(message, error) {
+    console.error(message, error);
     this.setData({
       hasError: true,
-      errorMessage: message,
-      loading: false,
-      refreshing: false,
-      mistakes: Array.isArray(this.data.mistakes) ? this.data.mistakes : [],
-      filteredMistakes: Array.isArray(this.data.filteredMistakes) ? this.data.filteredMistakes : [],
-      searchKeyword: String(this.data.searchKeyword || ''),
-      statistics: this.data.statistics || {
-        total: 0,
-        new: 0,
-        reviewing: 0,
-        mastered: 0
-      }
+      errorMessage: message
     });
-
-    // 简化错误提示，避免复杂的调用
+    
     wx.showToast({
       title: message,
       icon: 'none',
@@ -720,36 +861,10 @@ Page({
     });
   },
 
-  // 格式化时间显示
-  formatDateTime(dateTime) {
-    if (!dateTime) {
-      return new Date().toISOString().split('T')[0];
-    }
-    
-    try {
-      const date = new Date(dateTime);
-      if (isNaN(date.getTime())) {
-        return new Date().toISOString().split('T')[0];
-      }
-      
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      
-      return `${year}-${month}-${day}`;
-    } catch (error) {
-      console.warn('时间格式化失败:', error);
-      return new Date().toISOString().split('T')[0];
-    }
-  },
-
-  cleanup() {
+  onUnload() {
     // 清理防抖函数
     if (this.debouncedSearch) {
       this.debouncedSearch = null;
     }
-    
-    // 清理UX状态
-    uxManager.clearPageStates();
   }
 });
