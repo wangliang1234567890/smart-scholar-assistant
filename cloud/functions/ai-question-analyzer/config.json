@@ -2,12 +2,12 @@
   "timeout": 60,
   "envVariables": {
     "DOUBAO_API_KEY": "908e2e4e-8625-4a88-b2dc-81b2acf0f5a7",
-    "DOUBAO_ENDPOINT": "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
+    "DOUBAO_ENDPOINT": "https://ark.cn-beijing.volces.com/api/v3",
     "DOUBAO_MODEL_ID": "doubao-seed-1-6-250615",
-    "DOUBAO_TIMEOUT": "25000",
-    "DOUBAO_MAX_RETRIES": "0"
+    "DOUBAO_TIMEOUT": "30000",
+    "DOUBAO_MAX_RETRIES": "2"
   },
-  "runtime": "Nodejs16.13", 
+  "runtime": "Nodejs16.13",
   "memorySize": 256,
   "installDependency": true
-}
+} 

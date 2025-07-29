@@ -36,14 +36,15 @@ exports.main = async (event, context) => {
     };
   }
 
-  // 豆包AI配置
-  const DOUBAO_CONFIG = {
-    API_KEY: '908e2e4e-8625-4a88-b2dc-81b2acf0f5a7',
-    ENDPOINT: 'https://ark.cn-beijing.volces.com/api/v3',
-    MODEL_ID: 'doubao-seed-1-6-250615',
-    TIMEOUT: 30000,
-    MAX_RETRIES: 2
-  };
+  // 导入并获取豆包AI配置
+  const { getDoubaoConfig } = require('../shared/doubao-config');
+  const DOUBAO_CONFIG = getDoubaoConfig();
+
+  // 验证豆包AI配置
+  if (!DOUBAO_CONFIG.isValid) {
+    console.error('❌ 豆包AI配置无效:', DOUBAO_CONFIG.errors);
+    return await mockCompleteAnalysis(finalImageBase64, options);
+  }
 
   try {
     const { imageBase64, imageInfo, fileID, useCloudStorage, analysisType = 'complete', options = {} } = event;

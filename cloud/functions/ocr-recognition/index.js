@@ -6,14 +6,17 @@ cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
 });
 
-// 优化豆包AI配置，提高响应速度
-const DOUBAO_CONFIG = {
-  API_KEY: '908e2e4e-8625-4a88-b2dc-81b2acf0f5a7',
-  ENDPOINT: 'https://ark.cn-beijing.volces.com/api/v3/chat/completions',
-  MODEL_ID: 'doubao-seed-1-6-250615',
-  TIMEOUT: 25000, // 减少到25秒
-  MAX_RETRIES: 0   // 真机环境不重试
-};
+// 导入统一配置管理工具
+const { getDoubaoConfig, reportAPISuccess, reportAPIError, getKeyManagerReport } = require('../shared/doubao-config');
+
+// 获取豆包AI配置（OCR特定默认值，启用密钥轮换）
+const DOUBAO_CONFIG = getDoubaoConfig({
+  defaults: {
+    TIMEOUT: 25000, // OCR需要较短的超时时间
+    MAX_RETRIES: 0  // 真机环境不重试
+  },
+  enableKeyRotation: true // 启用密钥轮换
+});
 
 exports.main = async (event, context) => {
   // 设置更长的超时时间
@@ -48,6 +51,16 @@ exports.main = async (event, context) => {
     };
     console.log('测试模式返回结果:', testResult);
     return testResult;
+  }
+
+  // 检查豆包AI配置是否有效
+  if (!DOUBAO_CONFIG.isValid) {
+    console.error('豆包AI配置无效:', DOUBAO_CONFIG.errors);
+    return {
+      success: false,
+      error: `豆包AI配置错误: ${DOUBAO_CONFIG.errors.join(', ')}`,
+      code: 'CONFIG_ERROR'
+    };
   }
 
   // 正常的图片分析流程
@@ -371,10 +384,18 @@ async function callDoubaoImageAnalysis(imageBase64, imageInfo, analysisType, opt
       processingTime: Date.now() - startTime
     };
     
+    // 报告API调用成功
+    const responseTime = Date.now() - startTime;
+    reportAPISuccess(responseTime);
+    
     console.log('豆包AI分析完成:', finalResult);
     return finalResult;
 
   } catch (error) {
+    // 报告API调用错误
+    const responseTime = Date.now() - startTime;
+    reportAPIError(error, responseTime);
+    
     console.error('豆包AI调用异常:', error);
     throw error;
   }

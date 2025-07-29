@@ -322,9 +322,10 @@ export const DEFAULT_CONFIG = {
   }
 };
 
-// 豆包AI配置 - 更新传输阈值
+// 豆包AI前端配置 - 仅包含非敏感信息
+// 注意：API密钥等敏感信息仅在云函数中配置
 export const DOUBAO_CONFIG = {
-  API_KEY: '',
+  // API_KEY 在云函数中通过环境变量配置
   ENDPOINT: 'https://ark.cn-beijing.volces.com/api/v3',
   MODEL_ID: 'doubao-seed-1-6-250615',
   
