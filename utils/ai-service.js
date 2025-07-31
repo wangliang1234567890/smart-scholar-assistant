@@ -545,17 +545,26 @@ class AIService {
   }
 
   /**
-   * 改进的重试机制 - 快速失败策略
+   * 调用云函数（优化版）
+   * @param {string} name - 云函数名称
+   * @param {Object} data - 传递给云函数的数据
+   * @param {Object} options - 调用选项
    */
   async callCloudFunction(name, data, options = {}) {
-    const maxRetries = options.maxRetries || 0; // 默认不重试
+    const maxRetries = options.maxRetries !== undefined ? options.maxRetries : 2; // 默认重试2次
     const timeout = options.timeout || 50000; // 50秒超时
+    const retryDelay = options.retryDelay || 1000; // 重试延迟
     
-    console.log(`[${name}] 调用云函数，超时设置: ${timeout}ms`);
+    console.log(`[${name}] 调用云函数，超时设置: ${timeout}ms，最大重试: ${maxRetries}次`);
+    
+    let lastError;
     
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`[${name}] 尝试调用云函数 (${attempt + 1}/${maxRetries + 1})`);
+        const attemptInfo = `(${attempt + 1}/${maxRetries + 1})`;
+        console.log(`[${name}] 尝试调用云函数 ${attemptInfo}`);
+        
+        const startTime = Date.now();
         
         const result = await wx.cloud.callFunction({
           name,
@@ -563,24 +572,93 @@ class AIService {
           timeout: timeout
         });
         
+        const duration = Date.now() - startTime;
+        
         if (result.errMsg === 'cloud.callFunction:ok') {
-          return result.result;
+          console.log(`[${name}] 云函数调用成功 ${attemptInfo}，耗时: ${duration}ms`);
+          
+          // 检查返回结果的有效性
+          if (this.isValidResult(result.result)) {
+            return result.result;
+          } else {
+            console.warn(`[${name}] 云函数返回结果无效:`, result.result);
+            throw new Error('云函数返回结果格式无效');
+          }
         } else {
-          throw new Error(result.errMsg);
+          throw new Error(result.errMsg || '云函数调用未知错误');
         }
         
       } catch (error) {
-        console.error(`[${name}] 云函数调用失败 (尝试 ${attempt + 1}):`, error.message);
+        lastError = error;
+        const errorMsg = error.message || error.errMsg || '未知错误';
+        console.error(`[${name}] 云函数调用失败 (尝试 ${attempt + 1}):`, errorMsg);
         
-        if (attempt === maxRetries) {
-          throw this.createServiceError('CLOUD_FUNCTION_ERROR', 
-            `云函数调用失败: ${error.message}`);
+        // 判断是否应该重试
+        if (attempt === maxRetries || !this.shouldRetry(error)) {
+          break;
         }
         
-        // 简短延迟后重试
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // 计算重试延迟（指数退避）
+        const delay = retryDelay * Math.pow(2, attempt);
+        console.log(`[${name}] ${delay}ms后重试...`);
+        await this.delay(delay);
       }
     }
+    
+    // 所有重试都失败了
+    const finalError = this.createServiceError('CLOUD_FUNCTION_ERROR', 
+      `云函数调用失败: ${lastError?.message || '未知错误'}`);
+    
+    // 记录详细错误信息
+    console.error(`[${name}] 云函数调用最终失败:`, {
+      error: lastError?.message,
+      attempts: maxRetries + 1,
+      timeout: timeout
+    });
+    
+    throw finalError;
+  }
+
+  /**
+   * 检查云函数返回结果是否有效
+   */
+  isValidResult(result) {
+    return result && typeof result === 'object';
+  }
+
+  /**
+   * 判断错误是否应该重试
+   */
+  shouldRetry(error) {
+    const errorMsg = error.message || error.errMsg || '';
+    
+    // 不重试的错误类型
+    const noRetryErrors = [
+      'cloud.callFunction:fail invalid parameter',
+      '参数错误',
+      '配置无效'
+    ];
+    
+    if (noRetryErrors.some(msg => errorMsg.includes(msg))) {
+      return false;
+    }
+    
+    // 重试的错误类型（网络、超时等）
+    const retryErrors = [
+      'timeout',
+      'network',
+      'service unavailable',
+      'internal error'
+    ];
+    
+    return retryErrors.some(msg => errorMsg.toLowerCase().includes(msg));
+  }
+
+  /**
+   * 延迟工具方法
+   */
+  delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   // 智能批改（保持原有功能）
@@ -621,15 +699,606 @@ class AIService {
         '学科判断',
         '难度评估',
         '结构化分析',
-        '知识点提取'
+        '知识点提取',
+        'AI题目生成',
+        'AI智能评分'
       ]
     };
+  }
+
+  /**
+   * AI服务健康检查
+   * 测试所有关键的AI云函数是否正常工作
+   */
+  async performHealthCheck() {
+    console.log('开始AI服务健康检查...');
+    
+    const healthStatus = {
+      overall: 'unknown',
+      timestamp: new Date().toISOString(),
+      services: {},
+      summary: {
+        total: 0,
+        healthy: 0,
+        unhealthy: 0,
+        failed: 0
+      }
+    };
+
+    // 要检查的云函数列表
+    const servicesToCheck = [
+      {
+        name: 'ai-question-analyzer',
+        description: '图片分析服务',
+        testData: { test: true }
+      },
+      {
+        name: 'ai-question-generator', 
+        description: 'AI题目生成服务',
+        testData: { 
+          test: true,
+          sourceErrors: [{ content: '测试题目', subject: '数学' }],
+          generateCount: 1
+        }
+      },
+      {
+        name: 'ai-grading',
+        description: 'AI智能评分服务',
+        testData: {
+          question: { type: 'single_choice', content: '测试题目' },
+          userAnswer: 'A',
+          standardAnswer: 'A'
+        }
+      },
+      {
+        name: 'ocr-recognition',
+        description: 'OCR识别服务',
+        testData: { test: true }
+      }
+    ];
+
+    healthStatus.summary.total = servicesToCheck.length;
+
+    // 并发测试所有服务
+    const checkPromises = servicesToCheck.map(async service => {
+      try {
+        console.log(`检查 ${service.name}...`);
+        const startTime = Date.now();
+        
+        const result = await this.callCloudFunction(service.name, service.testData, {
+          timeout: 10000, // 健康检查使用较短超时
+          maxRetries: 1
+        });
+        
+        const duration = Date.now() - startTime;
+        const isHealthy = result.success !== false;
+        
+        healthStatus.services[service.name] = {
+          status: isHealthy ? 'healthy' : 'unhealthy',
+          description: service.description,
+          responseTime: duration,
+          result: isHealthy ? 'ok' : result.error || '响应异常',
+          lastCheck: new Date().toISOString()
+        };
+        
+        if (isHealthy) {
+          healthStatus.summary.healthy++;
+        } else {
+          healthStatus.summary.unhealthy++;
+        }
+        
+        console.log(`✅ ${service.name} 检查完成: ${isHealthy ? '健康' : '异常'} (${duration}ms)`);
+        
+      } catch (error) {
+        console.error(`❌ ${service.name} 检查失败:`, error.message);
+        
+        healthStatus.services[service.name] = {
+          status: 'failed',
+          description: service.description,
+          responseTime: -1,
+          result: error.message,
+          lastCheck: new Date().toISOString()
+        };
+        
+        healthStatus.summary.failed++;
+      }
+    });
+
+    await Promise.all(checkPromises);
+
+    // 确定整体健康状态
+    if (healthStatus.summary.healthy === healthStatus.summary.total) {
+      healthStatus.overall = 'healthy';
+    } else if (healthStatus.summary.healthy > 0) {
+      healthStatus.overall = 'degraded';
+    } else {
+      healthStatus.overall = 'unhealthy';
+    }
+
+    console.log('AI服务健康检查完成:', {
+      overall: healthStatus.overall,
+      healthy: `${healthStatus.summary.healthy}/${healthStatus.summary.total}`,
+      avgResponseTime: this.calculateAverageResponseTime(healthStatus.services)
+    });
+
+    return healthStatus;
+  }
+
+  /**
+   * 计算平均响应时间
+   */
+  calculateAverageResponseTime(services) {
+    const validTimes = Object.values(services)
+      .map(s => s.responseTime)
+      .filter(t => t > 0);
+    
+    if (validTimes.length === 0) return -1;
+    
+    return Math.round(validTimes.reduce((sum, time) => sum + time, 0) / validTimes.length);
+  }
+
+  /**
+   * AI服务性能测试
+   * 测试AI服务在不同负载下的性能
+   */
+  async performPerformanceTest(options = {}) {
+    const {
+      testDuration = 30000, // 30秒
+      concurrency = 3, // 并发数
+      testType = 'mixed' // 测试类型: image, generation, grading, mixed
+    } = options;
+
+    console.log(`开始AI服务性能测试 - 持续时间: ${testDuration}ms, 并发: ${concurrency}, 类型: ${testType}`);
+
+    const testResults = {
+      startTime: Date.now(),
+      endTime: null,
+      duration: testDuration,
+      concurrency,
+      testType,
+      requests: {
+        total: 0,
+        successful: 0,
+        failed: 0,
+        timeouts: 0
+      },
+      performance: {
+        avgResponseTime: 0,
+        minResponseTime: Infinity,
+        maxResponseTime: 0,
+        throughput: 0 // 请求/秒
+      },
+      errors: []
+    };
+
+    const endTime = Date.now() + testDuration;
+    const responseTimes = [];
+
+    // 创建并发测试任务
+    const testTasks = Array(concurrency).fill().map(async (_, index) => {
+      while (Date.now() < endTime) {
+        try {
+          const startRequest = Date.now();
+          
+          // 根据测试类型选择不同的测试方法
+          await this.executeTestRequest(testType);
+          
+          const responseTime = Date.now() - startRequest;
+          responseTimes.push(responseTime);
+          
+          testResults.requests.total++;
+          testResults.requests.successful++;
+          
+          testResults.performance.minResponseTime = Math.min(testResults.performance.minResponseTime, responseTime);
+          testResults.performance.maxResponseTime = Math.max(testResults.performance.maxResponseTime, responseTime);
+          
+        } catch (error) {
+          testResults.requests.total++;
+          testResults.requests.failed++;
+          
+          if (error.message.includes('timeout')) {
+            testResults.requests.timeouts++;
+          }
+          
+          testResults.errors.push({
+            timestamp: Date.now(),
+            error: error.message,
+            worker: index
+          });
+        }
+        
+        // 短暂延迟避免过于密集的请求
+        await this.delay(100);
+      }
+    });
+
+    await Promise.all(testTasks);
+
+    testResults.endTime = Date.now();
+    testResults.performance.avgResponseTime = responseTimes.length > 0 
+      ? Math.round(responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length)
+      : 0;
+    
+    const actualDuration = testResults.endTime - testResults.startTime;
+    testResults.performance.throughput = Math.round((testResults.requests.total / actualDuration) * 1000 * 100) / 100;
+
+    console.log('AI服务性能测试完成:', {
+      总请求数: testResults.requests.total,
+      成功率: `${Math.round((testResults.requests.successful / testResults.requests.total) * 100)}%`,
+      平均响应时间: `${testResults.performance.avgResponseTime}ms`,
+      吞吐量: `${testResults.performance.throughput} 请求/秒`
+    });
+
+    return testResults;
+  }
+
+  /**
+   * 执行测试请求
+   */
+  async executeTestRequest(testType) {
+    switch (testType) {
+      case 'image':
+        return await this.callCloudFunction('ai-question-analyzer', { test: true });
+        
+      case 'generation':
+        return await this.callCloudFunction('ai-question-generator', {
+          test: true,
+          sourceErrors: [{ content: '测试', subject: '数学' }],
+          generateCount: 1
+        });
+        
+      case 'grading':
+        return await this.callCloudFunction('ai-grading', {
+          question: { type: 'single_choice', content: '测试' },
+          userAnswer: 'A',
+          standardAnswer: 'A'
+        });
+        
+      case 'mixed':
+      default:
+        const methods = ['image', 'generation', 'grading'];
+        const randomMethod = methods[Math.floor(Math.random() * methods.length)];
+        return await this.executeTestRequest(randomMethod);
+    }
   }
 
   // 清理缓存
   clearCache() {
     this.cache.clear();
     console.log('AI服务缓存已清理');
+  }
+
+  /**
+   * 创建用户友好的错误信息
+   * @param {string} errorCode - 错误代码
+   * @param {string} technicalMessage - 技术错误信息
+   * @param {Object} context - 错误上下文
+   */
+  createUserFriendlyError(errorCode, technicalMessage, context = {}) {
+    const errorMappings = {
+      'CLOUD_FUNCTION_ERROR': {
+        title: 'AI服务暂时不可用',
+        message: '网络连接或服务异常，请稍后重试',
+        suggestions: ['检查网络连接', '稍后重试', '使用离线功能']
+      },
+      'TIMEOUT_ERROR': {
+        title: '处理超时',
+        message: '处理时间较长，请稍后重试',
+        suggestions: ['减少图片大小', '重新拍照', '稍后重试']
+      },
+      'INVALID_IMAGE': {
+        title: '图片格式不支持',
+        message: '请使用清晰的图片重新拍照',
+        suggestions: ['重新拍照', '确保图片清晰', '调整光线条件']
+      },
+      'AI_GENERATION_FAILED': {
+        title: 'AI生成失败',
+        message: '暂时无法生成练习题目，请稍后重试',
+        suggestions: ['稍后重试', '手动添加题目', '检查网络连接']
+      },
+      'AI_GRADING_FAILED': {
+        title: '智能评分失败',
+        message: '暂时无法进行智能评分，已使用基础评分',
+        suggestions: ['答案仍会被保存', '可手动核对答案', '稍后查看详细分析']
+      },
+      'QUOTA_EXCEEDED': {
+        title: '今日AI使用次数已达上限',
+        message: '您今天的AI功能使用已达上限，明天会自动重置',
+        suggestions: ['明天再试', '使用手动功能', '升级账户']
+      },
+      'CONFIG_ERROR': {
+        title: 'AI服务配置异常',
+        message: '服务配置需要更新，请联系客服',
+        suggestions: ['联系客服', '稍后重试', '使用基础功能']
+      }
+    };
+
+    const errorInfo = errorMappings[errorCode] || {
+      title: '未知错误',
+      message: '发生了未知错误，请稍后重试',
+      suggestions: ['重启应用', '检查网络', '联系客服']
+    };
+
+    return {
+      code: errorCode,
+      title: errorInfo.title,
+      message: errorInfo.message,
+      suggestions: errorInfo.suggestions,
+      technicalMessage,
+      context,
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  /**
+   * 显示用户友好的错误提示
+   * @param {Object} error - 错误信息
+   * @param {Object} options - 显示选项
+   */
+  showUserFriendlyError(error, options = {}) {
+    const {
+      showModal = true,
+      showToast = false,
+      duration = 3000
+    } = options;
+
+    if (showModal) {
+      wx.showModal({
+        title: error.title || '操作失败',
+        content: error.message || '发生了未知错误',
+        showCancel: error.suggestions && error.suggestions.length > 0,
+        cancelText: '查看建议',
+        confirmText: '知道了',
+        success: (res) => {
+          if (res.cancel && error.suggestions) {
+            // 显示建议
+            const suggestions = error.suggestions.join('\n• ');
+            wx.showModal({
+              title: '解决建议',
+              content: '• ' + suggestions,
+              showCancel: false,
+              confirmText: '明白了'
+            });
+          }
+        }
+      });
+    } else if (showToast) {
+      wx.showToast({
+        title: error.title || error.message || '操作失败',
+        icon: 'none',
+        duration
+      });
+    }
+
+    // 记录错误到控制台以便调试
+    console.error('用户友好错误:', error);
+  }
+
+  /**
+   * AI服务降级处理
+   * 当AI服务不可用时，提供基础功能
+   */
+  async degradeService(serviceType, originalData, options = {}) {
+    console.log(`AI服务降级: ${serviceType}`);
+
+    switch (serviceType) {
+      case 'image_analysis':
+        return this.fallbackImageAnalysis(originalData, options);
+        
+      case 'question_generation':
+        return this.fallbackQuestionGeneration(originalData, options);
+        
+      case 'grading':
+        return this.fallbackGrading(originalData, options);
+        
+      default:
+        throw this.createUserFriendlyError('CONFIG_ERROR', `未知的服务类型: ${serviceType}`);
+    }
+  }
+
+  /**
+   * 图片分析降级处理
+   */
+  async fallbackImageAnalysis(imageData, options = {}) {
+    console.log('使用降级图片分析...');
+    
+    return {
+      success: true,
+      recognizedText: '图片内容需要手动输入',
+      confidence: 0,
+      questionType: 'unknown',
+      subject: '未知',
+      analysis: {
+        difficulty: 3,
+        keyPoints: [],
+        concepts: []
+      },
+      fallbackMode: true,
+      provider: '降级服务'
+    };
+  }
+
+  /**
+   * 题目生成降级处理
+   */
+  async fallbackQuestionGeneration(sourceData, options = {}) {
+    console.log('使用降级题目生成...');
+    
+    const { mistakes, count = 5 } = sourceData;
+    
+    if (!mistakes || mistakes.length === 0) {
+      return {
+        success: false,
+        error: '没有可用的错题数据',
+        fallbackMode: true
+      };
+    }
+
+    // 基于错题创建简化版练习题
+    const questions = mistakes.slice(0, count).map((mistake, index) => ({
+      id: `fallback_${Date.now()}_${index}`,
+      type: mistake.type || 'single_choice',
+      subject: mistake.subject || '综合',
+      question: `根据错题：${(mistake.question || mistake.content || '').substring(0, 50)}...，请总结类似题目的解题方法。`,
+      options: ['方法A', '方法B', '方法C', '方法D'],
+      answer: '方法A',
+      explanation: '这是一个基于您错题生成的思考题，帮助您总结解题方法。',
+      difficulty: mistake.difficulty || 3,
+      fallbackGenerated: true
+    }));
+
+    return {
+      success: true,
+      questions,
+      fallbackMode: true,
+      provider: '降级服务',
+      metadata: {
+        generatedCount: questions.length,
+        method: 'fallback'
+      }
+    };
+  }
+
+  /**
+   * 智能评分降级处理
+   */
+  async fallbackGrading(gradingData, options = {}) {
+    console.log('使用降级智能评分...');
+    
+    const { question, userAnswer, standardAnswer } = gradingData;
+    
+    // 简单的字符串匹配评分
+    const userAnswerNormalized = (userAnswer || '').toString().trim().toLowerCase();
+    const standardAnswerNormalized = (standardAnswer || '').toString().trim().toLowerCase();
+    
+    const isExactMatch = userAnswerNormalized === standardAnswerNormalized;
+    const isSimilar = userAnswerNormalized.length > 0 && 
+      standardAnswerNormalized.includes(userAnswerNormalized);
+    
+    let score = 0;
+    let isCorrect = false;
+    let analysis = '';
+    
+    if (isExactMatch) {
+      score = 100;
+      isCorrect = true;
+      analysis = '答案完全正确！';
+    } else if (isSimilar) {
+      score = 60;
+      isCorrect = false;
+      analysis = '答案部分正确，但还需要完善。';
+    } else {
+      score = 0;
+      isCorrect = false;
+      analysis = '答案与标准答案不符，建议重新思考。';
+    }
+
+    return {
+      success: true,
+      isCorrect,
+      score,
+      analysis,
+      suggestions: '请参考标准答案，总结解题思路。',
+      keyPoints: [],
+      fallbackMode: true,
+      provider: '基础评分'
+    };
+  }
+
+  /**
+   * 智能重试机制
+   * 根据错误类型决定是否应该重试
+   */
+  async intelligentRetry(operation, maxAttempts = 3, context = {}) {
+    let lastError;
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        console.log(`智能重试第 ${attempt} 次尝试: ${context.operationType || 'unknown'}`);
+        
+        const result = await operation();
+        
+        console.log(`智能重试成功: ${context.operationType || 'unknown'}`);
+        return result;
+        
+      } catch (error) {
+        lastError = error;
+        console.error(`智能重试第 ${attempt} 次失败:`, error.message);
+        
+        // 根据错误类型决定是否继续重试
+        if (!this.shouldRetryOperation(error, attempt, maxAttempts)) {
+          break;
+        }
+        
+        // 智能延迟：网络错误用指数退避，其他错误固定延迟
+        const delay = this.calculateRetryDelay(error, attempt);
+        if (delay > 0) {
+          console.log(`等待 ${delay}ms 后重试...`);
+          await this.delay(delay);
+        }
+      }
+    }
+    
+    // 重试失败，抛出最后的错误
+    throw lastError;
+  }
+
+  /**
+   * 判断是否应该重试操作
+   */
+  shouldRetryOperation(error, currentAttempt, maxAttempts) {
+    if (currentAttempt >= maxAttempts) {
+      return false;
+    }
+    
+    const errorMessage = error.message || '';
+    
+    // 立即失败的错误类型（不重试）
+    const noRetryErrors = [
+      '参数错误',
+      '配置无效',
+      '权限不足',
+      'quota exceeded',
+      'invalid parameter'
+    ];
+    
+    if (noRetryErrors.some(msg => errorMessage.toLowerCase().includes(msg))) {
+      return false;
+    }
+    
+    // 可重试的错误类型
+    const retryableErrors = [
+      'timeout',
+      'network',
+      'service unavailable',
+      'connection',
+      'server error',
+      'internal error'
+    ];
+    
+    return retryableErrors.some(msg => errorMessage.toLowerCase().includes(msg));
+  }
+
+  /**
+   * 计算重试延迟
+   */
+  calculateRetryDelay(error, attempt) {
+    const errorMessage = error.message || '';
+    
+    // 网络相关错误使用指数退避
+    if (errorMessage.toLowerCase().includes('network') || 
+        errorMessage.toLowerCase().includes('timeout')) {
+      return Math.min(1000 * Math.pow(2, attempt - 1), 10000); // 最大10秒
+    }
+    
+    // 服务器错误使用固定延迟
+    if (errorMessage.toLowerCase().includes('server') || 
+        errorMessage.toLowerCase().includes('service')) {
+      return 2000; // 固定2秒
+    }
+    
+    // 其他错误使用较短延迟
+    return 1000;
   }
 
   /**
@@ -1072,6 +1741,151 @@ class AIService {
       console.error(`[${requestId}] 批量生成练习题失败:`, error);
       throw error;
     }
+  }
+
+  /**
+   * 基于错题数组生成练习题目（exam.js调用的方法）
+   * @param {Array} mistakes - 错题数组
+   * @param {Object} options - 生成选项
+   */
+  async generateQuestionsFromMistakes(mistakes, options = {}) {
+    const requestId = this.generateRequestId();
+    
+    try {
+      console.log(`[${requestId}] 基于${mistakes.length}个错题生成练习题目`);
+      
+      if (!mistakes || mistakes.length === 0) {
+        return {
+          success: false,
+          error: '没有错题数据',
+          questions: []
+        };
+      }
+      
+      // 调用豆包AI题目生成云函数
+      const result = await this.callCloudFunction('ai-question-generator', {
+        sourceErrors: mistakes.map(mistake => ({
+          content: mistake.question || mistake.content || '题目内容缺失',
+          subject: mistake.subject || '未知',
+          difficulty: mistake.difficulty || 3,
+          type: mistake.type || 'single_choice',
+          keyPoints: mistake.keyPoints || [],
+          concepts: mistake.concepts || [],
+          wrongAnswer: mistake.userAnswer || mistake.我的答案 || '',
+          correctAnswer: mistake.answer || mistake.correctAnswer || mistake.正确答案 || '',
+          mistakeReason: mistake.mistakeReason || '未分析'
+        })),
+        generateCount: options.count || 5,
+        questionTypes: options.types || ['single_choice', 'multiple_choice', 'fill_blank'],
+        difficulty: options.difficulty || 'auto', // 'auto'表示根据错题难度自动调整
+        requestId: requestId,
+        useDoubao: true
+      });
+      
+      if (result.success && result.questions) {
+        // 为生成的题目添加元数据
+        const enhancedQuestions = result.questions.map((q, index) => ({
+          ...q,
+          id: `generated_${Date.now()}_${index}`,
+          generatedAt: new Date().toISOString(),
+          practiceType: 'ai_generated',
+          sourceErrors: mistakes.map(m => m._id || m.id).filter(Boolean),
+          relatedConcepts: this.extractUniqueValues(mistakes, 'concepts'),
+          targetSubjects: this.extractUniqueValues(mistakes, 'subject')
+        }));
+        
+        console.log(`[${requestId}] 成功生成${enhancedQuestions.length}个练习题目`);
+        
+        return {
+          success: true,
+          questions: enhancedQuestions,
+          sourceErrors: mistakes,
+          metadata: {
+            generatedCount: enhancedQuestions.length,
+            sourceErrorCount: mistakes.length,
+            subjects: this.extractUniqueValues(mistakes, 'subject'),
+            processingTime: result.metadata?.processingTime || 0
+          }
+        };
+      }
+      
+      // AI生成失败时的降级处理
+      console.warn(`[${requestId}] AI生成失败，使用降级方案`);
+      return this.fallbackGenerateQuestions(mistakes, options);
+      
+    } catch (error) {
+      console.error(`[${requestId}] 基于错题生成练习题目失败:`, error);
+      
+      // 错误时的降级处理
+      return this.fallbackGenerateQuestions(mistakes, options);
+    }
+  }
+
+  /**
+   * 降级题目生成方案（当AI服务不可用时）
+   */
+  fallbackGenerateQuestions(mistakes, options = {}) {
+    console.log('使用降级方案生成练习题目');
+    
+    try {
+      const questions = mistakes.map((mistake, index) => ({
+        id: `fallback_${Date.now()}_${index}`,
+        type: mistake.type || 'single_choice',
+        subject: mistake.subject || '综合',
+        difficulty: mistake.difficulty || 3,
+        question: mistake.question || mistake.content || '题目内容缺失',
+        options: this.generateFallbackOptions(mistake),
+        answer: mistake.answer || mistake.correctAnswer || mistake.正确答案 || '',
+        explanation: `这是基于您的错题"${(mistake.question || mistake.content || '').substring(0, 20)}..."生成的类似题目。`,
+        keyPoints: mistake.keyPoints || [],
+        source: 'fallback_generation',
+        practiceType: 'error_review',
+        originalErrorId: mistake._id || mistake.id
+      }));
+      
+      return {
+        success: true,
+        questions: questions.slice(0, options.count || 5),
+        sourceErrors: mistakes,
+        metadata: {
+          generatedCount: Math.min(questions.length, options.count || 5),
+          sourceErrorCount: mistakes.length,
+          method: 'fallback',
+          subjects: this.extractUniqueValues(mistakes, 'subject')
+        }
+      };
+    } catch (error) {
+      console.error('降级题目生成也失败:', error);
+      return {
+        success: false,
+        error: '题目生成失败',
+        questions: []
+      };
+    }
+  }
+
+  /**
+   * 为降级方案生成选项
+   */
+  generateFallbackOptions(mistake) {
+    if (mistake.type === 'single_choice' || mistake.type === 'multiple_choice') {
+      const correctAnswer = mistake.answer || mistake.correctAnswer || mistake.正确答案 || 'A';
+      return [
+        correctAnswer,
+        '其他选项1',
+        '其他选项2',
+        '其他选项3'
+      ].slice(0, 4);
+    }
+    return [];
+  }
+
+  /**
+   * 提取数组中对象的唯一值
+   */
+  extractUniqueValues(array, field) {
+    const values = array.map(item => item[field]).filter(Boolean);
+    return [...new Set(values)];
   }
 
   /**

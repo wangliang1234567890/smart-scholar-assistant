@@ -1,0 +1,12 @@
+{
+  "name": "smart-scholar-shared",
+  "version": "1.0.0",
+  "description": "智能学霸小助手 - 共享工具函数",
+  "main": "index.js",
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  },
+  "engines": {
+    "node": ">=16.13.0"
+  }
+} 

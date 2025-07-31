@@ -7,7 +7,7 @@ cloud.init({
 });
 
 // 导入统一配置管理工具
-const { getDoubaoConfig, reportAPISuccess, reportAPIError, getKeyManagerReport } = require('../shared/doubao-config');
+const { getDoubaoConfig, reportAPISuccess, reportAPIError, getKeyManagerReport } = require('./shared/doubao-config');
 
 // 获取豆包AI配置（OCR特定默认值，启用密钥轮换）
 const DOUBAO_CONFIG = getDoubaoConfig({

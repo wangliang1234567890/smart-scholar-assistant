@@ -1,5 +1,6 @@
 // pages/practice/result.js
 import LocalDB from '../../utils/local-db';
+import DatabaseManager from '../../utils/database.js';
 
 Page({
 
@@ -12,57 +13,162 @@ Page({
     report: {},
     gradientColor: { '0%': '#FFD1D1', '100%': '#4A90E2' },
     record: null,
-    score: 0
+    score: 0,
+    practiceId: null, // Added practiceId
+    practiceType: 'ai' // Added practiceType
   },
 
   /**
    * 生命周期函数--监听页面加载
    */
   onLoad(query) {
-    const { localId } = query;
-    if (localId) {
-      const records = LocalDB.getPracticeRecords();
-      const rec = records.find(r => r.id === localId);
-      if (rec) {
-        const score = this.calculateScore(rec);
-        this.setData({ record: rec, score });
-      }
+    console.log('练习结果页面加载，参数:', query);
+    
+    const practiceId = query.practiceId || null;
+    const practiceType = query.type || 'ai';
+    
+    this.setData({ 
+      practiceId,
+      practiceType
+    });
+    
+    if (practiceId) {
+      // 从数据库加载练习结果
+      this.loadPracticeResult(practiceId);
+    } else {
+      console.log('没有practiceId，使用默认结果');
+      // 兼容旧版本，使用默认数据
+      this.setDefaultResult();
     }
-    this.setData({ reportId: query.reportId });
-    this.fetchReport();
   },
 
-  fetchReport() {
+  // 从数据库加载练习结果
+  async loadPracticeResult(practiceId) {
+    console.log('加载练习结果:', practiceId);
     this.setData({ isLoading: true });
     
     try {
-      console.log('加载练习报告，报告ID:', this.data.reportId);
+      const userId = DatabaseManager.getCurrentUserId();
+      const result = await DatabaseManager.getPracticeRecords(userId, {
+        practiceId,
+        pageSize: 1
+      });
       
-      // 目前没有真实的报告数据，显示简单的完成提示
-      setTimeout(() => {
+      if (result.success && result.data && result.data.length > 0) {
+        const practiceRecord = result.data[0];
+        console.log('练习记录:', practiceRecord);
+        
+        // 设置练习结果数据
         this.setData({
           report: {
-            id: this.data.reportId,
-            accuracy: 0,
-            score: 0,
-            correctCount: 0,
-            incorrectCount: 0,
-            totalCount: 0,
-            summaryText: '练习已完成',
-            questions: []
+            id: practiceRecord.practiceId,
+            type: practiceRecord.type,
+            title: practiceRecord.title,
+            accuracy: practiceRecord.accuracy || 0,
+            score: practiceRecord.score || 0,
+            correctCount: practiceRecord.correctCount || 0,
+            incorrectCount: practiceRecord.incorrectCount || 0,
+            totalCount: practiceRecord.totalQuestions || 0,
+            answeredCount: practiceRecord.answeredQuestions || 0,
+            duration: practiceRecord.duration || 0,
+            completionRate: practiceRecord.completionRate || 0,
+            startTime: practiceRecord.startTime,
+            endTime: practiceRecord.endTime,
+            createTime: practiceRecord.createTime
           },
+          record: practiceRecord,
+          score: practiceRecord.score || 0,
           isLoading: false
         });
         
-        wx.showToast({
-          title: '练习已完成',
-          icon: 'success',
-          duration: 2000
-        });
-      }, 500);
+        console.log('练习结果数据设置完成');
+      } else {
+        console.log('未找到练习记录，使用默认数据');
+        this.setDefaultResult();
+      }
     } catch (error) {
-      console.error('加载练习报告失败:', error);
-      this.setData({ isLoading: false });
+      console.error('加载练习结果失败:', error);
+      this.setDefaultResult();
+    }
+  },
+
+  // 设置默认结果（兼容处理）
+  setDefaultResult() {
+    this.setData({
+      isLoading: false,
+      report: {
+        id: 'default',
+        type: this.data.practiceType,
+        title: '练习已完成',
+        accuracy: 0,
+        score: 0,
+        correctCount: 0,
+        incorrectCount: 0,
+        totalCount: 0,
+        answeredCount: 0,
+        duration: 0,
+        completionRate: 0
+      }
+    });
+  },
+
+  fetchReport() {
+    // 已移至loadPracticeResult方法，保留空方法避免报错
+    console.log('fetchReport方法已重构为loadPracticeResult');
+  },
+
+  // 格式化练习用时
+  formatDuration(seconds) {
+    if (!seconds || seconds === 0) return '0秒';
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    let result = '';
+    if (hours > 0) result += `${hours}小时`;
+    if (minutes > 0) result += `${minutes}分钟`;
+    if (secs > 0) result += `${secs}秒`;
+    
+    return result || '0秒';
+  },
+
+  // 查看题目详情
+  viewQuestionDetail(e) {
+    const { index } = e.currentTarget.dataset;
+    console.log('查看题目详情:', index);
+    
+    // 这里可以扩展显示题目详情的功能
+    wx.showModal({
+      title: '题目详情',
+      content: '题目详情功能开发中',
+      showCancel: false
+    });
+  },
+
+  // 返回首页
+  backToHome() {
+    wx.switchTab({
+      url: '/pages/home/home'
+    });
+  },
+
+  // 再次练习
+  practiceAgain() {
+    const { practiceType } = this.data;
+    
+    if (practiceType === 'ai') {
+      wx.navigateTo({
+        url: '/pages/practice/config?type=ai'
+      });
+    } else if (practiceType === 'review') {
+      wx.navigateTo({
+        url: '/pages/practice/practice'
+      });
+    } else {
+      wx.switchTab({
+        url: '/pages/practice/practice'
+      });
     }
   },
 
@@ -75,12 +181,6 @@ Page({
     wx.switchTab({
       url: '/pages/home/home'
     });
-  },
-
-  viewQuestionDetail(e) {
-    const { id } = e.currentTarget.dataset;
-    wx.showToast({ title: `查看第${id}题详情 (开发中)`, icon: 'none' });
-    // TODO: 跳转到题目详情页
   },
 
   calculateScore(rec) {

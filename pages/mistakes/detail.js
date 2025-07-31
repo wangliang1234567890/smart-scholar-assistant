@@ -257,34 +257,34 @@ Page({
         
         // 重新获取最新数据
         await this.fetchMistakeDetail();
-        
-        const timeText = days === 0 ? '今日复习计划' : 
-                        days === 3 ? '3天后' :
-                        days === 7 ? '1周后' :
-                        days === 14 ? '2周后' : '1个月后';
-        
-        wx.showToast({
-          title: `已加入${timeText}`,
-          icon: 'success'
-        });
-        
+      
+      const timeText = days === 0 ? '今日复习计划' : 
+                      days === 3 ? '3天后' :
+                      days === 7 ? '1周后' :
+                      days === 14 ? '2周后' : '1个月后';
+      
+      wx.showToast({
+        title: `已加入${timeText}`,
+        icon: 'success'
+      });
+      
         // 如果是立即复习，询问是否开始复习
-        if (days === 0) {
-          setTimeout(() => {
-            wx.showModal({
-              title: '开始复习',
-              content: '是否立即开始复习这道错题？',
-              success: (res) => {
-                if (res.confirm) {
-                  // 跳转到复习页面
-                  wx.navigateTo({
-                    url: `/pages/practice/config?type=review&mistakeId=${mistake._id}`
-                  });
-                }
+      if (days === 0) {
+        setTimeout(() => {
+          wx.showModal({
+            title: '开始复习',
+            content: '是否立即开始复习这道错题？',
+            success: (res) => {
+              if (res.confirm) {
+                // 跳转到复习页面
+                wx.navigateTo({
+                  url: `/pages/practice/config?type=review&mistakeId=${mistake._id}`
+                });
               }
-            });
-          }, 1500);
-        }
+            }
+          });
+        }, 1500);
+      }
       } else {
         throw new Error(result.error || '添加复习计划失败');
       }

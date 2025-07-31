@@ -1,5 +1,6 @@
 const app = getApp();
 import DatabaseManager from '../../utils/database.js';
+import { getSystemInfo } from '../../utils/common.js';
 
 Page({
   data: {
@@ -352,7 +353,7 @@ Page({
   drawExamToCanvas(canvasInfo) {
     const canvas = canvasInfo.node;
     const ctx = canvas.getContext('2d');
-    const dpr = wx.getSystemInfoSync().pixelRatio;
+    const dpr = getSystemInfo().pixelRatio || 2;
     
     canvas.width = canvasInfo.width * dpr;
     canvas.height = canvasInfo.height * dpr;

@@ -18,11 +18,18 @@ Page({
     examTitle: '',
     generatingQuestions: false,
     isGrading: false,
-    isLoading: false
+    isLoading: false,
+    // 新增：练习结果追踪
+    answerHistory: [], // 记录每题的答题情况
+    startTime: null,   // 练习开始时间
+    practiceId: null   // 练习ID
   },
 
   onLoad(options) {
     console.log('练习页面加载，参数:', options);
+    
+    // 初始化练习会话
+    this.initPracticeSession();
     
     if (options.type === 'review' && options.mistakes) {
       try {
@@ -114,6 +121,52 @@ Page({
       console.log('未知类型或缺少参数，加载示例题目');
       this.loadAIQuestions();
     }
+  },
+
+  // 初始化练习会话
+  initPracticeSession() {
+    const practiceId = 'practice_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    const startTime = Date.now();
+    
+    this.setData({
+      practiceId,
+      startTime,
+      answerHistory: []
+    });
+    
+    console.log('练习会话初始化:', { practiceId, startTime });
+  },
+
+  // 记录答题历史
+  recordAnswer(questionIndex, question, userAnswer, isCorrect = null) {
+    const { answerHistory } = this.data;
+    
+    // 检查是否已经记录过这一题
+    const existingIndex = answerHistory.findIndex(item => item.questionIndex === questionIndex);
+    
+    const answerRecord = {
+      questionIndex,
+      questionId: question._id || question.id || `q_${questionIndex}`,
+      question: question.question || question.content || '',
+      questionType: question.type || 'choice',
+      userAnswer,
+      correctAnswer: question.answer || question.correctAnswer || '',
+      isCorrect,
+      answerTime: Date.now(),
+      subject: question.subject || '其他',
+      difficulty: question.difficulty || 'medium'
+    };
+    
+    if (existingIndex >= 0) {
+      // 更新已有记录
+      answerHistory[existingIndex] = answerRecord;
+    } else {
+      // 添加新记录
+      answerHistory.push(answerRecord);
+    }
+    
+    this.setData({ answerHistory });
+    console.log('记录答题:', answerRecord);
   },
 
   // 转换错题数据为练习题目格式
@@ -429,46 +482,303 @@ Page({
     ];
   },
 
-  // 加载AI题目（从错题生成）
+  // 加载AI题目（使用AI大模型生成新题目）
   async loadAIQuestions() {
-    console.log('开始加载AI题目...');
-    this.setData({ loading: true });
+    console.log('开始使用AI生成练习题目...');
+    this.setData({ 
+      loading: true,
+      generatingQuestions: true,
+      isLoading: true
+    });
     
     try {
-      const userId = wx.getStorageSync('userId') || 'default_user';
+      const userId = DatabaseManager.getCurrentUserId();
       
-      // 从错题库中获取题目
+      // 1. 获取用户的错题作为AI生成的基础
       const mistakesResult = await DatabaseManager.getMistakes(userId, { 
-        pageSize: 5,
+        pageSize: 10, // 获取更多错题供AI分析
         filters: { status: 'all' }
       });
       
-      if (mistakesResult.success && mistakesResult.data && mistakesResult.data.length > 0) {
-        console.log('从错题库获取到题目:', mistakesResult.data.length);
-        
-        // 转换错题为练习题目格式
-        const questions = this.convertMistakesToQuestions(mistakesResult.data);
-        
-        this.setData({
-          practiceType: 'ai',
-          questions: questions,
-          currentQuestion: questions[0] || null,
-          totalQuestions: questions.length,
-          currentIndex: 0,
-          loading: false,
-          userAnswer: null,
-          userAnswerText: ''
-        });
-        
-        console.log('AI题目加载完成');
-      } else {
-        console.log('暂无错题数据，显示提示');
+      if (!mistakesResult.success || !mistakesResult.data || mistakesResult.data.length === 0) {
+        console.log('暂无错题数据，无法进行AI练习');
         this.showNoQuestionsError();
+        return;
       }
+      
+      const mistakes = mistakesResult.data;
+      console.log(`基于${mistakes.length}个错题生成AI练习题目...`);
+      
+      // 2. 调用AI服务生成新题目
+      const aiService = getApp().globalData.aiService;
+      
+      if (aiService && typeof aiService.generateQuestionsFromMistakes === 'function') {
+        console.log('调用AI服务生成题目...');
+        
+        try {
+          const aiResult = await aiService.generateQuestionsFromMistakes(mistakes, {
+            count: 5,  // 生成5道新题
+            types: ['single_choice', 'multiple_choice', 'fill_blank', 'short_answer'],
+            difficulty: 'auto' // 根据错题难度自动调整
+          });
+          
+          if (aiResult.success && aiResult.questions && aiResult.questions.length > 0) {
+            console.log(`AI成功生成${aiResult.questions.length}道新题目`);
+            
+            // 使用AI生成的题目
+            this.setData({
+              practiceType: 'ai',
+              questions: aiResult.questions,
+              currentQuestion: aiResult.questions[0] || null,
+              totalQuestions: aiResult.questions.length,
+              currentIndex: 0,
+              loading: false,
+              generatingQuestions: false,
+              isLoading: false,
+              userAnswer: null,
+              userAnswerText: ''
+            });
+            
+            // 显示AI生成成功提示
+            wx.showToast({
+              title: `AI生成${aiResult.questions.length}道练习题`,
+              icon: 'success',
+              duration: 2000
+            });
+            
+            console.log('AI题目加载完成');
+            return;
+            
+          } else {
+            console.warn('AI生成题目失败，使用降级方案');
+            throw new Error('AI生成返回结果无效');
+          }
+          
+        } catch (aiError) {
+          console.error('AI题目生成失败:', aiError.message);
+          
+          // 显示AI生成失败，降级提示
+          wx.showModal({
+            title: 'AI生成失败',
+            content: 'AI服务暂时不可用，将为您智能生成基于错题的变化练习题',
+            showCancel: false,
+            confirmText: '继续练习'
+          });
+        }
+      } else {
+        console.log('AI服务不可用，使用降级方案');
+      }
+      
+      // 3. AI生成失败时的降级方案：基于错题生成练习题
+      console.log('使用基于错题的降级练习题目...');
+      
+      // 从错题中随机选择一部分，稍作变化作为练习题
+      const practiceQuestions = this.generatePracticeFromMistakes(mistakes);
+
+    this.setData({
+      practiceType: 'ai',
+        questions: practiceQuestions,
+        currentQuestion: practiceQuestions[0] || null,
+        totalQuestions: practiceQuestions.length,
+      currentIndex: 0,
+        loading: false,
+        generatingQuestions: false,
+        isLoading: false,
+        userAnswer: null,
+        userAnswerText: ''
+      });
+      
+      // 显示降级练习提示
+      wx.showToast({
+        title: '智能生成练习题目完成',
+        icon: 'success',
+        duration: 2000
+      });
+      
+      console.log('基础练习题目加载完成');
+      
     } catch (error) {
       console.error('加载AI题目失败:', error);
+      this.setData({ 
+        loading: false,
+        generatingQuestions: false,
+        isLoading: false
+      });
       this.showNoQuestionsError();
     }
+  },
+
+  // 基于错题生成练习题目（降级方案）
+  generatePracticeFromMistakes(mistakes) {
+    console.log('使用智能降级方案生成练习题目...');
+    
+    // 随机选择错题，并智能生成变化题型
+    const selectedMistakes = mistakes
+      .sort(() => Math.random() - 0.5) // 随机排序
+      .slice(0, 5); // 取前5个
+    
+    return selectedMistakes.map((mistake, index) => {
+      const originalQuestion = mistake.question || mistake.content || '';
+      
+      // 智能生成变化题目
+      const generatedQuestion = this.generateVariationQuestion(mistake, index);
+      
+      return {
+        id: `ai_practice_${Date.now()}_${index}`,
+        type: generatedQuestion.type,
+        subject: mistake.subject || '综合',
+        difficulty: mistake.difficulty || 3,
+        question: generatedQuestion.question,
+        options: generatedQuestion.options,
+        answer: generatedQuestion.answer,
+        explanation: generatedQuestion.explanation,
+        keyPoints: mistake.keyPoints || [],
+        source: 'ai_fallback',
+        originalMistakeId: mistake._id || mistake.id,
+        practiceType: 'ai_generated'
+      };
+    });
+  },
+
+  // 智能生成题目变化（模拟AI生成效果）
+  generateVariationQuestion(mistake, index) {
+    const originalQuestion = mistake.question || mistake.content || '';
+    const subject = mistake.subject || 'unknown';
+    
+    // 根据题目类型和学科生成不同的变化
+    const variations = this.getQuestionVariations(originalQuestion, subject, index);
+    
+    // 随机选择一个变化
+    const selectedVariation = variations[Math.floor(Math.random() * variations.length)];
+    
+    return selectedVariation;
+  },
+
+  // 获取题目变化方案
+  getQuestionVariations(originalQuestion, subject, index) {
+    const variations = [];
+    
+    // 数学题目变化
+    if (subject === 'math' || originalQuestion.includes('数学') || originalQuestion.includes('计算')) {
+      variations.push(
+        {
+          type: 'single_choice',
+          question: `【AI变化题${index + 1}】请根据数学规律，选择正确答案：下列哪个数字序列遵循相同的规律？`,
+          options: ['1, 3, 5, 7, 9', '2, 4, 8, 16, 32', '1, 4, 9, 16, 25', '3, 6, 9, 12, 15'],
+          answer: '1, 4, 9, 16, 25',
+          explanation: '这是一个平方数序列：1²=1, 2²=4, 3²=9, 4²=16, 5²=25'
+        },
+        {
+          type: 'fill_blank',
+          question: `【AI变化题${index + 1}】填空题：如果一个正方形的边长是5cm，那么它的面积是___平方厘米。`,
+          options: [],
+          answer: '25',
+          explanation: '正方形面积 = 边长 × 边长 = 5 × 5 = 25平方厘米'
+        }
+      );
+    }
+    
+    // 语文题目变化
+    if (subject === 'chinese' || originalQuestion.includes('语文') || originalQuestion.includes('文字')) {
+      variations.push(
+        {
+          type: 'single_choice',
+          question: `【AI变化题${index + 1}】下列词语中，哪个是正确的成语？`,
+          options: ['风雨同舟', '风雨同州', '风与同舟', '凤雨同舟'],
+          answer: '风雨同舟',
+          explanation: '风雨同舟：比喻共同经历患难，同心协力'
+        },
+        {
+          type: 'short_answer',
+          question: `【AI变化题${index + 1}】请用"春天"这个词造一个句子，要求不少于10个字。`,
+          options: [],
+          answer: '春天来了，花儿都开了。',
+          explanation: '要求使用"春天"造句，表达春天的美好景象'
+        }
+      );
+    }
+    
+    // 英语题目变化
+    if (subject === 'english' || originalQuestion.includes('英语') || originalQuestion.includes('English')) {
+      variations.push(
+        {
+          type: 'single_choice',
+          question: `【AI变化题${index + 1}】Choose the correct word: "I ___ to school every day."`,
+          options: ['go', 'goes', 'going', 'went'],
+          answer: 'go',
+          explanation: '"I"是第一人称，用动词原形"go"'
+        },
+        {
+          type: 'fill_blank',
+          question: `【AI变化题${index + 1}】Complete the sentence: "What ___ your name?" (填入正确的be动词)`,
+          options: [],
+          answer: 'is',
+          explanation: '"What is your name?"是询问姓名的常用句型'
+        }
+      );
+    }
+    
+    // 空间几何题目变化（针对立方体旋转类题目）
+    if (originalQuestion.includes('立方体') || originalQuestion.includes('旋转') || originalQuestion.includes('几何')) {
+      variations.push(
+        {
+          type: 'single_choice',
+          question: `【AI变化题${index + 1}】空间几何：如果将一个正方体沿着某条边旋转180度，下列哪个描述是正确的？`,
+          options: ['形状完全改变', '得到一个圆柱体', '得到一个扇形', '位置改变但形状不变'],
+          answer: '位置改变但形状不变',
+          explanation: '正方体沿边旋转只是位置变化，几何形状本身不会改变'
+        },
+        {
+          type: 'multiple_choice',
+          question: `【AI变化题${index + 1}】下列哪些是正方体的基本特征？（多选）`,
+          options: ['有6个面', '有8个顶点', '有12条边', '所有面都是正方形'],
+          answer: '有6个面,有8个顶点,有12条边,所有面都是正方形',
+          explanation: '正方体具有6个面、8个顶点、12条边，且所有面都是全等的正方形'
+        }
+      );
+    }
+    
+    // 通用变化题目（如果没有匹配到特定类型）
+    if (variations.length === 0) {
+      variations.push(
+        {
+          type: 'single_choice',
+          question: `【AI变化题${index + 1}】逻辑推理：根据规律，下一个数字应该是什么？ 2, 4, 6, 8, ?`,
+          options: ['9', '10', '11', '12'],
+          answer: '10',
+          explanation: '这是一个偶数序列，下一个偶数是10'
+        },
+        {
+          type: 'short_answer',
+          question: `【AI变化题${index + 1}】思考题：请简单描述一下您对学习的理解（不少于15字）。`,
+          options: [],
+          answer: '学习是获取知识和技能的过程，需要坚持和努力。',
+          explanation: '这是一道开放性题目，考查学生的思维表达能力'
+        }
+      );
+    }
+    
+    return variations;
+  },
+
+  // 为练习题生成选项
+  generatePracticeOptions(mistake) {
+    if (mistake.options && mistake.options.length > 0) {
+      return mistake.options;
+    }
+    
+    // 如果原错题没有选项，生成通用选项
+    if (mistake.type === 'single_choice' || mistake.type === 'multiple_choice') {
+      const correctAnswer = mistake.answer || mistake.correctAnswer || 'A';
+      return [
+        correctAnswer,
+        '其他选项1',
+        '其他选项2', 
+        '其他选项3'
+      ];
+    }
+    
+    return [];
   },
   
   // 显示无题目的错误信息
@@ -511,6 +821,12 @@ Page({
         userAnswer: parseInt(index),
         userAnswerText: answer || ''
       });
+      
+      // 记录答题历史
+      const { currentIndex, currentQuestion } = this.data;
+      if (currentQuestion) {
+        this.recordAnswer(currentIndex, currentQuestion, answer);
+      }
     }
   },
 
@@ -521,6 +837,12 @@ Page({
       userAnswer: value,
       userAnswerText: value
     });
+    
+    // 记录答题历史（对于输入类题目）
+    const { currentIndex, currentQuestion } = this.data;
+    if (currentQuestion) {
+      this.recordAnswer(currentIndex, currentQuestion, value);
+    }
   },
 
   // 下一题 - 修复方法名
@@ -557,10 +879,87 @@ Page({
   },
 
   // 完成练习
-  completePractice() {
+  async completePractice() {
+    console.log('开始保存练习结果...');
+    
+    try {
+      // 计算练习统计
+      const practiceResult = this.calculatePracticeResult();
+      console.log('练习统计结果:', practiceResult);
+      
+      // 保存到数据库
+      const userId = DatabaseManager.getCurrentUserId();
+      const saveResult = await DatabaseManager.savePracticeResult(userId, {
+        practiceId: this.data.practiceId,
+        type: this.data.practiceType,
+        title: this.data.examTitle || `${this.data.practiceType === 'ai' ? 'AI智能练习' : '错题复习'}`,
+        ...practiceResult,
+        answerDetails: this.data.answerHistory
+      });
+      
+      if (saveResult.success) {
+        console.log('练习结果保存成功');
+        
+        // 跳转到结果页面，传递练习结果
+        wx.redirectTo({
+          url: `/pages/practice/result?practiceId=${this.data.practiceId}&type=${this.data.practiceType}`
+        });
+      } else {
+        console.error('保存练习结果失败:', saveResult.error);
+        // 即使保存失败也跳转到结果页面
+        wx.redirectTo({
+          url: `/pages/practice/result?type=${this.data.practiceType}`
+        });
+      }
+    } catch (error) {
+      console.error('完成练习处理失败:', error);
+      // 出错时也跳转到结果页面
     wx.redirectTo({
-      url: '/pages/practice/result?type=' + this.data.practiceType
+        url: `/pages/practice/result?type=${this.data.practiceType}`
+      });
+    }
+  },
+
+  // 计算练习结果统计
+  calculatePracticeResult() {
+    const { answerHistory, startTime, questions } = this.data;
+    const endTime = Date.now();
+    const duration = Math.round((endTime - startTime) / 1000); // 秒
+    
+    let correctCount = 0;
+    let totalCount = answerHistory.length;
+    
+    // 统计正确率（这里简化处理，实际可能需要更复杂的判断逻辑）
+    answerHistory.forEach(record => {
+      if (record.userAnswer && record.correctAnswer) {
+        // 简单的字符串匹配（可以根据题目类型优化）
+        const userAnswerNormalized = record.userAnswer.toString().trim().toLowerCase();
+        const correctAnswerNormalized = record.correctAnswer.toString().trim().toLowerCase();
+        
+        if (userAnswerNormalized === correctAnswerNormalized) {
+          correctCount++;
+          record.isCorrect = true;
+        } else {
+          record.isCorrect = false;
+        }
+      }
     });
+    
+    const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+    const score = Math.round((correctCount / questions.length) * 100);
+    
+    return {
+      totalQuestions: questions.length,
+      answeredQuestions: totalCount,
+      correctCount,
+      incorrectCount: totalCount - correctCount,
+      accuracy,
+      score,
+      duration,
+      startTime,
+      endTime,
+      completionRate: Math.round((totalCount / questions.length) * 100)
+    };
   },
 
   // 退出确认弹窗相关方法

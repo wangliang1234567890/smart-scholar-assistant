@@ -16,46 +16,15 @@ let keyManager = null;
  * @returns {Object} 豆包AI配置对象
  */
 function getDoubaoConfig(options = {}) {
-  console.log('🚀 getDoubaoConfig 开始执行，参数:', options);
-  
   const { strict = false, defaults = {}, enableKeyRotation = true } = options;
-  
-  console.log('📋 环境变量检查:', {
-    DOUBAO_API_KEY: process.env.DOUBAO_API_KEY ? `已设置(${process.env.DOUBAO_API_KEY.substring(0, 8)}...)` : '未设置',
-    NODE_ENV: process.env.NODE_ENV || '未设置'
-  });
-  
-  // 🚨 临时硬编码解决本地调试环境变量问题
-  if (!process.env.DOUBAO_API_KEY) {
-    console.log('⚠️ 本地调试环境变量未生效，使用硬编码API密钥');
-    process.env.DOUBAO_API_KEY = '908e2e4e-8625-4a88-b2dc-81b2acf0f5a7';
-  }
   
   // 初始化密钥管理器
   if (enableKeyRotation && !keyManager) {
     keyManager = new APIKeyManager();
   }
   
-  // Fallback to default key in local debug if env not set
-  const DEFAULT_DEBUG_KEY = '908e2e4e-8625-4a88-b2dc-81b2acf0f5a7';
-
-  const currentKey = enableKeyRotation && keyManager ? keyManager.getCurrentKey() : null;
-
-  // 调试信息
-  console.log('🔍 API密钥解析调试:', {
-    enableKeyRotation,
-    hasKeyManager: !!keyManager,
-    currentKeyFromManager: currentKey,
-    envKey: process.env.DOUBAO_API_KEY ? '已设置' : '未设置',
-    defaultKey: DEFAULT_DEBUG_KEY ? '已设置' : '未设置'
-  });
-
-  // 简化密钥获取逻辑，确保一定有值
-  const finalApiKey = process.env.DOUBAO_API_KEY || DEFAULT_DEBUG_KEY;
-  console.log('🔑 最终使用的API密钥:', finalApiKey ? `${finalApiKey.substring(0, 8)}...` : '空值');
-  
   const config = {
-    API_KEY: finalApiKey,
+    API_KEY: enableKeyRotation && keyManager ? keyManager.getCurrentKey() : process.env.DOUBAO_API_KEY,
     ENDPOINT: process.env.DOUBAO_ENDPOINT || 'https://ark.cn-beijing.volces.com/api/v3/chat/completions',
     MODEL_ID: process.env.DOUBAO_MODEL_ID || 'doubao-seed-1-6-250615',
     TIMEOUT: parseInt(process.env.DOUBAO_TIMEOUT) || 30000,

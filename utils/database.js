@@ -375,32 +375,69 @@ class DatabaseManager {
   /**
    * 保存练习结果 - 新增方法
    */
-  async savePracticeResult(practiceData) {
+  async savePracticeResult(userId, practiceData) {
     try {
-      this.validateRequired(practiceData, ['userId', 'questions', 'score']);
+      // 验证基本参数
+      if (!userId) {
+        throw new Error('缺少用户ID');
+      }
+      
+      if (!practiceData || typeof practiceData !== 'object') {
+        throw new Error('缺少练习数据');
+      }
+      
+      // 确保必要字段存在，提供默认值
+      const dataToValidate = {
+        userId,
+        practiceId: practiceData.practiceId || `practice_${Date.now()}`,
+        type: practiceData.type || 'unknown',
+        title: practiceData.title || '练习记录',
+        totalQuestions: practiceData.totalQuestions || 0,
+        answeredQuestions: practiceData.answeredQuestions || 0,
+        correctCount: practiceData.correctCount || 0,
+        incorrectCount: practiceData.incorrectCount || 0,
+        accuracy: practiceData.accuracy || 0,
+        score: practiceData.score || 0,
+        duration: practiceData.duration || 0,
+        startTime: practiceData.startTime || Date.now(),
+        endTime: practiceData.endTime || Date.now(),
+        completionRate: practiceData.completionRate || 0,
+        answerDetails: practiceData.answerDetails || []
+      };
       
       const now = new Date();
-      const dataToSave = {
-        ...practiceData,
+      const finalData = {
+        ...dataToValidate,
         _id: generateUUID(),
         practiceTime: now.toISOString(),
         createTime: now.toISOString()
       };
       
+      console.log('保存练习记录:', {
+        practiceId: finalData.practiceId,
+        type: finalData.type,
+        totalQuestions: finalData.totalQuestions,
+        answeredQuestions: finalData.answeredQuestions,
+        score: finalData.score
+      });
+      
       const result = await withRetry(
         () => this.db.collection(this.collections.PRACTICE_RECORDS).add({
-          data: dataToSave
+          data: finalData
         }),
         this.retryOptions.maxRetries,
         this.retryOptions.delay
       );
       
+      console.log('练习记录保存成功:', result._id);
+      
       return {
         success: true,
-        data: { _id: result._id, ...dataToSave }
+        data: { _id: result._id, ...finalData }
       };
       
     } catch (error) {
+      console.error('保存练习结果详细错误:', error);
       return errorHandler.handle(error, {
         scene: 'database_save_practice_result',
         showToast: true,

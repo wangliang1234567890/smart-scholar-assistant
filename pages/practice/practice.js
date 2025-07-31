@@ -8,11 +8,12 @@ Page({
     practiceOptions: [
       {
         title: "AI 智能练习",
-        subtitle: "海量题库，智能推荐",
+        subtitle: "AI分析错题，生成类似新题目",
         icon: "/images/icons/white/brain.svg",
         gradient: "bg-grad-blue",
-        count: "推荐题目",
-        type: 'ai'
+        count: "智能生成",
+        type: 'ai',
+        description: "基于您的错题，使用AI大模型生成针对性练习题"
       },
       {
         title: "错题强化复习",
@@ -20,7 +21,8 @@ Page({
         icon: "/images/icons/white/homework.svg",
         gradient: "bg-grad-orange",
         count: "题",
-        type: 'review'
+        type: 'review',
+        description: "直接练习您拍照保存的原错题"
       },
     ],
     todayStats: {
@@ -71,62 +73,92 @@ Page({
   },
 
   async loadRealData() {
-    const userId = wx.getStorageSync('userId') || 'default_user';
+    const userId = DatabaseManager.getCurrentUserId();
     
-    // 1. 获取今日统计
-    const statsResult = await DatabaseManager.getTodayStats(userId);
-    let todayStats = { practiced: 0, correct: 0, accuracy: 0, total: 0 };
-    
-    if (statsResult.success) {
-      const stats = statsResult.data;
-      todayStats = {
-        practiced: stats.todayMistakes || 0,
-        correct: stats.masteredCount || 0, 
-        accuracy: stats.masteryRate || 0,
-        total: stats.totalMistakes || 0
-      };
-      console.log('今日统计数据:', todayStats);
-    }
+    try {
+      // 1. 获取今日统计
+      const statsResult = await DatabaseManager.getTodayStats(userId);
+      let todayStats = { practiced: 0, correct: 0, accuracy: 0, total: 0 };
+      
+      if (statsResult.success) {
+        const stats = statsResult.data;
+        todayStats = {
+          practiced: stats.todayMistakes || 0,
+          correct: stats.masteredCount || 0, 
+          accuracy: stats.masteryRate || 0,
+          total: stats.totalMistakes || 0
+        };
+        console.log('今日统计数据:', todayStats);
+      }
 
-    // 2. 获取错题数量（用于复习计数）
-    const mistakesResult = await DatabaseManager.getMistakes(userId, { 
-      pageSize: 100,
-      filters: { status: 'all' }
-    });
-    
-    let reviewCount = 0;
-    if (mistakesResult.success && mistakesResult.data) {
-      reviewCount = mistakesResult.data.length;
-      console.log('错题数量:', reviewCount);
-    }
+      // 2. 获取练习记录（真实的练习历史）
+      const practiceResult = await DatabaseManager.getPracticeRecords(userId, { 
+        pageSize: 5,
+        orderBy: 'createTime',
+        orderDirection: 'desc'
+      });
+      
+      let recentRecords = [];
+      let totalPracticed = 0;
+      let totalCorrect = 0;
+      
+      if (practiceResult.success && practiceResult.data) {
+        const records = practiceResult.data;
+        console.log('练习记录:', records);
+        
+        // 统计总练习数据
+        records.forEach(record => {
+          totalPracticed += record.answeredQuestions || 0;
+          totalCorrect += record.correctCount || 0;
+        });
+        
+        // 格式化最近记录
+        recentRecords = records.slice(0, 3).map((record, index) => ({
+          type: record.type === 'ai' ? 'AI练习' : '错题复习',
+          subject: this.getRecordSubject(record),
+          time: this.formatRecentTime(record.createTime),
+          duration: this.formatDuration(record.duration || 0),
+          score: record.score || 0,
+          accuracy: record.accuracy || 0,
+          icon: this.getSubjectIcon(this.getRecordSubject(record)),
+          gradient: index % 3 === 0 ? "bg-grad-blue" : index % 3 === 1 ? "bg-grad-orange" : "bg-grad-green"
+        }));
+        
+        // 更新今日统计，使用真实练习数据
+        if (totalPracticed > 0) {
+          todayStats.practiced = totalPracticed;
+          todayStats.correct = totalCorrect;
+          todayStats.accuracy = Math.round((totalCorrect / totalPracticed) * 100);
+        }
+      }
 
-    // 3. 获取复习记录（用于显示最近记录）
-    const reviewResult = await DatabaseManager.getReviewRecords(userId, { pageSize: 3 });
-    let recentRecords = [];
-    
-    if (reviewResult.success && reviewResult.data) {
-      recentRecords = reviewResult.data.map((record, index) => ({
-        type: "错题复习",
-        subject: record.subject || "未知",
-        time: this.formatRecentTime(record.reviewTime || record.createTime),
-        duration: "已完成",
-        score: record.isCorrect ? 100 : 0,
-        icon: this.getSubjectIcon(record.subject),
-        gradient: index % 3 === 0 ? "bg-grad-blue" : index % 3 === 1 ? "bg-grad-orange" : "bg-grad-green"
-      }));
-      console.log('最近复习记录:', recentRecords);
-    }
+      // 3. 获取错题数量（用于复习计数）
+      const mistakesResult = await DatabaseManager.getMistakes(userId, { 
+        pageSize: 100,
+        filters: { status: 'all' }
+      });
+      
+      let reviewCount = 0;
+      if (mistakesResult.success && mistakesResult.data) {
+        reviewCount = mistakesResult.data.length;
+        console.log('错题数量:', reviewCount);
+      }
 
-    // 更新页面数据
-    this.setData({
-      todayStats: todayStats,
-      recentRecords: recentRecords,
-      reviewCount: reviewCount,
-      'practiceOptions[1].subtitle': reviewCount > 0 ? `${reviewCount} 道错题等你复习` : '暂无错题需要复习',
-      'practiceOptions[1].count': reviewCount > 0 ? `${reviewCount}题` : '0题',
-    });
-    
-    console.log('练习页面数据加载完成');
+      // 更新页面数据
+      this.setData({
+        todayStats,
+        reviewCount,
+        recentRecords,
+        'practiceOptions[1].subtitle': `${reviewCount}道错题等你复习`,
+        'practiceOptions[1].count': `${reviewCount}题`
+      });
+      
+      console.log('练习页面数据更新完成:', { todayStats, reviewCount, recentRecords });
+      
+    } catch (error) {
+      console.error('加载练习数据失败:', error);
+      this.setDefaultData();
+    }
   },
 
   setDefaultData() {
@@ -170,6 +202,55 @@ Page({
     return iconMap[subject] || '/images/icons/white/maths.svg';
   },
 
+  // 获取练习记录的学科信息
+  getRecordSubject(record) {
+    if (record.answerDetails && record.answerDetails.length > 0) {
+      // 从答题详情中提取主要学科
+      const subjects = record.answerDetails.map(item => item.subject).filter(Boolean);
+      if (subjects.length > 0) {
+        // 统计出现最多的学科
+        const subjectCount = {};
+        subjects.forEach(subject => {
+          subjectCount[subject] = (subjectCount[subject] || 0) + 1;
+        });
+        return Object.keys(subjectCount).reduce((a, b) => 
+          subjectCount[a] > subjectCount[b] ? a : b
+        );
+      }
+    }
+    return record.subject || '综合';
+  },
+
+  // 格式化练习用时
+  formatDuration(seconds) {
+    if (!seconds || seconds === 0) return '未记录';
+    
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    
+    if (minutes > 0) {
+      return `${minutes}分${secs}秒`;
+    } else {
+      return `${secs}秒`;
+    }
+  },
+
+  // 设置默认数据（加载失败时使用）
+  setDefaultData() {
+    console.log('设置默认练习数据');
+    this.setData({
+      todayStats: {
+        practiced: 0,
+        correct: 0,
+        accuracy: 0,
+        total: 0
+      },
+      reviewCount: 0,
+      recentRecords: [],
+      'practiceOptions[1].subtitle': '暂无错题需要复习',
+      'practiceOptions[1].count': '0题'
+    });
+  },
 
 
   // 跳转到练习配置页

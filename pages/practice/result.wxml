@@ -2,63 +2,91 @@
 <view class="result-container">
   <block wx:if="{{isLoading}}">
     <view class="loading-container">
-      <van-loading type="spinner" size="32px">报告生成中...</van-loading>
+      <van-loading type="spinner" size="32px">加载练习结果中...</van-loading>
     </view>
   </block>
   <block wx:else>
     <!-- 结果总览 -->
     <view class="summary-section">
+      <view class="result-header">
+        <text class="result-title">{{report.title || '练习已完成'}}</text>
+        <text class="result-type">{{report.type === 'ai' ? 'AI智能练习' : '错题复习'}}</text>
+      </view>
+      
       <van-circle 
         value="{{ report.accuracy }}" 
-        text="得分：{{report.score}}" 
+        text="正确率: {{report.accuracy}}%" 
         size="150" 
         stroke-width="10"
         color="{{ gradientColor }}" />
-      <view class="summary-text">{{report.summaryText}}</view>
+      
+      <view class="score-display">
+        <text class="score-text">得分：{{report.score || 0}}分</text>
+      </view>
+      
       <view class="summary-stats">
         <view class="stat-item">
-          <text class="stat-value">{{report.correctCount}}</text>
+          <text class="stat-value">{{report.correctCount || 0}}</text>
           <text class="stat-label">答对</text>
         </view>
         <view class="stat-item">
-          <text class="stat-value">{{report.incorrectCount}}</text>
+          <text class="stat-value">{{report.incorrectCount || 0}}</text>
           <text class="stat-label">答错</text>
         </view>
         <view class="stat-item">
-          <text class="stat-value">{{report.totalCount}}</text>
+          <text class="stat-value">{{report.totalCount || 0}}</text>
           <text class="stat-label">总题数</text>
+        </view>
+      </view>
+      
+      <!-- 新增：练习详情 -->
+      <view class="practice-details">
+        <view class="detail-item">
+          <text class="detail-label">练习用时:</text>
+          <text class="detail-value">{{formatDuration(report.duration)}}</text>
+        </view>
+        <view class="detail-item">
+          <text class="detail-label">完成率:</text>
+          <text class="detail-value">{{report.completionRate || 0}}%</text>
+        </view>
+        <view class="detail-item">
+          <text class="detail-label">已答题数:</text>
+          <text class="detail-value">{{report.answeredCount || 0}}/{{report.totalCount || 0}}</text>
         </view>
       </view>
     </view>
     
-    <!-- 题目列表 -->
-    <view class="list-section">
+    <!-- 答题详情 -->
+    <view class="list-section" wx:if="{{record && record.answerDetails}}">
       <van-cell-group title="答题详情">
         <van-cell 
-          wx:for="{{report.questions}}" 
-          wx:key="id" 
-          title="第{{index + 1}}题: {{item.title}}"
+          wx:for="{{record.answerDetails}}" 
+          wx:key="questionIndex" 
+          title="第{{item.questionIndex + 1}}题"
+          label="{{item.question}}"
           is-link
-          data-id="{{item.id}}"
+          data-index="{{item.questionIndex}}"
           bind:click="viewQuestionDetail"
         >
-          <van-tag type="{{item.isCorrect ? 'success' : 'danger'}}">
-            {{item.isCorrect ? '答对' : '答错'}}
-          </van-tag>
+          <view slot="right-icon" class="answer-status">
+            <van-tag type="{{item.isCorrect ? 'success' : 'danger'}}" size="small">
+              {{item.isCorrect ? '✓' : '✗'}}
+            </van-tag>
+          </view>
         </van-cell>
       </van-cell-group>
     </view>
-
+    
     <!-- 操作按钮 -->
     <view class="action-section">
-      <van-button plain type="primary" class="action-btn" bind:tap="reviewMistakes">
-        <van-icon name="warning-o" class="btn-icon"/>
-        仅看错题
-      </van-button>
-      <van-button type="primary" class="action-btn" bind:tap="finish">
-        <van-icon name="wap-home-o" class="btn-icon"/>
-        完成
-      </van-button>
+      <view class="action-buttons">
+        <view class="action-btn home-btn" bind:tap="backToHome">
+          返回首页
+        </view>
+        <view class="action-btn again-btn" bind:tap="practiceAgain">
+          再次练习
+        </view>
+      </view>
     </view>
   </block>
 </view>

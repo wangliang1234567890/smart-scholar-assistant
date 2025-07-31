@@ -114,13 +114,19 @@ Page({
    */
   async initPage() {
     try {
+      // 设置问候语
+      this.updateGreeting();
+      
+      // 创建防抖函数
       this.debouncedRefresh = this.createSimpleDebounce(() => {
         this.loadRealStudyStats();
       }, 1000);
       
+      // 加载数据
       await this.loadRealStudyStats();
     } catch (error) {
       console.error('初始化页面失败:', error);
+      this.setDefaultData();
     }
   },
 
@@ -128,27 +134,16 @@ Page({
    * 初始化Store绑定
    */
   initStoreBinding() {
-    try {
-      this.storeBindings = createStoreBindings(this, {
-        store,
-        fields: ['userInfo', 'isLoggedIn', 'isGuestMode'],
-        actions: [],
-      });
-    } catch (error) {
-      errorHandler.handle(error, {
-        scene: 'home_store_binding',
-        showToast: false
-      });
-    }
+    // 暂时移除Store绑定，避免引用错误
+    console.log('Store绑定功能暂时禁用');
   },
 
   /**
    * 销毁Store绑定
    */
   destroyStoreBinding() {
-    if (this.storeBindings) {
-      this.storeBindings.destroyStoreBindings();
-    }
+    // 暂时移除Store绑定，避免引用错误
+    console.log('Store绑定销毁功能暂时禁用');
   },
 
   /**
@@ -173,7 +168,7 @@ Page({
     this.setData({ loading: true });
 
     try {
-      await this.loadDashboardData();
+      await this.loadRealStudyStats();
     } catch (error) {
       errorHandler.handle(error, {
         scene: 'home_initial_load',
@@ -314,6 +309,16 @@ Page({
   },
 
   /**
+   * 更新问候语
+   */
+  updateGreeting() {
+    const greeting = this.getGreeting();
+    if (this.data.greeting !== greeting) {
+      this.setData({ greeting });
+    }
+  },
+
+  /**
    * 获取问候语
    */
   getGreeting(date = new Date()) {
@@ -328,24 +333,15 @@ Page({
     return '夜深了';
   },
 
+
+
   /**
    * 加载仪表板数据
    */
   async loadDashboardData() {
-    // 游客模式处理
-    if (this.data.isGuestMode || !this.data.userInfo) {
-      this.setGuestModeData();
-      return;
-    }
-    
-    const userId = this.data.userInfo._id || this.data.userInfo.id;
-    
-    if (!userId) {
-      this.setGuestModeData();
-      return;
-    }
-
     try {
+      const userId = DatabaseManager.getCurrentUserId();
+      
       // 获取今日统计数据
       const statsResult = await DatabaseManager.getTodayStats(userId);
       
@@ -377,7 +373,6 @@ Page({
     } catch (error) {
       console.error('加载仪表板数据失败:', error);
       this.setDefaultData();
-      throw error;
     }
   },
 

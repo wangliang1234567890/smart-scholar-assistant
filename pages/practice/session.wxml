@@ -131,11 +131,11 @@
       <!-- 顶部进度区域 -->
       <view class="progress-section">
         <view class="progress-header">
-          <view class="progress-info">
+        <view class="progress-info">
             <view class="question-number">
               <text class="current-number">{{currentIndex + 1}}</text>
               <text class="total-number">/{{totalQuestions}}</text>
-            </view>
+        </view>
             <view class="subject-badge">{{currentQuestion.subject}}</view>
           </view>
           <view class="header-actions">
@@ -143,12 +143,12 @@
               <van-icon name="cross" size="16px" color="#6B7280" />
             </view>
           </view>
-        </view>
-        
-        <!-- 进度条 -->
+      </view>
+
+      <!-- 进度条 -->
         <view class="progress-bar-container">
-          <van-progress 
-            percentage="{{(currentIndex + 1) / totalQuestions * 100}}" 
+      <van-progress 
+        percentage="{{(currentIndex + 1) / totalQuestions * 100}}" 
             stroke-width="6" 
             color="#4F46E5"
             track-color="#F3F4F6"
@@ -170,8 +170,8 @@
           </view>
         </view>
 
-        <!-- 题目内容 -->
-        <view class="question-content">
+      <!-- 题目内容 -->
+      <view class="question-content">
           <view class="question-title">{{currentQuestion.question}}</view>
           <view wx:if="{{currentQuestion.stem}}" class="question-stem">{{currentQuestion.stem}}</view>
         </view>
@@ -182,17 +182,17 @@
           <text class="tip-text">{{currentQuestion.tip}}</text>
         </view>
       </view>
-
-      <!-- 选择题选项 -->
+        
+        <!-- 选择题选项 -->
       <view wx:if="{{(currentQuestion.type === 'choice' || currentQuestion.type === 'single_choice' || currentQuestion.type === 'multiple_choice') && currentQuestion.options && currentQuestion.options.length > 0}}" class="options-section">
-        <view 
-          wx:for="{{currentQuestion.options}}" 
-          wx:key="index"
+          <view 
+            wx:for="{{currentQuestion.options}}" 
+            wx:key="index"
           class="option-wrapper {{userAnswer === index ? 'active' : ''}}"
           data-index="{{index}}"
-          data-answer="{{item}}"
-          bindtap="onSelectAnswer"
-        >
+            data-answer="{{item}}"
+            bindtap="onSelectAnswer"
+          >
           <view class="option-indicator">
             <view class="radio-circle {{userAnswer === index ? 'checked' : ''}}">
               <view wx:if="{{userAnswer === index}}" class="radio-dot"></view>
@@ -218,20 +218,20 @@
         />
         <view class="input-footer">
           <text class="char-count">{{userAnswerText ? userAnswerText.length : 0}}/200字</text>
+          </view>
         </view>
-      </view>
 
       <!-- 解答题输入 -->
       <view wx:elif="{{currentQuestion.type === 'solve' || currentQuestion.type === 'short_answer' || (currentQuestion.type === 'input' && currentQuestion.question.length > 100)}}" class="solve-container">
-        <van-field
+          <van-field
           value="{{userAnswerText}}"
           placeholder="📝 请在此详细写出解答过程..."
           type="textarea"
           autosize="{{true}}"
           border="{{false}}"
           class="solve-input"
-          bind:change="onAnswerInput"
-        />
+            bind:change="onAnswerInput"
+          />
         <view class="input-footer">
           <text class="char-count">{{userAnswerText ? userAnswerText.length : 0}}/500字</text>
         </view>

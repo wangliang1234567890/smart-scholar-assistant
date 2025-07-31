@@ -52,8 +52,8 @@
         <view class="action-btn-item" bind:tap="enterPrintMode">
           <view class="action-btn-icon">📄</view>
           <text class="action-btn-text">打印试卷</text>
-        </view>
-        
+      </view>
+
         <view class="action-btn-item primary" bind:tap="startAnswering">
           <view class="action-btn-icon">✏️</view>
           <text class="action-btn-text">开始答题</text>
@@ -79,7 +79,7 @@
               <view class="question-number">{{qIndex + 1}}</view>
               <view class="question-content">
                 <text class="question-text">{{question.content}}</text>
-                <text class="question-score">（{{item.scorePerQuestion}}分）</text>
+              <text class="question-score">（{{item.scorePerQuestion}}分）</text>
               </view>
             </view>
 
@@ -161,7 +161,7 @@
         custom-class="retry-btn"
       >
         重新生成
-      </van-button>
+    </van-button>
     </view>
   </view>
 

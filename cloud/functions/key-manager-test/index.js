@@ -11,7 +11,7 @@ const {
   performKeyHealthCheck,
   reportAPIError,
   reportAPISuccess
-} = require('../shared/doubao-config');
+} = require('./shared/doubao-config');
 
 cloud.init({ 
   env: cloud.DYNAMIC_CURRENT_ENV 

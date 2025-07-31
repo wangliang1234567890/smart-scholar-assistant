@@ -534,14 +534,187 @@ async function generateFillBlankAnalysis(question, userAnswer, standardAnswer, i
 }
 
 /**
- * AI分析（模拟实现）
+ * AI智能分析（豆包AI实现）
  */
 async function analyzeWithAI(question, userAnswer, standardAnswer) {
-  // 这里是模拟的AI分析，实际部署时可以集成真实的AI服务
-  return {
-    success: false,
-    message: 'AI分析服务暂未集成'
-  };
+  try {
+    // 导入豆包AI配置
+    const { getDoubaoConfig } = require('./shared/doubao-config');
+    const DOUBAO_CONFIG = getDoubaoConfig();
+
+    if (!DOUBAO_CONFIG.isValid) {
+      console.warn('豆包AI配置无效，跳过AI分析');
+      return {
+        success: false,
+        message: '豆包AI配置不可用'
+      };
+    }
+
+    console.log('开始豆包AI智能分析');
+
+    // 构建AI分析提示词
+    const prompt = buildGradingPrompt(question, userAnswer, standardAnswer);
+    
+    // 调用豆包AI进行分析
+    const analysisResult = await callDoubaoAPI(DOUBAO_CONFIG, {
+      model: DOUBAO_CONFIG.MODEL_ID,
+      messages: [
+        {
+          role: "system",
+          content: "你是一位专业的教师，擅长各科目的智能批改。请根据题目、学生答案和标准答案，进行客观准确的评分和分析。"
+        },
+        {
+          role: "user", 
+          content: prompt
+        }
+      ],
+      temperature: 0.3, // 较低的temperature确保输出稳定
+      max_tokens: 500
+    });
+
+    if (analysisResult.success && analysisResult.data) {
+      const aiResponse = analysisResult.data.choices?.[0]?.message?.content;
+      
+      if (aiResponse) {
+        // 解析AI返回的结果
+        const parsedResult = parseAIGradingResponse(aiResponse);
+        
+        return {
+          success: true,
+          isCorrect: parsedResult.isCorrect,
+          score: parsedResult.score,
+          analysis: parsedResult.analysis,
+          suggestions: parsedResult.suggestions,
+          keyPoints: parsedResult.keyPoints,
+          aiProvider: '豆包AI'
+        };
+      }
+    }
+
+    throw new Error('AI分析返回结果无效');
+
+  } catch (error) {
+    console.error('豆包AI分析失败:', error);
+    return {
+      success: false,
+      message: `AI分析失败: ${error.message}`
+    };
+  }
+}
+
+/**
+ * 构建评分提示词
+ */
+function buildGradingPrompt(question, userAnswer, standardAnswer) {
+  return `请对以下题目进行智能批改：
+
+【题目信息】
+类型: ${question.type || '未知'}
+学科: ${question.subject || '未知'}
+难度: ${question.difficulty || '中等'}
+题目内容: ${question.content || question.question || '题目内容缺失'}
+
+【学生答案】
+${userAnswer || '学生未作答'}
+
+【标准答案】
+${standardAnswer || '标准答案缺失'}
+
+【批改要求】
+请按照以下JSON格式返回评分结果：
+{
+  "isCorrect": true/false,
+  "score": 0-100,
+  "analysis": "详细分析学生答案的对错和原因",
+  "suggestions": "给学生的改进建议",
+  "keyPoints": ["关键知识点1", "关键知识点2"]
+}
+
+请确保：
+1. 评分客观公正，考虑部分正确的情况
+2. 分析要具体指出学生答案的优缺点
+3. 建议要具有指导性和可操作性
+4. 关键知识点要准确概括
+`;
+}
+
+/**
+ * 解析AI评分响应
+ */
+function parseAIGradingResponse(aiResponse) {
+  try {
+    // 尝试解析JSON
+    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        isCorrect: Boolean(parsed.isCorrect),
+        score: Math.max(0, Math.min(100, Number(parsed.score) || 0)),
+        analysis: String(parsed.analysis || ''),
+        suggestions: String(parsed.suggestions || ''),
+        keyPoints: Array.isArray(parsed.keyPoints) ? parsed.keyPoints : []
+      };
+    }
+
+    // 如果没有找到JSON，使用规则解析
+    const isCorrect = /正确|对|是的|yes|true/i.test(aiResponse);
+    const scoreMatch = aiResponse.match(/(\d+)\s*分/);
+    const score = scoreMatch ? parseInt(scoreMatch[1]) : (isCorrect ? 100 : 0);
+
+    return {
+      isCorrect,
+      score: Math.max(0, Math.min(100, score)),
+      analysis: aiResponse.substring(0, 200),
+      suggestions: '请仔细复习相关知识点',
+      keyPoints: []
+    };
+
+  } catch (error) {
+    console.error('解析AI响应失败:', error);
+    return {
+      isCorrect: false,
+      score: 0,
+      analysis: 'AI分析结果解析失败',
+      suggestions: '请重新答题',
+      keyPoints: []
+    };
+  }
+}
+
+/**
+ * 调用豆包AI API
+ */
+async function callDoubaoAPI(config, payload) {
+  const fetch = require('node-fetch');
+  
+  try {
+    const response = await fetch(config.ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${config.API_KEY}`
+      },
+      body: JSON.stringify(payload),
+      timeout: config.TIMEOUT || 30000
+    });
+
+    if (!response.ok) {
+      throw new Error(`豆包AI API调用失败: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      data
+    };
+
+  } catch (error) {
+    console.error('豆包AI API调用失败:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
 }
 
 /**

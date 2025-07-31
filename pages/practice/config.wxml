@@ -3,6 +3,23 @@
   <view class="header">
     <view class="header-title">{{pageTitle}}</view>
     <view class="header-subtitle">请选择本次练习的参数</view>
+    
+    <!-- 功能说明 -->
+    <view class="feature-description" wx:if="{{practiceType === 'ai'}}">
+      <view class="feature-icon">🤖</view>
+      <view class="feature-text">
+        <text class="feature-title">AI智能练习</text>
+        <text class="feature-desc">基于您的错题，AI将生成类似的新题目进行针对性训练</text>
+      </view>
+    </view>
+    
+    <view class="feature-description" wx:elif="{{practiceType === 'review'}}">
+      <view class="feature-icon">📚</view>
+      <view class="feature-text">
+        <text class="feature-title">错题强化复习</text>
+        <text class="feature-desc">直接练习您拍照识别保存的原错题，加深记忆</text>
+      </view>
+    </view>
   </view>
 
   <!-- 1. 选择学科 -->

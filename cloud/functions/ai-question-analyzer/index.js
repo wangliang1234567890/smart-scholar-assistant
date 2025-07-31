@@ -37,7 +37,7 @@ exports.main = async (event, context) => {
   }
 
   // 导入并获取豆包AI配置
-  const { getDoubaoConfig } = require('../shared/doubao-config');
+  const { getDoubaoConfig } = require('./shared/doubao-config');
   const DOUBAO_CONFIG = getDoubaoConfig();
 
   // 验证豆包AI配置
