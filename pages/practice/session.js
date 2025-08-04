@@ -1,5 +1,6 @@
 import Dialog from '@vant/weapp/dialog/dialog';
 import DatabaseManager from '../../utils/database.js';
+import EventManager, { EVENT_TYPES } from '../../utils/event-manager.js';
 
 Page({
   data: {
@@ -508,6 +509,7 @@ Page({
       
       const mistakes = mistakesResult.data;
       console.log(`基于${mistakes.length}个错题生成AI练习题目...`);
+      console.log('📋 错题数据样本:', mistakes.slice(0, 2)); // 输出前2个错题的详细信息
       
       // 2. 调用AI服务生成新题目
       const aiService = getApp().globalData.aiService;
@@ -516,21 +518,34 @@ Page({
         console.log('调用AI服务生成题目...');
         
         try {
-          const aiResult = await aiService.generateQuestionsFromMistakes(mistakes, {
-            count: 5,  // 生成5道新题
-            types: ['single_choice', 'multiple_choice', 'fill_blank', 'short_answer'],
+          const aiResult = await aiService.generateQuestionsFromMistakes(mistakes.slice(0, 2), {
+            count: 2,  // 生成2道新题
+            types: ['single_choice'], // 只生成单选题，避免复杂格式问题
             difficulty: 'auto' // 根据错题难度自动调整
           });
           
+          console.log('🔍 AI服务返回结果:', aiResult);
+          
           if (aiResult.success && aiResult.questions && aiResult.questions.length > 0) {
             console.log(`AI成功生成${aiResult.questions.length}道新题目`);
+            console.log('AI生成的题目数据:', aiResult.questions);
+            
+            // 验证AI题目格式
+            const validQuestions = aiResult.questions.filter(q => 
+              q && q.question && typeof q.question === 'string' && q.question.trim().length > 0
+            );
+            
+            if (validQuestions.length === 0) {
+              console.warn('AI生成的题目格式无效，使用降级方案');
+              throw new Error('AI生成题目格式无效');
+            }
             
             // 使用AI生成的题目
             this.setData({
               practiceType: 'ai',
-              questions: aiResult.questions,
-              currentQuestion: aiResult.questions[0] || null,
-              totalQuestions: aiResult.questions.length,
+              questions: validQuestions,
+              currentQuestion: validQuestions[0] || null,
+              totalQuestions: validQuestions.length,
               currentIndex: 0,
               loading: false,
               generatingQuestions: false,
@@ -541,12 +556,13 @@ Page({
             
             // 显示AI生成成功提示
             wx.showToast({
-              title: `AI生成${aiResult.questions.length}道练习题`,
+              title: `AI生成${validQuestions.length}道练习题`,
               icon: 'success',
               duration: 2000
             });
             
             console.log('AI题目加载完成');
+            console.log('当前题目:', validQuestions[0]);
             return;
             
           } else {
@@ -899,6 +915,14 @@ Page({
       
       if (saveResult.success) {
         console.log('练习结果保存成功');
+        
+        // 触发练习完成事件
+        EventManager.emit(EVENT_TYPES.PRACTICE_COMPLETED, {
+          practiceId: this.data.practiceId,
+          practiceType: this.data.practiceType,
+          result: practiceResult,
+          timestamp: Date.now()
+        });
         
         // 跳转到结果页面，传递练习结果
         wx.redirectTo({

@@ -5,58 +5,13 @@
   padding-bottom: 160rpx;
 }
 
-/* 顶部导航栏 */
-.course-header {
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24rpx 32rpx;
-  border-bottom: 1rpx solid #f0f0f0;
-}
-
-.back-button {
-  width: 48rpx;
-  height: 48rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.header-center {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-}
-
-.header-icon {
-  width: 56rpx;
-  height: 56rpx;
-  background: #f0f1ff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.header-title {
-  font-size: 36rpx;
-  font-weight: 600;
-  color: #333;
-}
-
-.header-placeholder {
-  width: 48rpx;
-  height: 48rpx;
-}
-
-/* 表单区块 */
+/* 表单样式 */
 .form-section {
   background: #fff;
-  margin: 16rpx 32rpx;
+  margin: 24rpx;
   border-radius: 16rpx;
   padding: 32rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
 }
 
 .section-title {

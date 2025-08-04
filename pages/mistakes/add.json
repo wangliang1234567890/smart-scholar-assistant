@@ -1,5 +1,8 @@
 {
   "navigationBarTitleText": "录入错题",
+  "navigationBarBackgroundColor": "#4F46E5",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#F8FAFC",
   "usingComponents": {
     "van-field": "/miniprogram_npm/@vant/weapp/field/index",
     "van-uploader": "/miniprogram_npm/@vant/weapp/uploader/index",

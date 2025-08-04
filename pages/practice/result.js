@@ -173,8 +173,50 @@ Page({
   },
 
   reviewMistakes() {
-    wx.showToast({ title: '功能开发中...', icon: 'none' });
-    // TODO: 跳转到错题详情页或新的练习，只包含本次的错题
+    try {
+      const { record } = this.data;
+      
+      if (!record || !record.answerDetails) {
+        wx.showToast({ title: '暂无错题数据', icon: 'none' });
+        return;
+      }
+      
+      // 筛选出错题数据
+      const wrongAnswers = record.answerDetails.filter(item => 
+        item.isCorrect === false || item.isCorrect === null && item.userAnswer !== item.correctAnswer
+      );
+      
+      if (wrongAnswers.length === 0) {
+        wx.showToast({ title: '本次练习全部正确，无错题', icon: 'success' });
+        return;
+      }
+      
+      console.log('本次练习错题:', wrongAnswers);
+      
+      // 转换错题数据格式，适配错题详情页面
+      const mistakesData = wrongAnswers.map((item, index) => ({
+        _id: item.questionId || `wrong_${index}`,
+        question: item.question,
+        userAnswer: item.userAnswer,
+        correctAnswer: item.correctAnswer,
+        answer: item.correctAnswer,
+        subject: item.subject || '其他',
+        difficulty: item.difficulty || 'medium',
+        questionType: item.questionType || 'choice',
+        reviewLevel: 0,
+        isFromPractice: true, // 标记来源于练习
+        practiceId: record.practiceId
+      }));
+      
+      // 跳转到练习错题查看页面
+      wx.navigateTo({
+        url: `/pages/practice/session?type=review&mistakes=${encodeURIComponent(JSON.stringify(mistakesData))}&title=${encodeURIComponent('本次练习错题复习')}&practiceId=${record.practiceId}`
+      });
+      
+    } catch (error) {
+      console.error('查看错题失败:', error);
+      wx.showToast({ title: '查看错题失败', icon: 'error' });
+    }
   },
   
   finish() {

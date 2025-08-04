@@ -1,9 +1,7 @@
 {
-  "navigationBarTitleText": "智能学霸小助手",
+  "navigationBarTitleText": "意见反馈",
   "navigationBarBackgroundColor": "#4F46E5",
   "navigationBarTextStyle": "white",
-  "enablePullDownRefresh": true,
-  "onReachBottomDistance": 50,
   "backgroundColor": "#F8FAFC",
   "usingComponents": {}
 } 

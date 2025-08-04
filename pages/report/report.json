@@ -1,15 +1,13 @@
 {
   "navigationBarTitleText": "学习报告",
+  "enablePullDownRefresh": true,
+  "backgroundColor": "#F8FAFC",
   "navigationBarBackgroundColor": "#4F46E5",
   "navigationBarTextStyle": "white",
-  "backgroundColor": "#F8FAFC",
-  "enablePullDownRefresh": true,
-  "onReachBottomDistance": 50,
   "usingComponents": {
-    "van-button": "@vant/weapp/button/index",
-    "van-tag": "@vant/weapp/tag/index",
-    "van-icon": "@vant/weapp/icon/index",
     "van-loading": "@vant/weapp/loading/index",
-    "section-header": "/components/section-header/index"
+    "van-empty": "@vant/weapp/empty/index",
+    "van-icon": "@vant/weapp/icon/index",
+    "van-button": "@vant/weapp/button/index"
   }
 } 

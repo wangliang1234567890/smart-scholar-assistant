@@ -1,2 +1,155 @@
 <!--pages/about/about.wxml-->
-<text>pages/about/about.wxml</text>
+<view class="about-container">
+  <scroll-view class="about-content" scroll-y>
+    
+    <!-- 应用信息 -->
+    <view class="app-info-section">
+      <view class="app-logo">
+        <image src="{{appInfo.logo}}" class="logo-img" />
+      </view>
+      <view class="app-name">{{appInfo.name}}</view>
+      <view class="app-version">v{{appInfo.version}}</view>
+      <view class="app-desc">{{appInfo.description}}</view>
+      
+      <view class="action-buttons">
+        <van-button 
+          type="primary" 
+          size="small" 
+          bind:click="checkUpdate"
+          custom-class="action-btn"
+        >
+          检查更新
+        </van-button>
+        <van-button 
+          type="default" 
+          size="small" 
+          bind:click="feedback"
+          custom-class="action-btn"
+        >
+          意见反馈
+        </van-button>
+      </view>
+    </view>
+
+    <!-- 功能特色 -->
+    <view class="features-section">
+      <view class="section-title">功能特色</view>
+      <view class="features-grid">
+        <view wx:for="{{features}}" wx:key="title" class="feature-item">
+          <view class="feature-icon">
+            <image src="{{item.icon}}" class="icon-img" />
+          </view>
+          <view class="feature-info">
+            <text class="feature-title">{{item.title}}</text>
+            <text class="feature-desc">{{item.desc}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 开发团队 -->
+    <view class="team-section">
+      <view class="section-title">开发团队</view>
+      <view class="team-grid">
+        <view wx:for="{{team}}" wx:key="name" class="team-member">
+          <image src="{{item.avatar}}" class="member-avatar" />
+          <view class="member-name">{{item.name}}</view>
+          <view class="member-role">{{item.role}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 更新日志 -->
+    <view class="changelog-section">
+      <view class="section-title">更新日志</view>
+      <view wx:for="{{changelog}}" wx:key="version" class="changelog-item">
+        <view class="changelog-header">
+          <text class="changelog-version">v{{item.version}}</text>
+          <text class="changelog-date">{{item.date}}</text>
+        </view>
+        <view class="changelog-content">
+          <view wx:for="{{item.changes}}" wx:key="*this" class="change-item">
+            {{item}}
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 联系我们 -->
+    <view class="contact-section">
+      <view class="section-title">联系我们</view>
+      <view class="contact-list">
+        <view class="contact-item" bindtap="sendEmail">
+          <view class="contact-icon">
+            <van-icon name="envelop-o" size="20" color="#4285F4" />
+          </view>
+          <view class="contact-info">
+            <text class="contact-label">邮箱</text>
+            <text class="contact-value">{{contact.email}}</text>
+          </view>
+          <van-icon name="arrow" color="#c0c4cc" />
+        </view>
+        
+        <view class="contact-item" bindtap="visitWebsite">
+          <view class="contact-icon">
+            <van-icon name="globe-o" size="20" color="#4285F4" />
+          </view>
+          <view class="contact-info">
+            <text class="contact-label">官网</text>
+            <text class="contact-value">{{contact.website}}</text>
+          </view>
+          <van-icon name="arrow" color="#c0c4cc" />
+        </view>
+        
+        <view class="contact-item" bindtap="addWechat">
+          <view class="contact-icon">
+            <van-icon name="wechat" size="20" color="#4285F4" />
+          </view>
+          <view class="contact-info">
+            <text class="contact-label">微信</text>
+            <text class="contact-value">{{contact.wechat}}</text>
+          </view>
+          <van-icon name="arrow" color="#c0c4cc" />
+        </view>
+      </view>
+    </view>
+
+    <!-- 法律信息 -->
+    <view class="legal-section">
+      <view class="section-title">法律信息</view>
+      <view class="legal-list">
+        <view class="legal-item" bindtap="viewPrivacy">
+          <text class="legal-label">隐私政策</text>
+          <van-icon name="arrow" color="#c0c4cc" />
+        </view>
+        <view class="legal-item" bindtap="viewTerms">
+          <text class="legal-label">用户协议</text>
+          <van-icon name="arrow" color="#c0c4cc" />
+        </view>
+      </view>
+    </view>
+
+    <!-- 版权信息 -->
+    <view class="copyright-section">
+      <text class="copyright-text">{{legal.copyright}}</text>
+      <text class="copyright-desc">本应用由智能学霸小助手团队开发，致力于为学生提供更好的学习体验。</text>
+    </view>
+
+    <!-- 技术信息 -->
+    <view class="tech-info-section">
+      <view class="tech-item">
+        <text class="tech-label">构建版本:</text>
+        <text class="tech-value">{{appInfo.buildNumber}}</text>
+      </view>
+      <view class="tech-item" wx:if="{{appInfo.platform}}">
+        <text class="tech-label">运行平台:</text>
+        <text class="tech-value">{{appInfo.platform}}</text>
+      </view>
+      <view class="tech-item" wx:if="{{appInfo.sdkVersion}}">
+        <text class="tech-label">SDK版本:</text>
+        <text class="tech-value">{{appInfo.sdkVersion}}</text>
+      </view>
+    </view>
+
+  </scroll-view>
+</view>

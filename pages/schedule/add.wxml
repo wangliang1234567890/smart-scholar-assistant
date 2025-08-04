@@ -1,19 +1,5 @@
 <!--pages/schedule/add.wxml-->
 <view class="add-course-container">
-  <!-- 顶部导航栏 -->
-  <view class="course-header">
-    <view class="back-button" bind:tap="goBack">
-      <van-icon name="arrow-left" size="20" color="#333" />
-    </view>
-    <view class="header-center">
-      <view class="header-icon">
-        <van-icon name="calendar-o" size="24" color="#6366f1" />
-      </view>
-      <text class="header-title">添加课程</text>
-    </view>
-    <view class="header-placeholder"></view>
-  </view>
-
   <!-- 基本信息 -->
   <view class="form-section">
     <view class="section-title">基本信息</view>

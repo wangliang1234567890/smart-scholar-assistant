@@ -1,2 +1,223 @@
 <!--pages/mistakes/analysis.wxml-->
-<text>pages/mistakes/analysis.wxml</text>
+<view class="analysis-container">
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <van-loading type="spinner" size="32px">分析数据加载中...</van-loading>
+  </view>
+
+  <!-- 分析内容 -->
+  <view wx:else class="analysis-content">
+    
+    <!-- 页面头部 -->
+    <view class="page-header" bind:longpress="fixUnknownSubjects">
+      <view class="header-icon">
+        <van-icon name="bar-chart-o" size="24" color="#4F46E5" />
+      </view>
+      <text class="header-title">错题分析</text>
+    </view>
+
+    <!-- 时间段选择器 -->
+    <view class="time-selector">
+      <view class="time-option {{selectedPeriod === 'week' ? 'active' : ''}}" bind:tap="onPeriodChange" data-period="week">
+        <text>本周</text>
+      </view>
+      <view class="time-option {{selectedPeriod === 'month' ? 'active' : ''}}" bind:tap="onPeriodChange" data-period="month">
+        <text>本月</text>
+      </view>
+      <view class="time-option {{selectedPeriod === 'year' ? 'active' : ''}}" bind:tap="onPeriodChange" data-period="year">
+        <text>本年</text>
+      </view>
+      </view>
+      
+    <!-- 主要数据统计 -->
+    <view class="main-stats">
+      <view class="stat-card">
+        <view class="stat-icon blue">
+          <van-icon name="bookmark-o" size="20" color="#fff" />
+        </view>
+        <view class="stat-number">{{totalMistakes}}</view>
+        <view class="stat-label">总错题数</view>
+        <view class="stat-change positive">+{{newMistakes}} {{selectedPeriodText}}新增</view>
+      </view>
+
+      <view class="stat-card">
+        <view class="stat-icon green">
+          <van-icon name="arrow-up" size="20" color="#fff" />
+        </view>
+        <view class="stat-number">{{improvementRate}}%</view>
+        <view class="stat-label">改善率</view>
+        <view class="stat-change positive">持续提升</view>
+        </view>
+
+      <view class="stat-card">
+        <view class="stat-icon orange">
+          <van-icon name="replay" size="20" color="#fff" />
+        </view>
+        <view class="stat-number">{{reviewCount}}</view>
+        <view class="stat-label">{{selectedPeriodText}}复习</view>
+        <view class="stat-change">平均{{avgReviewTimes}}次/题</view>
+      </view>
+      
+      <view class="stat-card">
+        <view class="stat-icon purple">
+          <van-icon name="success" size="20" color="#fff" />
+        </view>
+        <view class="stat-number">{{masteredCount}}</view>
+        <view class="stat-label">{{selectedPeriodText}}掌握</view>
+        <view class="stat-change">掌握率{{masteryRate}}%</view>
+      </view>
+    </view>
+
+    <!-- 科目分布 -->
+    <view class="subject-distribution">
+      <view class="section-header">
+        <text class="section-title">科目分布</text>
+      </view>
+      
+      <view class="subject-list">
+        <view wx:for="{{subjectStats}}" wx:key="subject" class="subject-item">
+            <view class="subject-info">
+            <view class="subject-icon {{item.subjectClass}}">
+              <text class="subject-short">{{item.shortName}}</text>
+            </view>
+              <text class="subject-name">{{item.name}}</text>
+          </view>
+          <view class="subject-data">
+              <text class="subject-count">{{item.total}}题</text>
+            <view class="subject-trend {{item.trend > 0 ? 'up' : 'down'}}">
+              <van-icon name="{{item.trend > 0 ? 'arrow-up' : 'arrow-down'}}" size="12" />
+              <text>{{Math.abs(item.trend)}}%</text>
+            </view>
+          </view>
+          <view class="subject-progress">
+            <view class="progress-bar">
+              <view class="progress-fill" style="width: {{item.percentage}}%; background: {{item.color}};"></view>
+            </view>
+            <text class="progress-percent">{{item.percentage}}%</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 重点薄弱知识点 -->
+    <view class="weak-points">
+      <view class="section-header">
+        <van-icon name="warning-o" size="18" color="#F59E0B" />
+        <text class="section-title">重点薄弱知识点</text>
+      </view>
+      
+      <view class="weak-list">
+        <view wx:for="{{weakPoints}}" wx:key="id" class="weak-item">
+          <view class="weak-content">
+            <text class="weak-title">{{item.title}}</text>
+                         <view class="weak-meta">
+               <text class="weak-subject">{{item.subject}}</text>
+               <view class="weak-difficulty {{item.difficultyClass}}">
+                 <text>{{item.difficultyText}}</text>
+            </view>
+            </view>
+            <text class="weak-time">最近错误: {{item.lastError}}</text>
+          </view>
+          <view class="weak-stats">
+            <text class="weak-count">{{item.count}}次</text>
+            <view class="weak-change {{item.improvement > 0 ? 'improve' : 'worse'}}">
+              <van-icon name="{{item.improvement > 0 ? 'arrow-up' : 'arrow-down'}}" size="10" />
+              <text>{{item.improvement > 0 ? '改善' : '恶化'}} {{Math.abs(item.improvement)}}%</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 复习效率分析 -->
+    <view class="review-efficiency">
+      <view class="section-header">
+        <text class="section-title">复习效率分析</text>
+      </view>
+      
+      <view class="efficiency-grid">
+        <view class="efficiency-item">
+          <text class="efficiency-number blue">{{reviewSuccessRate}}%</text>
+          <text class="efficiency-label">复习成功率</text>
+          </view>
+        <view class="efficiency-item">
+          <text class="efficiency-number green">{{knowledgeRetentionRate}}%</text>
+          <text class="efficiency-label">知识保持率</text>
+        </view>
+        <view class="efficiency-item">
+          <text class="efficiency-number orange">{{avgReviewTimes}}</text>
+          <text class="efficiency-label">平均复习次数</text>
+        </view>
+        <view class="efficiency-item">
+          <text class="efficiency-number purple">{{optimalInterval}}</text>
+          <text class="efficiency-label">最佳复习间隔(天)</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 难度分布和状态分布 -->
+    <view class="distribution-section">
+      <view class="distribution-row">
+        <view class="distribution-col">
+          <text class="distribution-title">难度分布</text>
+                     <view wx:for="{{difficultyDistribution}}" wx:key="level" class="distribution-item">
+             <text class="distribution-label">{{item.name}}</text>
+             <text class="distribution-count {{item.levelClass}}">{{item.count}} ({{item.percentage}}%)</text>
+          </view>
+        </view>
+        
+         <view class="distribution-col">
+           <text class="distribution-title">状态分布</text>
+           <view wx:for="{{statusDistribution}}" wx:key="status" class="distribution-item">
+             <text class="distribution-label">{{item.name}}</text>
+             <text class="distribution-count {{item.statusClass}}">{{item.count}} ({{item.percentage}}%)</text>
+          </view>
+        </view>
+          </view>
+        </view>
+
+    <!-- 学习趋势 -->
+    <view class="learning-trend">
+      <view class="section-header">
+        <van-icon name="calendar-o" size="18" color="#4F46E5" />
+        <text class="section-title">学习趋势</text>
+      </view>
+      
+      <view class="trend-list">
+        <view wx:for="{{weeklyTrend}}" wx:key="week" class="trend-week">
+          <text class="week-label">第{{item.week}}周</text>
+          <view class="trend-data">
+            <view class="trend-item new">
+              <view class="trend-dot"></view>
+              <text>新增 {{item.new}}</text>
+            </view>
+            <view class="trend-item review">
+              <view class="trend-dot"></view>
+              <text>复习 {{item.review}}</text>
+          </view>
+            <view class="trend-item mastered">
+              <view class="trend-dot"></view>
+              <text>掌握 {{item.mastered}}</text>
+          </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 学习建议 -->
+    <view class="learning-suggestions">
+      <view class="section-header">
+        <van-icon name="bulb-o" size="18" color="#4F46E5" />
+        <text class="section-title">学习建议</text>
+      </view>
+      
+      <view class="suggestion-list">
+        <view wx:for="{{suggestions}}" wx:key="id" class="suggestion-item">
+          <view class="suggestion-dot"></view>
+          <text class="suggestion-text">{{item.text}}</text>
+        </view>
+      </view>
+    </view>
+
+  </view>
+</view>

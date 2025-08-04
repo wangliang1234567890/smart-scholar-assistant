@@ -27,13 +27,37 @@
   margin-bottom: 48rpx;
 }
 
+.avatar-wrapper {
+  position: relative;
+  margin-bottom: 24rpx;
+  cursor: pointer;
+}
+
 .avatar {
   width: 180rpx;
   height: 180rpx;
   border-radius: 48rpx;
   background-image: linear-gradient(to bottom right, #F8D568, #F5A623);
   border: 6rpx solid rgba(255, 255, 255, 0.5);
-  margin-bottom: 24rpx;
+  transition: transform 0.2s ease;
+}
+
+.avatar-wrapper:active .avatar {
+  transform: scale(0.95);
+}
+
+.avatar-edit-hint {
+  position: absolute;
+  bottom: 8rpx;
+  right: 8rpx;
+  width: 48rpx;
+  height: 48rpx;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
 }
 
 .user-name {
@@ -57,6 +81,19 @@
 .level-icon {
   width: 28rpx;
   height: 28rpx;
+}
+
+.auth-status {
+  margin-top: 16rpx;
+}
+
+.auth-hint {
+  font-size: 24rpx;
+  color: #8E8E93;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 8rpx 16rpx;
+  border-radius: 16rpx;
+  backdrop-filter: blur(4px);
 }
 
 /* Stats Card */

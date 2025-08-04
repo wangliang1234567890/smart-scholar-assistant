@@ -1,5 +1,15 @@
 <!--pages/mistakes/detail.wxml-->
 <view class="detail-container">
+  <!-- 顶部导航栏 -->
+  <view class="nav-header">
+    <van-nav-bar 
+      title="题目详情" 
+      left-arrow 
+      bind:click-left="navigateBack"
+      custom-class="nav-bar"
+    />
+  </view>
+
   <block wx:if="{{isLoading}}">
     <view class="loading-wrapper">
       <van-loading type="spinner" size="32px">加载中...</van-loading>
@@ -9,59 +19,163 @@
     <van-empty description="错题不存在或已被删除" />
   </block>
   <block wx:else>
-    <!-- 题目内容 -->
-    <view class="card question-card">
-      <view class="card-header">
-        <van-icon name="question-o" class="card-header-icon" />
-        <text>题目内容</text>
+    <scroll-view class="detail-content" scroll-y enable-back-to-top>
+      
+      <!-- 题目信息卡片 -->
+      <view class="subject-card">
+        <view class="subject-header">
+          <view class="subject-icon">
+            <text class="subject-text">{{mistake.subject === '数学' ? '数' : mistake.subject === '语文' ? '语' : mistake.subject === '英语' ? '英' : '理'}}</text>
+          </view>
+          <view class="subject-info">
+            <view class="subject-title">题目详情</view>
+            <view class="subject-detail">{{mistake.subject}} · {{mistake.difficultyText}}</view>
+          </view>
+        </view>
       </view>
-      <view class="question-stem">{{mistake.question}}</view>
-      <image 
-        wx:if="{{mistake.imageUrl}}" 
-        class="question-image" 
-        src="{{mistake.imageUrl}}" 
-        mode="widthFix"
-        show-menu-by-longpress
-      />
+
+      <!-- 统计信息 -->
+      <view class="stats-section">
+        <view class="stats-item error">
+          <van-icon name="warning-o" size="16" color="#ff4444" />
+          <text class="stats-label">答题错误</text>
+        </view>
+        
+        <view class="stats-grid">
+          <view class="stat-item">
+            <text class="stat-number">{{mistake.reviewCount || 2}}</text>
+            <text class="stat-label">复习次数</text>
+          </view>
+          <view class="stat-item">
+            <text class="stat-number">{{formattedCreateDate}}</text>
+            <text class="stat-label">录入日期</text>
+          </view>
+          <view class="stat-item highlight">
+            <text class="stat-number">{{formattedNextReviewDate}}</text>
+            <text class="stat-label">下次复习</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 题目内容 -->
+      <view class="question-section">
+        <view class="section-header">
+          <van-icon name="bookmark-o" size="16" color="#4285F4" />
+          <text class="section-title">题目内容</text>
+        </view>
+        
+        <view class="question-content">
+          <text class="question-text">{{mistake.question}}</text>
+          
+          <!-- 题目图片 -->
+          <image 
+            wx:if="{{mistake.imageUrl}}" 
+            class="question-image" 
+            src="{{mistake.imageUrl}}" 
+            mode="widthFix"
+            show-menu-by-longpress
+          />
+          
+          <!-- 题目标签 -->
+          <view class="question-tags">
+            <view wx:for="{{mistake.tags || ['除法', '平均分配', '应用题']}}" wx:key="*this" class="tag-item">
+              {{item}}
+            </view>
+          </view>
+          
+          <!-- 难度等级 -->
+          <view class="difficulty-section">
+            <text class="difficulty-label">难度等级：</text>
+            <view class="difficulty-tag {{mistake.difficulty}}">{{mistake.difficultyText}}</view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 答案与解析 - 直接显示 -->
+      <view class="answer-section">
+        <view class="section-header">
+          <van-icon name="success" size="16" color="#4CAF50" />
+          <text class="section-title">正确答案</text>
+          <view wx:if="{{isGeneratingAnswer}}" class="ai-generating">
+            <van-loading type="spinner" size="14px" />
+            <text class="generating-text">AI生成中...</text>
+          </view>
+        </view>
+        
+        <view class="answer-content">
+          <view class="answer-display">
+            <text class="answer-text">{{mistake.answer || aiAnswer || '正在生成答案...'}}</text>
+            <view wx:if="{{mistake.aiGenerated || aiAnswer}}" class="ai-badge">
+              <van-icon name="star-o" size="12" color="#FF9800" />
+              <text class="ai-text">AI生成</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 题目解析 -->
+      <view class="analysis-section" wx:if="{{mistake.analysis || aiAnalysis}}">
+        <view class="section-header">
+          <van-icon name="bulb-o" size="16" color="#FF9800" />
+          <text class="section-title">题目解析</text>
+        </view>
+        
+        <view class="analysis-content">
+          <text class="analysis-text">{{mistake.analysis || aiAnalysis || '正在生成解析...'}}</text>
+        </view>
+      </view>
+
+      <!-- 学习建议 -->
+      <view class="suggestion-section">
+        <view class="section-header">
+          <van-icon name="star-o" size="16" color="#9C27B0" />
+          <text class="section-title">学习建议</text>
+        </view>
+        
+        <view class="suggestion-content">
+          <view class="suggestion-item">
+            <van-icon name="bulb-o" size="14" color="#FF9800" />
+            <text class="suggestion-text">多练习平均分配类型的题目，掌握除法运算规律</text>
+          </view>
+          <view class="suggestion-item">
+            <van-icon name="edit" size="14" color="#2196F3" />
+            <text class="suggestion-text">可以通过画图的方式理解平均分配的概念</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 相关题目 -->
+      <view class="related-section">
+        <view class="section-header">
+          <van-icon name="question-o" size="16" color="#FF5722" />
+          <text class="section-title">相关题目</text>
+        </view>
+        
+        <view class="related-item" bind:tap="navigateToRelated" data-url="/pages/mistakes/detail?id=related1">
+          <text class="related-text">18个橘子平均分给3个人...</text>
+          <van-icon name="arrow" size="14" color="#999" />
+        </view>
+        <view class="related-item" bind:tap="navigateToRelated" data-url="/pages/mistakes/detail?id=related2">
+          <text class="related-text">30个糖果分给5个小朋友...</text>
+          <van-icon name="arrow" size="14" color="#999" />
+        </view>
+      </view>
+
+    </scroll-view>
+
+    <!-- 底部操作按钮 -->
+    <view class="bottom-actions">
+      <van-button 
+        icon="clock-o" 
+        type="primary" 
+        size="large"
+        block
+        bind:click="handleAddToReview"
+        custom-class="review-plan-btn"
+      >
+        加入复习计划
+      </van-button>
     </view>
 
-    <!-- 答案与解析 -->
-    <view class="card answer-card">
-      <view class="card-header">
-        <van-icon name="passed" class="card-header-icon" />
-        <text>答案与解析</text>
-      </view>
-      <view class="answer-content">
-        <view class="answer-label">正确答案：</view>
-        <view class="answer-text">{{mistake.answer}}</view>
-      </view>
-      <van-divider />
-      <view class="analysis-content">
-        <view class="analysis-label">题目解析：</view>
-        <view class="analysis-text">{{mistake.analysis || '暂无解析'}}</view>
-      </view>
-    </view>
-
-    <!-- 详细信息 -->
-    <van-cell-group title="详细信息" inset>
-      <van-cell title="所属学科" value="{{mistake.subject}}" />
-      <van-cell title="题目难度">
-        <van-tag type="primary" round>{{mistake.difficultyText}}</van-tag>
-      </van-cell>
-      <van-cell title="掌握状态">
-        <van-tag type="{{mistake.status === 'mastered' ? 'success' : 'warning'}}" round>{{mistake.statusText}}</van-tag>
-      </van-cell>
-      <van-cell title="录入时间" value="{{mistake.createTime}}" />
-      <van-cell title="复习次数" value="{{mistake.reviewCount}} 次" />
-      <van-cell title="上次复习" value="{{mistake.lastReviewTime || '暂无记录'}}" />
-      <van-cell title="下次复习" value="{{mistake.nextReviewTime || '未安排'}}" />
-    </van-cell-group>
-    
-    <!-- 操作按钮 -->
-    <view class="action-buttons">
-      <van-button icon="delete-o" class="action-btn" plain type="danger" bind:tap="handleDelete">删除</van-button>
-      <van-button icon="clock-o" class="action-btn" plain type="warning" bind:tap="handleAddToReview">加入复习计划</van-button>
-      <van-button icon="edit" class="action-btn" type="primary" bind:tap="handleEdit">编辑</van-button>
-    </view>
   </block>
 </view>

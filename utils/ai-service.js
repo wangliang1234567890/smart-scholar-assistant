@@ -159,7 +159,9 @@ class AIService {
       };
 
       // 调用豆包AI题目生成云函数
-      const result = await this.callCloudFunction('ai-question-generator', params);
+      const result = await this.callCloudFunction('ai-question-generator', params, {
+        timeout: 60000 // 60秒超时
+      });
 
       this.updateMetrics('generation', 'success');
       console.log(`[${requestId}] 练习题生成成功，共${result.questions?.length || 0}道题`);
@@ -245,7 +247,7 @@ class AIService {
           }
         }, {
           maxRetries: 0,
-          timeout: 50000
+          timeout: 60000 // 60秒超时
         });
 
         console.log(`[${requestId}] 云函数原始返回结果:`, result);
@@ -552,7 +554,7 @@ class AIService {
    */
   async callCloudFunction(name, data, options = {}) {
     const maxRetries = options.maxRetries !== undefined ? options.maxRetries : 2; // 默认重试2次
-    const timeout = options.timeout || 50000; // 50秒超时
+    const timeout = options.timeout || 60000; // 60秒超时
     const retryDelay = options.retryDelay || 1000; // 重试延迟
     
     console.log(`[${name}] 调用云函数，超时设置: ${timeout}ms，最大重试: ${maxRetries}次`);
@@ -674,6 +676,8 @@ class AIService {
         userAnswer: userAnswer,
         standardAnswer: standardAnswer,
         requestId: requestId
+      }, {
+        timeout: 60000 // 60秒超时
       });
 
       this.updateMetrics('grading', 'success');
@@ -766,7 +770,7 @@ class AIService {
         const startTime = Date.now();
         
         const result = await this.callCloudFunction(service.name, service.testData, {
-          timeout: 10000, // 健康检查使用较短超时
+          timeout: 60000, // 60秒超时
           maxRetries: 1
         });
         
@@ -938,13 +942,17 @@ class AIService {
   async executeTestRequest(testType) {
     switch (testType) {
       case 'image':
-        return await this.callCloudFunction('ai-question-analyzer', { test: true });
+        return await this.callCloudFunction('ai-question-analyzer', { test: true }, {
+          timeout: 60000 // 60秒超时
+        });
         
       case 'generation':
         return await this.callCloudFunction('ai-question-generator', {
           test: true,
           sourceErrors: [{ content: '测试', subject: '数学' }],
           generateCount: 1
+        }, {
+          timeout: 60000 // 60秒超时
         });
         
       case 'grading':
@@ -952,6 +960,8 @@ class AIService {
           question: { type: 'single_choice', content: '测试' },
           userAnswer: 'A',
           standardAnswer: 'A'
+        }, {
+          timeout: 60000 // 60秒超时
         });
         
       case 'mixed':
@@ -1463,6 +1473,8 @@ class AIService {
       // 只有在测试时才传递 test: true
       const result = await this.callCloudFunction('ocr-recognition', {
         test: true // 明确的测试调用
+      }, {
+        timeout: 60000 // 60秒超时
       });
       
       console.log('云函数测试结果:', result);
@@ -1654,11 +1666,13 @@ class AIService {
           correctAnswer: mistake.correctAnswer,
           mistakeReason: mistake.mistakeReason
         },
-        generateCount: options.count || 5,
+        generateCount: options.count || 2, // 减少到2道题
         difficulty: options.difficulty || mistake.difficulty,
-        questionTypes: options.types || ['single_choice', 'multiple_choice', 'fill_blank'],
+        questionTypes: options.types || ['single_choice'], // 只生成单选题
         requestId: requestId,
         useDoubao: true // 明确使用豆包AI
+      }, {
+        timeout: 60000 // 60秒超时
       });
       
       if (result.success && result.questions) {
@@ -1711,7 +1725,7 @@ class AIService {
         const batch = mistakeIds.slice(i, i + maxConcurrency);
         const batchPromises = batch.map(id => 
           this.generatePracticeFromMistake(id, {
-            count: options.questionsPerError || 2,
+            count: options.questionsPerError || 1, // 减少到1道题
             difficulty: options.difficulty
           })
         );
@@ -1762,8 +1776,8 @@ class AIService {
         };
       }
       
-      // 调用豆包AI题目生成云函数
-      const result = await this.callCloudFunction('ai-question-generator', {
+      // 准备调用云函数的参数
+      const cloudFunctionParams = {
         sourceErrors: mistakes.map(mistake => ({
           content: mistake.question || mistake.content || '题目内容缺失',
           subject: mistake.subject || '未知',
@@ -1775,11 +1789,18 @@ class AIService {
           correctAnswer: mistake.answer || mistake.correctAnswer || mistake.正确答案 || '',
           mistakeReason: mistake.mistakeReason || '未分析'
         })),
-        generateCount: options.count || 5,
-        questionTypes: options.types || ['single_choice', 'multiple_choice', 'fill_blank'],
+        generateCount: options.count || 2, // 减少到2道题
+        questionTypes: options.types || ['single_choice'], // 只生成单选题
         difficulty: options.difficulty || 'auto', // 'auto'表示根据错题难度自动调整
         requestId: requestId,
         useDoubao: true
+      };
+      
+      console.log('🚀 调用云函数参数:', JSON.stringify(cloudFunctionParams, null, 2));
+      
+      // 调用豆包AI题目生成云函数
+      const result = await this.callCloudFunction('ai-question-generator', cloudFunctionParams, {
+        timeout: 60000 // 60秒超时
       });
       
       if (result.success && result.questions) {
@@ -1828,30 +1849,123 @@ class AIService {
     console.log('使用降级方案生成练习题目');
     
     try {
-      const questions = mistakes.map((mistake, index) => ({
-        id: `fallback_${Date.now()}_${index}`,
-        type: mistake.type || 'single_choice',
-        subject: mistake.subject || '综合',
-        difficulty: mistake.difficulty || 3,
-        question: mistake.question || mistake.content || '题目内容缺失',
-        options: this.generateFallbackOptions(mistake),
-        answer: mistake.answer || mistake.correctAnswer || mistake.正确答案 || '',
-        explanation: `这是基于您的错题"${(mistake.question || mistake.content || '').substring(0, 20)}..."生成的类似题目。`,
-        keyPoints: mistake.keyPoints || [],
-        source: 'fallback_generation',
-        practiceType: 'error_review',
-        originalErrorId: mistake._id || mistake.id
-      }));
+      const count = options.count || 3; // 减少到3道题
+      const types = options.types || ['single_choice']; // 只生成单选题
+      
+      // 高质量题目模板
+      const qualityTemplates = {
+        math: [
+          {
+            question: '计算：25 + 37 = ?',
+            options: ['A. 52', 'B. 62', 'C. 72', 'D. 82'],
+            answer: 'B',
+            explanation: '25 + 37 = 62，注意进位计算'
+          },
+          {
+            question: '一个正方形的周长是16厘米，它的边长是多少厘米？',
+            options: ['A. 2厘米', 'B. 3厘米', 'C. 4厘米', 'D. 5厘米'],
+            answer: 'C',
+            explanation: '正方形周长 = 4 × 边长，所以边长 = 16 ÷ 4 = 4厘米'
+          },
+          {
+            question: '6 × 7 = ___',
+            options: [],
+            answer: '42',
+            explanation: '6乘以7等于42，这是乘法口诀表中的基础计算'
+          },
+          {
+            question: '小明有12颗糖，分给3个朋友，每人分几颗？',
+            options: ['A. 3颗', 'B. 4颗', 'C. 5颗', 'D. 6颗'],
+            answer: 'B',
+            explanation: '12 ÷ 3 = 4，每人分4颗糖'
+          },
+          {
+            question: '下列哪个数字最大？',
+            options: ['A. 45', 'B. 38', 'C. 52', 'D. 49'],
+            answer: 'C',
+            explanation: '比较大小：38 < 45 < 49 < 52，所以52最大'
+          }
+        ],
+        chinese: [
+          {
+            question: '下列词语中，哪个是正确的？',
+            options: ['A. 金壁辉煌', 'B. 金碧辉煌', 'C. 金璧辉煌', 'D. 金臂辉煌'],
+            answer: 'B',
+            explanation: '"金碧辉煌"指金光闪闪、色彩绚丽，形容建筑物等富丽堂皇'
+          },
+          {
+            question: '"春眠不觉晓"的下一句是？',
+            options: ['A. 处处闻啼鸟', 'B. 花落知多少', 'C. 夜来风雨声', 'D. 鸟鸣山更幽'],
+            answer: 'A',
+            explanation: '这是孟浩然《春晓》中的诗句：春眠不觉晓，处处闻啼鸟'
+          },
+          {
+            question: '选择正确的拼音：中国',
+            options: ['A. zhōng guó', 'B. zhong guo', 'C. zōng guó', 'D. chōng guó'],
+            answer: 'A',
+            explanation: '"中国"的正确拼音是"zhōng guó"，注意声调'
+          }
+        ],
+        english: [
+          {
+            question: 'What color is the sun?',
+            options: ['A. Blue', 'B. Green', 'C. Yellow', 'D. Purple'],
+            answer: 'C',
+            explanation: 'The sun appears yellow to us from Earth'
+          },
+          {
+            question: 'How do you say "谢谢" in English?',
+            options: ['A. Hello', 'B. Thank you', 'C. Goodbye', 'D. Sorry'],
+            answer: 'B',
+            explanation: '"Thank you" means "谢谢" in English'
+          }
+        ]
+      };
+      
+      // 基于错题推断学科
+      const subjects = this.extractUniqueValues(mistakes, 'subject');
+      const primarySubject = subjects.find(s => s !== 'unknown') || 'math';
+      const templates = qualityTemplates[primarySubject] || qualityTemplates.math;
+      
+      // 生成高质量练习题
+      const questions = [];
+      for (let i = 0; i < count; i++) {
+        const template = templates[i % templates.length];
+        const type = types[i % types.length];
+        
+        // 根据题型调整模板
+        let question = { ...template };
+        if (type === 'fill_blank' && template.options.length > 0) {
+          question.question = question.question.replace(/哪个.*？/, '___');
+          question.options = [];
+        }
+        
+        questions.push({
+          id: `fallback_${Date.now()}_${i}`,
+          type: type,
+          subject: primarySubject,
+          difficulty: 3,
+          question: question.question,
+          options: question.options,
+          answer: question.answer,
+          explanation: question.explanation,
+          keyPoints: ['基础练习'],
+          source: 'fallback_quality',
+          generatedAt: new Date().toISOString(),
+          relatedErrors: mistakes.slice(0, 2).map(m => m._id || m.id).filter(Boolean)
+        });
+      }
       
       return {
         success: true,
-        questions: questions.slice(0, options.count || 5),
+        questions: questions,
         sourceErrors: mistakes,
         metadata: {
-          generatedCount: Math.min(questions.length, options.count || 5),
+          generatedCount: questions.length,
           sourceErrorCount: mistakes.length,
-          method: 'fallback',
-          subjects: this.extractUniqueValues(mistakes, 'subject')
+          method: 'fallback_quality',
+          primarySubject: primarySubject,
+          processingTime: 50
         }
       };
     } catch (error) {
@@ -2096,6 +2210,8 @@ class AIService {
       
       const result = await this.callCloudFunction('ai-question-generator', {
         test: true
+      }, {
+        timeout: 60000 // 60秒超时
       });
       
       console.log('豆包AI题目生成测试结果:', result);

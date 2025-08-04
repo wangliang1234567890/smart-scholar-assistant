@@ -40,9 +40,9 @@ Page({
     showDatePicker: false,
     showTimePicker: false,
     currentTimeType: '', // 'startTime' 或 'endTime'
-    datePickerValue: new Date().getTime(),
-    timePickerValue: new Date().getTime(),
-    minDate: new Date().getTime(),
+    datePickerValue: new Date(),
+    timePickerValue: new Date(),
+    minDate: new Date(),
     
     // 日期格式化器
     dateFormatter(type, value) {
@@ -66,11 +66,6 @@ Page({
     this.setData({
       'formData.date': formatTime(new Date(), 'yyyy-MM-dd')
     });
-  },
-
-  // 返回上一页
-  goBack() {
-    wx.navigateBack();
   },
 
   // 输入框变化
@@ -115,8 +110,8 @@ Page({
   // --- 日期选择器 ---
   showDatePicker() {
     const currentDate = this.data.formData.date ? 
-      new Date(this.data.formData.date).getTime() : 
-      new Date().getTime();
+      new Date(this.data.formData.date) : 
+      new Date();
     
     this.setData({
       showDatePicker: true,
@@ -149,7 +144,7 @@ Page({
     this.setData({
       showTimePicker: true,
       currentTimeType: type,
-      timePickerValue: date.getTime()
+      timePickerValue: date
     });
   },
 
@@ -206,47 +201,78 @@ Page({
         updatedAt: new Date().toISOString()
       };
 
-      // 本地存储
-      const localCourse = {
-        _id: `local_${Date.now()}`,
-        ...courseData,
-        synced: false
-      };
-      LocalDB.saveCourse(localCourse);
+      // 使用真实数据库操作
+      const result = await DatabaseManager.addCourse(courseData);
 
-      // 云端同步（忽略错误）
-      try {
-        await DatabaseManager.addCourse(courseData);
-        localCourse.synced = true;
+      if (result.success) {
+        // 同时保存到本地存储作为缓存
+        const localCourse = {
+          _id: result.data._id,
+          ...courseData,
+          synced: true
+        };
         LocalDB.saveCourse(localCourse);
-      } catch(err) {
-        console.warn('云端同步失败:', err);
-      }
 
-      wx.hideLoading();
-      wx.showToast({ 
-        title: '保存成功',
-        icon: 'success',
-        duration: 1500
-      });
-      
-      // 通知上级页面刷新
-      setTimeout(() => {
-        const pages = getCurrentPages();
-        const prevPage = pages[pages.length - 2];
-        if (prevPage && prevPage.route === 'pages/schedule/schedule') {
-          prevPage.loadAllCourses && prevPage.loadAllCourses();
-        }
-        wx.navigateBack();
-      }, 1500);
+        wx.hideLoading();
+        wx.showToast({ 
+          title: '保存成功',
+          icon: 'success',
+          duration: 1500
+        });
+        
+        // 通知上级页面刷新
+        setTimeout(() => {
+          const pages = getCurrentPages();
+          const prevPage = pages[pages.length - 2];
+          if (prevPage && prevPage.route === 'pages/schedule/schedule') {
+            // 调用新的数据加载方法
+            prevPage.loadScheduleData && prevPage.loadScheduleData();
+          }
+          wx.navigateBack();
+        }, 1500);
+      } else {
+        throw new Error(result.message || '保存失败');
+      }
       
     } catch (error) {
       wx.hideLoading();
       console.error('保存课程失败:', error);
-      wx.showToast({ 
-        title: '保存失败，请重试', 
-        icon: 'none' 
-      });
+      
+      // 数据库保存失败时，保存到本地作为未同步数据
+      try {
+        const localCourse = {
+          _id: `local_${Date.now()}`,
+          ...this.data.formData,
+          name: this.data.formData.name.trim(),
+          duration: toMinutes(endTime) - toMinutes(startTime),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          synced: false
+        };
+        LocalDB.saveCourse(localCourse);
+        
+        wx.showToast({ 
+          title: '已保存到本地，将稍后同步',
+          icon: 'none',
+          duration: 2000
+        });
+        
+        setTimeout(() => {
+          const pages = getCurrentPages();
+          const prevPage = pages[pages.length - 2];
+          if (prevPage && prevPage.route === 'pages/schedule/schedule') {
+            prevPage.loadScheduleData && prevPage.loadScheduleData();
+          }
+          wx.navigateBack();
+        }, 2000);
+      } catch (localError) {
+        console.error('本地保存也失败:', localError);
+        wx.showToast({ 
+          title: '保存失败，请重试',
+          icon: 'error',
+          duration: 2000
+        });
+      }
     }
   },
 

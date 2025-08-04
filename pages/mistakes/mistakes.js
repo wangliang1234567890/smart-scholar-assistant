@@ -1,5 +1,6 @@
 import DatabaseManager from '../../utils/database.js';
 import { debounce } from '../../utils/common.js';
+import EventManager, { EVENT_TYPES } from '../../utils/event-manager.js';
 
 // 常量定义
 const SUBJECTS = ['数学', '英语', '语文', '物理', '化学', '生物', '历史', '地理', '政治'];
@@ -94,6 +95,11 @@ Page({
     
     // 初始化防抖搜索
     this.debouncedSearch = debounce(this.performSearch.bind(this), 300);
+    
+    // 注册事件监听器
+    EventManager.on(EVENT_TYPES.MISTAKE_ADDED, 'onMistakeAdded', this);
+    EventManager.on(EVENT_TYPES.MISTAKE_UPDATED, 'onMistakeUpdated', this);
+    EventManager.on(EVENT_TYPES.MISTAKE_DELETED, 'onMistakeDeleted', this);
     
     // 处理传入的筛选参数
     if (options && options.subject) {
@@ -866,5 +872,40 @@ Page({
     if (this.debouncedSearch) {
       this.debouncedSearch = null;
     }
+    
+    // 移除事件监听器
+    EventManager.off(EVENT_TYPES.MISTAKE_ADDED, this);
+    EventManager.off(EVENT_TYPES.MISTAKE_UPDATED, this);
+    EventManager.off(EVENT_TYPES.MISTAKE_DELETED, this);
+  },
+
+  /**
+   * 处理错题添加事件
+   */
+  onMistakeAdded(data) {
+    console.log('收到错题添加事件:', data);
+    // 重新加载错题数据和统计信息
+    this.loadMistakes();
+    this.loadStatistics();
+  },
+
+  /**
+   * 处理错题更新事件
+   */
+  onMistakeUpdated(data) {
+    console.log('收到错题更新事件:', data);
+    // 重新加载数据以确保最新状态
+    this.loadMistakes();
+    this.loadStatistics();
+  },
+
+  /**
+   * 处理错题删除事件
+   */
+  onMistakeDeleted(data) {
+    console.log('收到错题删除事件:', data);
+    // 重新加载数据
+    this.loadMistakes();
+    this.loadStatistics();
   }
 });

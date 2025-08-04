@@ -1,1 +1,406 @@
 /* pages/about/about.wxss */
+
+.about-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.nav-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.about-content {
+  height: calc(100vh - 88rpx);
+  padding: 20rpx;
+}
+
+/* 应用信息 */
+.app-info-section {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20rpx;
+  padding: 40rpx;
+  margin-bottom: 30rpx;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.app-logo {
+  margin-bottom: 20rpx;
+}
+
+.logo-img {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 24rpx;
+  background: #ffffff;
+  padding: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.app-name {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #333333;
+  margin-bottom: 8rpx;
+}
+
+.app-version {
+  font-size: 24rpx;
+  color: #666666;
+  margin-bottom: 16rpx;
+}
+
+.app-desc {
+  font-size: 26rpx;
+  color: #666666;
+  line-height: 1.6;
+  margin-bottom: 30rpx;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 20rpx;
+  justify-content: center;
+}
+
+.action-btn {
+  min-width: 140rpx !important;
+  height: 64rpx !important;
+  border-radius: 32rpx !important;
+}
+
+/* 通用样式 */
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 20rpx;
+  padding: 0 16rpx;
+}
+
+/* 功能特色 */
+.features-section {
+  margin-bottom: 30rpx;
+}
+
+.features-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.feature-item {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+}
+
+.feature-icon {
+  width: 64rpx;
+  height: 64rpx;
+  background: linear-gradient(135deg, #4285F4, #34A853);
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-img {
+  width: 32rpx;
+  height: 32rpx;
+  filter: brightness(0) invert(1);
+}
+
+.feature-info {
+  flex: 1;
+}
+
+.feature-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333333;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.feature-desc {
+  font-size: 24rpx;
+  color: #666666;
+  line-height: 1.4;
+}
+
+/* 开发团队 */
+.team-section {
+  margin-bottom: 30rpx;
+}
+
+.team-grid {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  padding: 30rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30rpx;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+}
+
+.team-member {
+  text-align: center;
+}
+
+.member-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  margin-bottom: 12rpx;
+  background: #f0f0f0;
+}
+
+.member-name {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #333333;
+  margin-bottom: 4rpx;
+}
+
+.member-role {
+  font-size: 22rpx;
+  color: #666666;
+}
+
+/* 更新日志 */
+.changelog-section {
+  margin-bottom: 30rpx;
+}
+
+.changelog-item {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+}
+
+.changelog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+  padding-bottom: 12rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.changelog-version {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #4285F4;
+}
+
+.changelog-date {
+  font-size: 24rpx;
+  color: #666666;
+}
+
+.changelog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.change-item {
+  font-size: 26rpx;
+  color: #333333;
+  line-height: 1.5;
+  padding-left: 16rpx;
+  position: relative;
+}
+
+.change-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6rpx;
+  height: 6rpx;
+  background: #4285F4;
+  border-radius: 50%;
+}
+
+/* 联系我们 */
+.contact-section {
+  margin-bottom: 30rpx;
+}
+
+.contact-list {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  transition: background-color 0.2s ease;
+}
+
+.contact-item:last-child {
+  border-bottom: none;
+}
+
+.contact-item:active {
+  background-color: rgba(66, 133, 244, 0.05);
+}
+
+.contact-icon {
+  width: 48rpx;
+  height: 48rpx;
+  background: rgba(66, 133, 244, 0.1);
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+}
+
+.contact-info {
+  flex: 1;
+}
+
+.contact-label {
+  font-size: 28rpx;
+  color: #333333;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.contact-value {
+  font-size: 24rpx;
+  color: #666666;
+}
+
+/* 法律信息 */
+.legal-section {
+  margin-bottom: 30rpx;
+}
+
+.legal-list {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+}
+
+.legal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  transition: background-color 0.2s ease;
+}
+
+.legal-item:last-child {
+  border-bottom: none;
+}
+
+.legal-item:active {
+  background-color: rgba(66, 133, 244, 0.05);
+}
+
+.legal-label {
+  font-size: 28rpx;
+  color: #333333;
+  font-weight: 500;
+}
+
+/* 版权信息 */
+.copyright-section {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  padding: 30rpx;
+  text-align: center;
+  margin-bottom: 30rpx;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+}
+
+.copyright-text {
+  font-size: 26rpx;
+  color: #333333;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.copyright-desc {
+  font-size: 24rpx;
+  color: #666666;
+  line-height: 1.5;
+}
+
+/* 技术信息 */
+.tech-info-section {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 40rpx;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+}
+
+.tech-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.tech-item:last-child {
+  border-bottom: none;
+}
+
+.tech-label {
+  font-size: 24rpx;
+  color: #666666;
+}
+
+.tech-value {
+  font-size: 24rpx;
+  color: #333333;
+  font-weight: 500;
+}
+
+/* 响应式适配 */
+@media (max-width: 400px) {
+  .team-grid {
+    grid-template-columns: 1fr;
+    gap: 20rpx;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .action-btn {
+    width: 200rpx !important;
+  }
+}

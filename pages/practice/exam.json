@@ -1,5 +1,8 @@
 {
   "navigationBarTitleText": "AI智能练习",
+  "navigationBarBackgroundColor": "#4F46E5",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#F8FAFC",
   "usingComponents": {
     "van-button": "@vant/weapp/button/index",
     "van-loading": "@vant/weapp/loading/index",

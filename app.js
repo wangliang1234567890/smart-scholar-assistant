@@ -54,8 +54,7 @@ App({
         console.error('❌ AI服务未加载');
       }
       
-      // 启动性能监控
-      this.initPerformanceMonitor();
+
       
       // 验证基础功能
       this.verifyBasicFunctions();
@@ -109,15 +108,7 @@ App({
     }
   },
 
-  // 初始化性能监控
-  initPerformanceMonitor() {
-    try {
-      // 性能监控已在utils/performance-monitor.js中自动启动
-      console.log('📊 性能监控已启动');
-    } catch (error) {
-      console.error('📊 性能监控启动失败:', error);
-    }
-  },
+
 
   // 验证基础功能
   verifyBasicFunctions() {

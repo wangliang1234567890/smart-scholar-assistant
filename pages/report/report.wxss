@@ -1,241 +1,645 @@
 /* pages/report/report.wxss */
-.page-container {
+
+.report-container {
   min-height: 100vh;
-  background: var(--bg-secondary);
-  padding: 32rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-/* 时间选择器 */
-.time-selector {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color-indigo) 100%);
-  border-radius: 32rpx;
-  padding: 32rpx;
-  margin-bottom: 32rpx;
-  box-shadow: 0 8rpx 32rpx rgba(59,130,246,0.3);
+.nav-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.selector-header {
+.loading-container {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  margin-bottom: 16rpx;
+  height: 60vh;
+  color: #ffffff;
 }
 
-.period-title {
-  font-size: 40rpx;
-  font-weight: bold;
-  color: var(--text-light);
+.report-content {
+  height: calc(100vh - 88rpx);
+  padding: 20rpx;
 }
 
-.date-range {
-  font-size: 28rpx;
-  color: rgba(255, 255, 255, 0.8);
+/* 时间范围选择 */
+.time-range-section {
+  margin-bottom: 30rpx;
 }
 
-/* 整体统计 */
-.overall-stats {
-  margin-bottom: 48rpx;
-}
-
-.stats-card {
-  background: var(--bg-primary);
-  border-radius: 32rpx;
-  padding: 48rpx 32rpx;
-  box-shadow: var(--shadow-light);
-}
-
-.stats-header {
+.time-range-picker {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20rpx;
+  padding: 20rpx 30rpx;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  margin-bottom: 32rpx;
+  gap: 12rpx;
+  backdrop-filter: blur(10px);
 }
 
-.stats-title {
-  font-size: 36rpx;
+.range-label {
+  font-size: 32rpx;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #ffffff;
 }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 32rpx;
-}
-
-.stat-item {
-  text-align: center;
-  padding: 24rpx;
-  border-radius: 24rpx;
-  background: var(--bg-tertiary);
-}
-
-.stat-value {
-  font-size: 48rpx;
-  font-weight: bold;
-  color: var(--primary-color);
-  display: block;
-  margin-bottom: 8rpx;
-}
-
-.stat-label {
+/* 通用样式 */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
   font-size: 28rpx;
-  color: var(--text-secondary);
-  display: block;
+  font-weight: 600;
+  color: #ffffff;
+  padding: 0 16rpx;
+}
+
+/* 学习概览 */
+.overview-section {
+  margin-bottom: 40rpx;
+}
+
+.overview-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+
+.overview-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.overview-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4rpx;
+  background: linear-gradient(90deg, #4285F4, #34A853);
+}
+
+.overview-card.success::before {
+  background: linear-gradient(90deg, #34A853, #4CAF50);
+}
+
+.overview-card.warning::before {
+  background: linear-gradient(90deg, #FF9800, #F57C00);
+}
+
+.overview-card.info::before {
+  background: linear-gradient(90deg, #2196F3, #03A9F4);
+}
+
+.card-value {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #333333;
   margin-bottom: 8rpx;
 }
 
-.stat-change {
+.card-label {
   font-size: 24rpx;
-  font-weight: 500;
-  display: block;
+  color: #666666;
+  margin-bottom: 12rpx;
 }
 
-.stat-change.up { color: var(--success-color); }
-.stat-change.down { color: var(--danger-color); }
+.card-trend {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.trend-text {
+  font-size: 22rpx;
+  color: #4CAF50;
+}
+
+.card-progress {
+  font-size: 22rpx;
+  color: #4285F4;
+}
 
 /* 学科分析 */
-.subject-analysis {
-  margin-bottom: 48rpx;
+.subject-section {
+  margin-bottom: 40rpx;
 }
 
-.section-title {
-  font-size: 36rpx;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 32rpx;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.chart-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  font-size: 28rpx;
-  color: var(--text-secondary);
-}
-
-.chart-view {
-  background: var(--bg-primary);
-  border-radius: 24rpx;
-  padding: 32rpx;
-  box-shadow: var(--shadow-light);
-}
-
-.chart-canvas {
-  width: 100%;
-  height: 400rpx;
-}
-
-.subjects-list {
-  display: flex;
-  flex-direction: column;
-  gap: 24rpx;
+.subject-charts {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
 }
 
 .subject-item {
-  background: var(--bg-primary);
-  border-radius: 24rpx;
-  padding: 32rpx;
-  box-shadow: var(--shadow-light);
-  transition: all 0.3s ease;
+  margin-bottom: 32rpx;
 }
 
-.subject-item:active {
-  transform: translateY(-2rpx);
-  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.12);
+.subject-item:last-child {
+  margin-bottom: 0;
 }
 
 .subject-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 24rpx;
-  margin-bottom: 24rpx;
+  margin-bottom: 12rpx;
 }
-
-.subject-icon {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 20rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.subject-icon.math { background: var(--primary-color); }
-.subject-icon.chinese { background: var(--danger-color); }
-.subject-icon.english { background: var(--success-color); }
-.subject-icon.science { background: var(--accent-color-purple); }
 
 .subject-info {
-  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.subject-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
 }
 
 .subject-name {
-  font-size: 32rpx;
+  font-size: 26rpx;
   font-weight: 600;
-  color: var(--text-primary);
-  display: block;
-  margin-bottom: 8rpx;
+  color: #333333;
 }
 
-.subject-desc {
+.subject-count {
+  font-size: 22rpx;
+  color: #666666;
+}
+
+.subject-accuracy {
   font-size: 28rpx;
-  color: var(--text-secondary);
-  display: block;
+  font-weight: 700;
+  color: #4285F4;
 }
 
 .subject-progress {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
-}
-
-.progress-container {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
+  margin-bottom: 16rpx;
 }
 
 .progress-bar {
-  flex: 1;
-  height: 12rpx;
-  background: var(--border-light);
-  border-radius: 12rpx;
+  height: 8rpx;
+  background: #f0f0f0;
+  border-radius: 4rpx;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: var(--primary-color);
-  border-radius: 12rpx;
+  border-radius: 4rpx;
   transition: width 0.3s ease;
 }
 
-.progress-text {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: var(--primary-color);
-  min-width: 80rpx;
-  text-align: right;
+.subject-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 16rpx;
 }
 
-.trend-indicator {
+.stat-item {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: #666666;
+}
+
+.stat-label.success {
+  color: #4CAF50;
+}
+
+/* 难度分析 */
+.difficulty-section {
+  margin-bottom: 40rpx;
+}
+
+.difficulty-chart {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.difficulty-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.difficulty-info {
+  flex: 1;
+}
+
+.difficulty-level {
+  display: inline-block;
+  padding: 6rpx 16rpx;
+  border-radius: 12rpx;
+  color: #ffffff;
+  font-size: 22rpx;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+}
+
+.difficulty-stats {
+  display: flex;
+  gap: 16rpx;
+}
+
+.stats-count {
+  font-size: 24rpx;
+  color: #333333;
+  font-weight: 600;
+}
+
+.stats-accuracy {
+  font-size: 22rpx;
+  color: #666666;
+}
+
+.difficulty-progress {
+  width: 80rpx;
+  height: 80rpx;
+}
+
+.circle-progress {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: conic-gradient(var(--color) 0deg, var(--color) calc(var(--progress) * 3.6deg), #f0f0f0 calc(var(--progress) * 3.6deg));
   display: flex;
   align-items: center;
-  gap: 8rpx;
-  font-size: 24rpx;
+  justify-content: center;
+  position: relative;
 }
 
-.trend-text.up { color: var(--success-color); }
-.trend-text.down { color: var(--danger-color); }
-.trend-text.stable { color: var(--text-secondary); }
+.circle-progress::before {
+  content: "";
+  position: absolute;
+  width: 60rpx;
+  height: 60rpx;
+  background: #ffffff;
+  border-radius: 50%;
+}
+
+.progress-text {
+  font-size: 20rpx;
+  color: #333333;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+}
+
+/* 学习趋势 */
+.trend-section {
+  margin-bottom: 40rpx;
+}
+
+.trend-chart {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.chart-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #333333;
+  margin-bottom: 20rpx;
+  text-align: center;
+}
+
+.daily-chart {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 200rpx;
+  padding: 20rpx 0;
+}
+
+.day-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.bar-value {
+  font-size: 20rpx;
+  color: #666666;
+  margin-bottom: 8rpx;
+  min-height: 28rpx;
+}
+
+.bar-column {
+  width: 24rpx;
+  background: #f0f0f0;
+  border-radius: 12rpx 12rpx 0 0;
+  position: relative;
+  margin-bottom: 8rpx;
+  min-height: 20rpx;
+}
+
+.bar-fill {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to top, #4285F4, #64B5F6);
+  border-radius: 12rpx 12rpx 0 0;
+}
+
+.bar-label {
+  font-size: 20rpx;
+  color: #666666;
+}
+
+.monthly-comparison {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.comparison-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #333333;
+  margin-bottom: 20rpx;
+  text-align: center;
+}
+
+.comparison-chart {
+  display: flex;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.month-item {
+  flex: 1;
+  text-align: center;
+}
+
+.month-bar {
+  height: 120rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.bar-bg {
+  width: 32rpx;
+  height: 80rpx;
+  background: #f0f0f0;
+  border-radius: 16rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.bar-progress {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(to top, #34A853, #4CAF50);
+  border-radius: 16rpx;
+  transition: height 0.3s ease;
+}
+
+.month-label {
+  font-size: 20rpx;
+  color: #666666;
+}
+
+.month-value {
+  font-size: 18rpx;
+  color: #333333;
+  font-weight: 600;
+}
+
+/* 学习效率 */
+.efficiency-section {
+  margin-bottom: 40rpx;
+}
+
+.efficiency-metrics {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  padding: 30rpx;
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 16rpx;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.metric-item {
+  text-align: center;
+}
+
+.metric-circle {
+  width: 100rpx;
+  height: 100rpx;
+  margin-bottom: 12rpx;
+}
+
+.circle-chart {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  background: conic-gradient(#4285F4 0deg, #4285F4 calc(var(--progress) * 3.6deg), #f0f0f0 calc(var(--progress) * 3.6deg));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.circle-chart::before {
+  content: "";
+  position: absolute;
+  width: 70rpx;
+  height: 70rpx;
+  background: #ffffff;
+  border-radius: 50%;
+}
+
+.circle-text {
+  font-size: 24rpx;
+  color: #333333;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+}
+
+.metric-label {
+  font-size: 22rpx;
+  color: #666666;
+}
+
+.efficiency-details {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  padding: 20rpx;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.detail-text {
+  font-size: 24rpx;
+  color: #333333;
+}
+
+/* 学习习惯 */
+.habits-section {
+  margin-bottom: 40rpx;
+}
+
+.habits-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+
+.habit-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.habit-icon {
+  font-size: 32rpx;
+}
+
+.habit-info {
+  flex: 1;
+}
+
+.habit-label {
+  font-size: 22rpx;
+  color: #666666;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.habit-value {
+  font-size: 24rpx;
+  color: #333333;
+  font-weight: 600;
+}
+
+/* 成就展示 */
+.achievements-section {
+  margin-bottom: 40rpx;
+}
+
+.achievement-subtitle {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 16rpx;
+  padding: 0 16rpx;
+}
+
+.recent-achievements,
+.progress-achievements {
+  margin-bottom: 20rpx;
+}
+
+.achievement-list,
+.progress-list {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  padding: 20rpx;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.achievement-item,
+.progress-item {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.achievement-item:last-child,
+.progress-item:last-child {
+  border-bottom: none;
+}
+
+.achievement-icon {
+  font-size: 32rpx;
+  width: 48rpx;
+  text-align: center;
+}
+
+.achievement-info,
+.progress-info {
+  flex: 1;
+}
+
+.achievement-name {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #333333;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.achievement-desc {
+  font-size: 22rpx;
+  color: #666666;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.achievement-date {
+  font-size: 20rpx;
+  color: #999999;
+}
+
+.progress-text {
+  font-size: 20rpx;
+  color: #4285F4;
+  margin-top: 8rpx;
+}
 
 /* 学习建议 */
-.study-suggestions {
-  margin-bottom: 48rpx;
+.suggestions-section {
+  margin-bottom: 40rpx;
 }
 
 .suggestions-list {
@@ -245,31 +649,42 @@
 }
 
 .suggestion-item {
-  background: var(--bg-primary);
-  border-radius: 20rpx;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
   padding: 24rpx;
   display: flex;
   align-items: center;
-  gap: 20rpx;
-  box-shadow: var(--shadow-light);
-  border-left: 6rpx solid transparent;
+  gap: 16rpx;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
 }
 
-.suggestion-item.urgent {
-  border-left-color: var(--danger-color);
-  background: #FEF2F2;
+.suggestion-item:active {
+  transform: scale(0.98);
 }
 
-.suggestion-item.good {
-  border-left-color: var(--success-color);
-  background: var(--bg-tertiary);
+.suggestion-item.warning {
+  border-left: 4rpx solid #FF9800;
+}
+
+.suggestion-item.success {
+  border-left: 4rpx solid #4CAF50;
+}
+
+.suggestion-item.info {
+  border-left: 4rpx solid #2196F3;
+}
+
+.suggestion-item.tip {
+  border-left: 4rpx solid #9C27B0;
 }
 
 .suggestion-icon {
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: 16rpx;
-  background: rgba(255, 255, 255, 0.8);
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 20rpx;
+  background: rgba(66, 133, 244, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -280,91 +695,96 @@
 }
 
 .suggestion-title {
-  font-size: 30rpx;
+  font-size: 26rpx;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #333333;
   display: block;
-  margin-bottom: 4rpx;
+  margin-bottom: 6rpx;
 }
 
 .suggestion-desc {
-  font-size: 26rpx;
-  color: var(--text-secondary);
-  display: block;
+  font-size: 22rpx;
+  color: #666666;
+  line-height: 1.4;
 }
 
-/* 成就展示 */
-.achievements {
-  margin-bottom: 48rpx;
-}
-
-.achievements-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24rpx;
-}
-
-.achievement-item {
-  background: var(--bg-primary);
-  border-radius: 20rpx;
-  padding: 32rpx 24rpx;
-  text-align: center;
-  box-shadow: var(--shadow-light);
-  transition: all 0.3s ease;
-}
-
-.achievement-item.earned {
-  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
-  border: 2rpx solid var(--warning-color);
-}
-
-.achievement-item.locked {
-  opacity: 0.6;
-}
-
-.achievement-item:active {
-  transform: scale(1.02);
-}
-
-.achievement-icon {
-  margin-bottom: 16rpx;
-}
-
-.achievement-name {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: var(--text-primary);
-  display: block;
-  margin-bottom: 8rpx;
-}
-
-.achievement-desc {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  display: block;
-}
-
-/* 导出操作 */
-.export-actions {
+.suggestion-action {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 16rpx;
+  background: rgba(66, 133, 244, 0.1);
+  border-radius: 20rpx;
+}
+
+.action-text {
+  font-size: 22rpx;
+  color: #4285F4;
+  font-weight: 500;
+}
+
+/* 报告总结 */
+.summary-section {
+  margin-bottom: 40rpx;
+}
+
+.summary-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  padding: 30rpx;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.summary-text {
+  font-size: 26rpx;
+  color: #333333;
+  line-height: 1.6;
+  margin-bottom: 24rpx;
+}
+
+.highlight {
+  color: #4285F4;
+  font-weight: 700;
+}
+
+.summary-actions {
+  display: flex;
   gap: 16rpx;
-  margin-bottom: 32rpx;
+  justify-content: center;
+}
+
+/* 空状态 */
+.empty-state {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  padding: 60rpx 20rpx;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.empty-suggestions {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  padding: 40rpx 20rpx;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
 }
 
 /* 响应式调整 */
-@media (max-width: 750rpx) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 16rpx;
-  }
-  
-  .achievements-grid {
+@media (max-width: 400px) {
+  .overview-cards {
     grid-template-columns: 1fr;
   }
   
-  .suggestion-item {
+  .habits-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .efficiency-metrics {
     flex-direction: column;
-    text-align: center;
+    gap: 30rpx;
   }
 } 

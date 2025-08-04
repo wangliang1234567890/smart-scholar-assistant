@@ -1,5 +1,8 @@
 import DatabaseManager from '../../utils/database.js';
 import { debounce } from '../../utils/common.js';
+import EventManager, { EVENT_TYPES } from '../../utils/event-manager.js';
+import RecommendationEngine from '../../utils/recommendation-engine.js';
+import ReviewReminderManager from '../../utils/review-reminder.js';
 
 // 添加缺失的常量定义
 const SUBJECTS = ['数学', '英语', '语文', '物理', '化学', '生物', '历史', '地理', '政治'];
@@ -71,7 +74,22 @@ Page({
     ],
     subjectStats: [],
     refreshing: false,
-    greeting: ''
+    greeting: '',
+    // 智能推荐数据
+    recommendations: {
+      items: [],
+      summary: {},
+      tips: [],
+      loading: false
+    },
+    // 复习提醒数据
+    reviewReminder: {
+      primaryReminder: {},
+      todayPlan: {},
+      weeklyPlan: [],
+      suggestions: [],
+      loading: false
+    }
   },
 
   onLoad() {
@@ -81,6 +99,8 @@ Page({
 
   onShow() {
     console.log('首页显示');
+    // 每次显示时都更新用户信息，以防从profile页面返回时信息有变化
+    this.loadUserInfo();
     this.refreshData();
   },
 
@@ -92,6 +112,13 @@ Page({
   onUnload() {
     console.log('首页卸载');
     loadingManager.clearLoading('home_data');
+    
+    // 移除事件监听器
+    EventManager.off(EVENT_TYPES.MISTAKE_ADDED, this);
+    EventManager.off(EVENT_TYPES.MISTAKE_UPDATED, this);
+    EventManager.off(EVENT_TYPES.MISTAKE_DELETED, this);
+    EventManager.off(EVENT_TYPES.PRACTICE_COMPLETED, this);
+    EventManager.off(EVENT_TYPES.USER_INFO_UPDATED, this);
   },
 
   onPullDownRefresh() {
@@ -117,16 +144,93 @@ Page({
       // 设置问候语
       this.updateGreeting();
       
+      // 加载用户信息
+      this.loadUserInfo();
+      
+      // 注册事件监听器
+      EventManager.on(EVENT_TYPES.MISTAKE_ADDED, 'onDataChanged', this);
+      EventManager.on(EVENT_TYPES.MISTAKE_UPDATED, 'onDataChanged', this);
+      EventManager.on(EVENT_TYPES.MISTAKE_DELETED, 'onDataChanged', this);
+      EventManager.on(EVENT_TYPES.PRACTICE_COMPLETED, 'onDataChanged', this);
+      EventManager.on(EVENT_TYPES.USER_INFO_UPDATED, 'onUserInfoChanged', this);
+      
       // 创建防抖函数
       this.debouncedRefresh = this.createSimpleDebounce(() => {
         this.loadRealStudyStats();
       }, 1000);
       
       // 加载数据
-      await this.loadRealStudyStats();
+      await Promise.all([
+        this.loadRealStudyStats(),
+        this.loadRecommendations(),
+        this.loadReviewReminders()
+      ]);
     } catch (error) {
       console.error('初始化页面失败:', error);
       this.setDefaultData();
+    }
+  },
+
+  /**
+   * 加载用户信息
+   */
+  loadUserInfo() {
+    try {
+      // 获取App实例
+      const app = getApp();
+      
+      // 从本地存储获取用户信息
+      const storedUserInfo = wx.getStorageSync('userInfo');
+      
+      if (storedUserInfo) {
+        // 使用本地存储的用户信息
+        const userInfo = {
+          nickName: storedUserInfo.nickName || '游客用户',
+          avatarUrl: storedUserInfo.avatarUrl || '/images/default-avatar.png',
+          level: storedUserInfo.level || 1,
+          hasAuthorized: true
+        };
+        
+        this.setData({ userInfo });
+        
+        // 同步到全局状态
+        if (app.globalData) {
+          app.globalData.userInfo = userInfo;
+        }
+      } else {
+        // 检查全局状态
+        if (app.globalData && app.globalData.userInfo) {
+          this.setData({ userInfo: app.globalData.userInfo });
+        } else {
+          // 使用默认用户信息
+          const defaultUserInfo = {
+            nickName: '游客用户',
+            avatarUrl: '/images/default-avatar.png',
+            level: 1,
+            hasAuthorized: false
+          };
+          
+          this.setData({ userInfo: defaultUserInfo });
+          
+          if (app.globalData) {
+            app.globalData.userInfo = defaultUserInfo;
+          }
+        }
+      }
+      
+      console.log('用户信息加载完成:', this.data.userInfo);
+    } catch (error) {
+      console.error('加载用户信息失败:', error);
+      
+      // 设置默认用户信息
+      this.setData({
+        userInfo: {
+          nickName: '游客用户',
+          avatarUrl: '/images/default-avatar.png',
+          level: 1,
+          hasAuthorized: false
+        }
+      });
     }
   },
 
@@ -673,6 +777,142 @@ Page({
         title: '启动失败，请重试',
         icon: 'none'
       });
+    }
+  },
+
+  /**
+   * 处理数据变化事件（错题、练习相关）
+   */
+  onDataChanged(data) {
+    console.log('收到数据变化事件:', data);
+    // 使用防抖函数刷新数据，避免频繁更新
+    if (this.debouncedRefresh) {
+      this.debouncedRefresh();
+    } else {
+      this.loadRealStudyStats();
+    }
+    
+    // 重新加载推荐和复习提醒（数据变化可能影响结果）
+    this.loadRecommendations();
+    this.loadReviewReminders();
+  },
+
+  /**
+   * 处理用户信息更新事件
+   */
+  onUserInfoChanged(data) {
+    console.log('收到用户信息更新事件:', data);
+    // 重新加载用户信息
+    this.loadUserInfo();
+  },
+
+  /**
+   * 加载智能推荐
+   */
+  async loadRecommendations() {
+    try {
+      this.setData({ 'recommendations.loading': true });
+      
+      const userId = DatabaseManager.getCurrentUserId();
+      const recommendationResult = await RecommendationEngine.generateRecommendations(userId);
+      
+      console.log('智能推荐加载完成:', recommendationResult);
+      
+      this.setData({
+        'recommendations.items': recommendationResult.recommendations || [],
+        'recommendations.summary': recommendationResult.summary || {},
+        'recommendations.tips': recommendationResult.tips || [],
+        'recommendations.loading': false
+      });
+      
+    } catch (error) {
+      console.error('加载智能推荐失败:', error);
+      this.setData({
+        'recommendations.loading': false,
+        'recommendations.items': [],
+        'recommendations.tips': ['暂时无法获取智能推荐，请稍后再试']
+      });
+    }
+  },
+
+  /**
+   * 处理推荐项点击
+   */
+  onRecommendationTap(e) {
+    const { action, subject } = e.currentTarget.dataset;
+    
+    console.log('推荐项点击:', action, subject);
+    
+    switch (action) {
+      case 'start_review':
+        this.navigateToPage('/pages/review/review');
+        break;
+      case 'practice_subject':
+        this.navigateToPage(`/pages/mistakes/mistakes?subject=${encodeURIComponent(subject)}`);
+        break;
+      case 'ai_practice':
+        this.navigateToPage('/pages/practice/practice');
+        break;
+      case 'add_mistake':
+        this.navigateToPage('/pages/camera/camera');
+        break;
+      default:
+        console.log('未知推荐动作:', action);
+    }
+  },
+
+  /**
+   * 加载复习提醒
+   */
+  async loadReviewReminders() {
+    try {
+      this.setData({ 'reviewReminder.loading': true });
+      
+      const userId = DatabaseManager.getCurrentUserId();
+      const reminderResult = await ReviewReminderManager.getReviewReminders(userId);
+      
+      console.log('复习提醒加载完成:', reminderResult);
+      
+      if (reminderResult.success) {
+        const data = reminderResult.data;
+        this.setData({
+          'reviewReminder.primaryReminder': data.primaryReminder || {},
+          'reviewReminder.todayPlan': data.todayPlan || {},
+          'reviewReminder.weeklyPlan': data.weeklyPlan || [],
+          'reviewReminder.suggestions': data.suggestions || [],
+          'reviewReminder.loading': false
+        });
+      } else {
+        this.setData({
+          'reviewReminder.loading': false
+        });
+      }
+      
+    } catch (error) {
+      console.error('加载复习提醒失败:', error);
+      this.setData({
+        'reviewReminder.loading': false,
+        'reviewReminder.primaryReminder': { type: 'error', title: '加载失败', message: '无法获取复习提醒', count: 0, icon: 'warning', color: '#888', action: null }
+      });
+    }
+  },
+
+  /**
+   * 处理复习提醒点击
+   */
+  onReminderTap(e) {
+    const { action } = e.currentTarget.dataset;
+    
+    console.log('复习提醒点击:', action);
+    
+    switch (action) {
+      case 'review_urgent':
+      case 'review_overdue':
+      case 'review_today':
+        this.navigateToPage('/pages/review/review');
+        break;
+      default:
+        console.log('未知复习动作:', action);
     }
   }
 }); 

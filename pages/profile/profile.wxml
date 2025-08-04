@@ -6,11 +6,19 @@
   <view class="content-container">
     <!-- 用户信息卡片 -->
     <view class="user-card">
-      <image class="avatar" src="{{userInfo.avatarUrl || '/images/default-avatar.png'}}" />
+      <view class="avatar-wrapper" bind:tap="onAvatarTap">
+        <image class="avatar" src="{{userInfo.avatarUrl || '/images/default-avatar.png'}}" />
+        <view class="avatar-edit-hint" wx:if="{{!userInfo.hasAuthorized}}">
+          <van-icon name="edit" size="12" color="#fff" />
+        </view>
+      </view>
       <view class="user-name">{{userInfo.nickName || '小星星'}}</view>
       <view class="user-level">
         <image class="level-icon" src="/images/icons/level-badge.svg" />
         <text>Lv.{{userInfo.level || 5}}</text>
+      </view>
+      <view class="auth-status" wx:if="{{!userInfo.hasAuthorized}}">
+        <text class="auth-hint">点击头像获取微信信息</text>
       </view>
     </view>
 

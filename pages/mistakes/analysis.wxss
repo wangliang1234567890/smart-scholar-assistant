@@ -1,1 +1,628 @@
 /* pages/mistakes/analysis.wxss */
+
+.analysis-container {
+  min-height: 100vh;
+  background: #F8FAFC;
+  padding-bottom: 40rpx;
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+  color: #666;
+}
+
+/* 分析内容 */
+.analysis-content {
+  padding: 32rpx 24rpx;
+}
+
+/* 页面头部 */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40rpx;
+  gap: 16rpx;
+}
+
+.header-icon {
+  width: 80rpx;
+  height: 80rpx;
+  background: #F0F1FF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-title {
+  font-size: 48rpx;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+/* 时间段选择器 */
+.time-selector {
+  display: flex;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 8rpx;
+  margin-bottom: 40rpx;
+  gap: 8rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.time-option {
+  flex: 1;
+  text-align: center;
+  padding: 20rpx 0;
+  border-radius: 18rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #6B7280;
+  transition: all 0.3s ease;
+}
+
+.time-option.active {
+  background: #4F46E5;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* 主要数据统计 */
+.main-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24rpx;
+  margin-bottom: 40rpx;
+}
+
+.stat-card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  text-align: center;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+  position: relative;
+}
+
+.stat-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20rpx;
+}
+
+.stat-icon.blue {
+  background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+}
+
+.stat-icon.green {
+  background: linear-gradient(135deg, #10B981, #047857);
+}
+
+.stat-icon.orange {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+}
+
+.stat-icon.purple {
+  background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+}
+
+.stat-number {
+  font-size: 64rpx;
+  font-weight: 700;
+  color: #1F2937;
+  line-height: 1;
+  margin-bottom: 12rpx;
+}
+
+.stat-label {
+  font-size: 28rpx;
+  color: #6B7280;
+  margin-bottom: 8rpx;
+}
+
+.stat-change {
+  font-size: 24rpx;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+.stat-change.positive {
+  color: #10B981;
+}
+
+/* 科目分布 */
+.subject-distribution {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 32rpx;
+  gap: 12rpx;
+}
+
+.section-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.subject-list {
+  display: flex;
+  flex-direction: column;
+  gap: 32rpx;
+}
+
+.subject-item {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.subject-info {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.subject-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.subject-icon.math {
+  background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+}
+
+.subject-icon.chinese {
+  background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+}
+
+.subject-icon.english {
+  background: linear-gradient(135deg, #10B981, #047857);
+}
+
+.subject-icon.physics {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+}
+
+.subject-icon.chemistry {
+  background: linear-gradient(135deg, #8B5CF6, #6366F1);
+}
+
+.subject-icon.biology {
+  background: linear-gradient(135deg, #10B981, #059669);
+}
+
+.subject-icon.history {
+  background: linear-gradient(135deg, #F59E0B, #E0A82E);
+}
+
+.subject-icon.geography {
+  background: linear-gradient(135deg, #06B6D4, #0891B2);
+}
+
+.subject-icon.politics {
+  background: linear-gradient(135deg, #EF4444, #DC2626);
+}
+
+.subject-icon.other {
+  background: linear-gradient(135deg, #6B7280, #4B5563);
+}
+
+.subject-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1F2937;
+  flex: 1;
+}
+
+.subject-data {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.subject-count {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.subject-trend {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+.subject-trend.up {
+  color: #10B981;
+}
+
+.subject-trend.down {
+  color: #EF4444;
+}
+
+.subject-progress {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 12rpx;
+  background: #F3F4F6;
+  border-radius: 6rpx;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 6rpx;
+  transition: width 0.3s ease;
+}
+
+.progress-percent {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #6B7280;
+  min-width: 80rpx;
+  text-align: right;
+}
+
+/* 重点薄弱知识点 */
+.weak-points {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.weak-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.weak-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 24rpx;
+  background: #F9FAFB;
+  border-radius: 20rpx;
+  border: 1rpx solid #F3F4F6;
+}
+
+.weak-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.weak-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.weak-meta {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.weak-subject {
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+.weak-difficulty {
+  padding: 6rpx 16rpx;
+  border-radius: 12rpx;
+  font-size: 20rpx;
+  font-weight: 500;
+}
+
+.weak-difficulty.hard {
+  background: #FEF2F2;
+  color: #DC2626;
+}
+
+.weak-difficulty.medium {
+  background: #FFF7ED;
+  color: #EA580C;
+}
+
+.weak-difficulty.easy {
+  background: #F0FDF4;
+  color: #16A34A;
+}
+
+.weak-time {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+.weak-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8rpx;
+}
+
+.weak-count {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #DC2626;
+}
+
+.weak-change {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  font-size: 20rpx;
+  font-weight: 500;
+}
+
+.weak-change.improve {
+  color: #10B981;
+}
+
+.weak-change.worse {
+  color: #EF4444;
+}
+
+/* 复习效率分析 */
+.review-efficiency {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.efficiency-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32rpx;
+}
+
+.efficiency-item {
+  text-align: center;
+}
+
+.efficiency-number {
+  font-size: 72rpx;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 12rpx;
+  display: block;
+}
+
+.efficiency-number.blue {
+  color: #3B82F6;
+}
+
+.efficiency-number.green {
+  color: #10B981;
+}
+
+.efficiency-number.orange {
+  color: #F59E0B;
+}
+
+.efficiency-number.purple {
+  color: #8B5CF6;
+}
+
+.efficiency-label {
+  font-size: 28rpx;
+  color: #6B7280;
+}
+
+/* 分布统计 */
+.distribution-section {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.distribution-row {
+  display: flex;
+  gap: 40rpx;
+}
+
+.distribution-col {
+  flex: 1;
+}
+
+.distribution-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 24rpx;
+  display: block;
+}
+
+.distribution-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.distribution-label {
+  font-size: 28rpx;
+  color: #6B7280;
+}
+
+.distribution-count {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.distribution-count.easy {
+  color: #16A34A;
+}
+
+.distribution-count.medium {
+  color: #EA580C;
+}
+
+.distribution-count.hard {
+  color: #DC2626;
+}
+
+.distribution-count.not-reviewed {
+  color: #DC2626;
+}
+
+.distribution-count.reviewing {
+  color: #F59E0B;
+}
+
+.distribution-count.mastered {
+  color: #10B981;
+}
+
+/* 学习趋势 */
+.learning-trend {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.trend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.trend-week {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx;
+  background: #F9FAFB;
+  border-radius: 16rpx;
+}
+
+.week-label {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1F2937;
+  min-width: 120rpx;
+}
+
+.trend-data {
+  display: flex;
+  align-items: center;
+  gap: 32rpx;
+}
+
+.trend-item {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+.trend-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+}
+
+.trend-item.new .trend-dot {
+  background: #DC2626;
+}
+
+.trend-item.new {
+  color: #DC2626;
+}
+
+.trend-item.review .trend-dot {
+  background: #F59E0B;
+}
+
+.trend-item.review {
+  color: #F59E0B;
+}
+
+.trend-item.mastered .trend-dot {
+  background: #10B981;
+}
+
+.trend-item.mastered {
+  color: #10B981;
+}
+
+/* 学习建议 */
+.learning-suggestions {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.suggestion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  font-size: 28rpx;
+  line-height: 1.6;
+  color: #4B5563;
+}
+
+.suggestion-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: #4F46E5;
+  margin-top: 12rpx;
+  flex-shrink: 0;
+}
+
+.suggestion-text {
+  flex: 1;
+}

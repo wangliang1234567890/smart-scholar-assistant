@@ -1,5 +1,6 @@
 // 确保必要的导入
 import { generateUUID } from './common.js';
+const { formatTime } = require('./util.js');
 
 // 简单的重试函数实现
 async function withRetry(fn, maxRetries = 2, delay = 1000) {
@@ -39,8 +40,8 @@ const errorHandler = {
   }
 };
 
-// 艾宾浩斯遗忘曲线复习间隔（天）
-const REVIEW_INTERVALS = [1, 2, 4, 7, 15, 30];
+// 导入复习间隔常量
+import { REVIEW_INTERVALS } from './constants.js';
 
 class DatabaseManager {
   constructor() {
@@ -753,6 +754,57 @@ class DatabaseManager {
   }
 
   /**
+   * 更新错题数据
+   */
+  async updateMistake(mistakeId, updateData) {
+    try {
+      if (!mistakeId) {
+        throw new Error('错题ID不能为空');
+      }
+      
+      if (!updateData || typeof updateData !== 'object') {
+        throw new Error('更新数据不能为空');
+      }
+
+      const userId = this.getCurrentUserId();
+      
+      // 添加更新时间
+      const dataToUpdate = {
+        ...updateData,
+        updateTime: new Date().toISOString()
+      };
+      
+      const result = await withRetry(
+        () => this.db.collection(this.collections.MISTAKES)
+          .where({
+            _id: mistakeId,
+            userId
+          })
+          .update({
+            data: dataToUpdate
+          }),
+        this.retryOptions.maxRetries,
+        this.retryOptions.delay
+      );
+      
+      // 清除缓存
+      this.cache.todayStats = null;
+      
+      return {
+        success: result.stats && result.stats.updated > 0,
+        data: result
+      };
+      
+    } catch (error) {
+      return errorHandler.handle(error, {
+        scene: 'database_update_mistake',
+        showToast: false,
+        message: '更新错题失败'
+      });
+    }
+  }
+
+  /**
    * 更新错题状态
    */
   async updateMistakeStatus(mistakeId, status) {
@@ -945,6 +997,279 @@ class DatabaseManager {
       return errorHandler.handle(error, {
         scene: 'database_get_status',
         showToast: false
+      });
+    }
+  }
+
+  /**
+   * 格式化日期为 YYYY-MM-DD 格式
+   */
+  formatDate(date) {
+    return formatTime(date, 'yyyy-MM-dd');
+  }
+
+  // ==================== 课程管理相关方法 ====================
+
+  /**
+   * 添加课程
+   */
+  async addCourse(courseData) {
+    try {
+      const userId = this.getCurrentUserId();
+      
+      const course = {
+        ...courseData,
+        userId,
+        _id: undefined, // 让数据库自动生成ID
+        createTime: new Date().toISOString(),
+        updateTime: new Date().toISOString(),
+        status: 'active'
+      };
+      
+      const result = await withRetry(
+        () => this.db.collection(this.collections.COURSES).add({
+          data: course
+        }),
+        this.retryOptions.maxRetries,
+        this.retryOptions.delay
+      );
+      
+      return {
+        success: true,
+        data: { _id: result._id, ...course },
+        message: '课程添加成功'
+      };
+      
+    } catch (error) {
+      return errorHandler.handle(error, {
+        scene: 'database_add_course',
+        showToast: true,
+        message: '添加课程失败'
+      });
+    }
+  }
+
+  /**
+   * 获取课程列表
+   */
+  async getCourses(userId, options = {}) {
+    try {
+      const {
+        page = 1,
+        pageSize = 50,
+        startDate,
+        endDate,
+        subject,
+        status = 'active'
+      } = options;
+      
+      let whereCondition = {
+        userId,
+        status
+      };
+      
+      // 添加日期范围筛选
+      if (startDate && endDate) {
+        whereCondition.date = this.db.command.gte(startDate).and(this.db.command.lte(endDate));
+      }
+      
+      // 添加学科筛选
+      if (subject && subject !== 'all') {
+        whereCondition.subject = subject;
+      }
+      
+      const result = await withRetry(
+        () => this.db.collection(this.collections.COURSES)
+          .where(whereCondition)
+          .orderBy('date', 'asc')
+          .orderBy('startTime', 'asc')
+          .skip((page - 1) * pageSize)
+          .limit(pageSize)
+          .get(),
+        this.retryOptions.maxRetries,
+        this.retryOptions.delay
+      );
+      
+      return {
+        success: true,
+        data: result.data || [],
+        total: result.data ? result.data.length : 0,
+        message: '获取课程列表成功'
+      };
+      
+    } catch (error) {
+      return errorHandler.handle(error, {
+        scene: 'database_get_courses',
+        showToast: false,
+        message: '获取课程列表失败'
+      });
+    }
+  }
+
+  /**
+   * 获取指定日期的课程
+   */
+  async getCoursesByDate(userId, date) {
+    try {
+      const result = await withRetry(
+        () => this.db.collection(this.collections.COURSES)
+          .where({
+            userId,
+            date,
+            status: 'active'
+          })
+          .orderBy('startTime', 'asc')
+          .get(),
+        this.retryOptions.maxRetries,
+        this.retryOptions.delay
+      );
+      
+      return {
+        success: true,
+        data: result.data || [],
+        message: '获取当日课程成功'
+      };
+      
+    } catch (error) {
+      return errorHandler.handle(error, {
+        scene: 'database_get_courses_by_date',
+        showToast: false,
+        message: '获取当日课程失败'
+      });
+    }
+  }
+
+  /**
+   * 更新课程
+   */
+  async updateCourse(courseId, updateData) {
+    try {
+      const result = await withRetry(
+        () => this.db.collection(this.collections.COURSES)
+          .doc(courseId)
+          .update({
+            data: {
+              ...updateData,
+              updateTime: new Date().toISOString()
+            }
+          }),
+        this.retryOptions.maxRetries,
+        this.retryOptions.delay
+      );
+      
+      return {
+        success: true,
+        data: result,
+        message: '课程更新成功'
+      };
+      
+    } catch (error) {
+      return errorHandler.handle(error, {
+        scene: 'database_update_course',
+        showToast: true,
+        message: '更新课程失败'
+      });
+    }
+  }
+
+  /**
+   * 删除课程
+   */
+  async deleteCourse(courseId) {
+    try {
+      // 软删除：将状态设为 deleted
+      const result = await withRetry(
+        () => this.db.collection(this.collections.COURSES)
+          .doc(courseId)
+          .update({
+            data: {
+              status: 'deleted',
+              deleteTime: new Date().toISOString(),
+              updateTime: new Date().toISOString()
+            }
+          }),
+        this.retryOptions.maxRetries,
+        this.retryOptions.delay
+      );
+      
+      return {
+        success: true,
+        data: result,
+        message: '课程删除成功'
+      };
+      
+    } catch (error) {
+      return errorHandler.handle(error, {
+        scene: 'database_delete_course',
+        showToast: true,
+        message: '删除课程失败'
+      });
+    }
+  }
+
+  /**
+   * 获取课程统计数据
+   */
+  async getCourseStats(userId) {
+    try {
+      const now = new Date();
+      const today = this.formatDate(now);
+      const tomorrow = this.formatDate(new Date(now.getTime() + 24 * 60 * 60 * 1000));
+      
+      // 并行获取统计数据
+      const [todayResult, tomorrowResult, totalResult] = await Promise.all([
+        // 今日课程
+        withRetry(
+          () => this.db.collection(this.collections.COURSES)
+            .where({
+              userId,
+              date: today,
+              status: 'active'
+            })
+            .count(),
+          this.retryOptions.maxRetries,
+          this.retryOptions.delay
+        ),
+        // 明日课程
+        withRetry(
+          () => this.db.collection(this.collections.COURSES)
+            .where({
+              userId,
+              date: tomorrow,
+              status: 'active'
+            })
+            .count(),
+          this.retryOptions.maxRetries,
+          this.retryOptions.delay
+        ),
+        // 总课程数
+        withRetry(
+          () => this.db.collection(this.collections.COURSES)
+            .where({
+              userId,
+              status: 'active'
+            })
+            .count(),
+          this.retryOptions.maxRetries,
+          this.retryOptions.delay
+        )
+      ]);
+      
+      return {
+        success: true,
+        data: {
+          todayCourses: todayResult.total || 0,
+          tomorrowCourses: tomorrowResult.total || 0,
+          totalCourses: totalResult.total || 0
+        },
+        message: '获取课程统计成功'
+      };
+      
+    } catch (error) {
+      return errorHandler.handle(error, {
+        scene: 'database_get_course_stats',
+        showToast: false,
+        message: '获取课程统计失败'
       });
     }
   }

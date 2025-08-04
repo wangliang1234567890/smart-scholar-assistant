@@ -1,3 +1,7 @@
 {
+  "navigationBarTitleText": "日志记录",
+  "navigationBarBackgroundColor": "#4F46E5",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#F8FAFC",
   "usingComponents": {}
 }

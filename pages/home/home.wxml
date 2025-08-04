@@ -84,7 +84,116 @@
     </view>
   </view>
 
-  <!-- 4. 空状态/内容区 -->
+  <!-- 4. 智能推荐 -->
+  <view wx:if="{{!loading && studyStats.totalMistakes > 0}}" class="recommendation-section">
+    <view class="section-header">
+      <view class="section-title">
+        <view class="title-decorator"></view>
+        智能推荐
+      </view>
+      <view class="section-subtitle">基于学习情况的个性化建议</view>
+    </view>
+
+    <view wx:if="{{recommendations.loading}}" class="recommendation-loading">
+      <van-skeleton title row="2" />
+    </view>
+
+    <view wx:else class="recommendation-content">
+      <!-- 推荐卡片 -->
+      <view wx:if="{{recommendations.items.length > 0}}" class="recommendation-cards">
+        <view 
+          wx:for="{{recommendations.items}}" 
+          wx:key="type" 
+          class="recommendation-card"
+          style="border-left-color: {{item.color}}"
+          bind:tap="onRecommendationTap"
+          data-action="{{item.action}}"
+          data-subject="{{item.subject}}"
+        >
+          <view class="card-header">
+            <view class="card-icon" style="background-color: {{item.color}}">
+              <image class="icon-img" src="/images/icons/{{item.icon}}.svg" />
+            </view>
+            <view class="card-title">{{item.title}}</view>
+          </view>
+          <view class="card-description">{{item.description}}</view>
+          <view class="card-urgency">
+            <view class="urgency-bar">
+              <view class="urgency-fill" style="width: {{item.urgency * 100}}%; background-color: {{item.color}}"></view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 学习提示 -->
+      <view wx:if="{{recommendations.tips.length > 0}}" class="learning-tips">
+        <view class="tips-title">💡 学习提示</view>
+        <view wx:for="{{recommendations.tips}}" wx:key="index" class="tip-item">
+          <text class="tip-text">{{item}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 5. 复习提醒 -->
+  <view wx:if="{{!loading && studyStats.totalMistakes > 0 && reviewReminder.primaryReminder.type !== 'none'}}" class="review-reminder-section">
+    <view class="section-header">
+      <view class="section-title">
+        <view class="title-decorator" style="background: {{reviewReminder.primaryReminder.color}}"></view>
+        复习提醒
+      </view>
+      <view class="section-subtitle">基于遗忘曲线的智能提醒</view>
+    </view>
+
+    <view wx:if="{{reviewReminder.loading}}" class="reminder-loading">
+      <van-skeleton title row="2" />
+    </view>
+
+    <view wx:else class="reminder-content">
+      <!-- 主要提醒卡片 -->
+      <view 
+        class="reminder-card primary-reminder"
+        style="border-left-color: {{reviewReminder.primaryReminder.color}}"
+        bind:tap="onReminderTap"
+        data-action="{{reviewReminder.primaryReminder.action}}"
+        wx:if="{{reviewReminder.primaryReminder.type !== 'none'}}"
+      >
+        <view class="reminder-header">
+          <view class="reminder-icon" style="background-color: {{reviewReminder.primaryReminder.color}}">
+            <van-icon name="{{reviewReminder.primaryReminder.icon}}" size="20" color="#fff" />
+          </view>
+          <view class="reminder-info">
+            <view class="reminder-title">{{reviewReminder.primaryReminder.title}}</view>
+            <view class="reminder-message">{{reviewReminder.primaryReminder.message}}</view>
+          </view>
+          <view class="reminder-count" wx:if="{{reviewReminder.primaryReminder.count > 0}}">
+            <text class="count-number">{{reviewReminder.primaryReminder.count}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 今日计划概览 -->
+      <view wx:if="{{reviewReminder.todayPlan.total > 0}}" class="today-plan-summary">
+        <view class="plan-header">
+          <text class="plan-title">📅 今日复习计划</text>
+          <text class="plan-time">{{reviewReminder.todayPlan.estimatedTime}}</text>
+        </view>
+        
+        <view wx:if="{{reviewReminder.todayPlan.subjects.length > 0}}" class="plan-subjects">
+          <view 
+            wx:for="{{reviewReminder.todayPlan.subjects}}" 
+            wx:key="subject" 
+            class="subject-chip"
+          >
+            <text class="subject-name">{{item.subject}}</text>
+            <text class="subject-count">{{item.count}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 6. 空状态/内容区 -->
   <view wx:if="{{loading}}" class="loading-placeholder card">
     <van-skeleton title row="3" />
   </view>

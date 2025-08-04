@@ -283,4 +283,292 @@
 
 .action-icon-wrapper{width:96rpx;height:96rpx;background:rgba(255,255,255,0.2);border-radius:36rpx;display:flex;align-items:center;justify-content:center;box-shadow:0 4rpx 8rpx rgba(0,0,0,0.08)}
 .action-icon{width:48rpx;height:48rpx;filter:invert(1) brightness(2)}
-.action-item__icon{display:none} 
+.action-item__icon{display:none}
+
+/* 4. 智能推荐 */
+.recommendation-section {
+  padding: 0 24rpx;
+  margin-top: 40rpx;
+}
+
+.section-header {
+  margin-bottom: 32rpx;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8rpx;
+}
+
+.section-subtitle {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  margin-left: 24rpx;
+}
+
+.recommendation-loading {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
+}
+
+.recommendation-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.recommendation-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.recommendation-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  border-left: 8rpx solid #4F46E5;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recommendation-card:active {
+  transform: translateY(-4rpx);
+  box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, 0.12);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.card-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16rpx;
+}
+
+.card-icon .icon-img {
+  width: 32rpx;
+  height: 32rpx;
+  filter: invert(1) brightness(2);
+}
+
+.card-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.card-description {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 16rpx;
+}
+
+.card-urgency {
+  margin-top: 16rpx;
+}
+
+.urgency-bar {
+  width: 100%;
+  height: 6rpx;
+  background: #F3F4F6;
+  border-radius: 3rpx;
+  overflow: hidden;
+}
+
+.urgency-fill {
+  height: 100%;
+  border-radius: 3rpx;
+  transition: width 0.3s ease;
+}
+
+.learning-tips {
+  background: #F8FAFC;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  border: 2rpx solid #E5E7EB;
+}
+
+.tips-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 20rpx;
+}
+
+.tip-item {
+  margin-bottom: 12rpx;
+}
+
+.tip-item:last-child {
+  margin-bottom: 0;
+}
+
+.tip-text {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.tip-text::before {
+  content: "• ";
+  color: #4F46E5;
+  font-weight: bold;
+  margin-right: 8rpx;
+}
+
+/* 5. 复习提醒 */
+.review-reminder-section {
+  padding: 0 24rpx;
+  margin-top: 40rpx;
+}
+
+.reminder-loading {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
+}
+
+.reminder-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.reminder-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  border-left: 8rpx solid #4F46E5;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.reminder-card:active {
+  transform: translateY(-4rpx);
+  box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, 0.12);
+}
+
+.reminder-header {
+  display: flex;
+  align-items: center;
+}
+
+.reminder-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.reminder-info {
+  flex: 1;
+  margin-right: 16rpx;
+}
+
+.reminder-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8rpx;
+}
+
+.reminder-message {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.reminder-count {
+  flex-shrink: 0;
+}
+
+.count-number {
+  background: linear-gradient(135deg, #FF6B6B, #4ECDC4);
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 700;
+  padding: 12rpx 20rpx;
+  border-radius: 32rpx;
+  min-width: 48rpx;
+  text-align: center;
+  display: inline-block;
+}
+
+.today-plan-summary {
+  background: #F8FAFC;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  border: 2rpx solid #E2E8F0;
+}
+
+.plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.plan-title {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.plan-time {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  background: #fff;
+  padding: 8rpx 16rpx;
+  border-radius: 12rpx;
+}
+
+.plan-subjects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.subject-chip {
+  background: #fff;
+  border: 2rpx solid #E2E8F0;
+  border-radius: 16rpx;
+  padding: 8rpx 16rpx;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  font-size: 22rpx;
+}
+
+.subject-name {
+  color: var(--text-primary);
+}
+
+.subject-count {
+  background: #4F46E5;
+  color: #fff;
+  font-size: 20rpx;
+  padding: 4rpx 8rpx;
+  border-radius: 8rpx;
+  min-width: 32rpx;
+  text-align: center;
+} 

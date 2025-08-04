@@ -1,5 +1,8 @@
 {
   "navigationBarTitleText": "练习报告",
+  "navigationBarBackgroundColor": "#4F46E5",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#F8FAFC",
   "usingComponents": {
     "van-circle": "/miniprogram_npm/@vant/weapp/circle/index",
     "van-cell": "/miniprogram_npm/@vant/weapp/cell/index",

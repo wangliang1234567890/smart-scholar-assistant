@@ -153,19 +153,22 @@ Page({
     // TODO: 调用真实API提交数据
     wx.showLoading({ title: '保存中...' });
     try {
-      await DatabaseManager.addMistake(formData);
+      const result = await DatabaseManager.addMistake(formData);
       // 本地持久化
       LocalDB.saveMistake({ _id: `local_${Date.now()}`, ...formData });
       this.setData({ isSubmitting: false });
       wx.hideLoading();
       wx.showToast({ title: '保存成功' });
       
-      // 通知上一页刷新数据并返回
-      const pages = getCurrentPages();
-      const prevPage = pages[pages.length - 2];
-      if (prevPage && (prevPage.route === 'pages/mistakes/mistakes' || prevPage.route === 'pages/mistakes/detail')) {
-        prevPage.onLoad(prevPage.options); // 简单粗暴地刷新
-      }
+      // 触发错题添加事件，通知相关页面更新数据
+      const EventManager = require('../../utils/event-manager.js').default;
+      const { EVENT_TYPES } = require('../../utils/event-manager.js');
+      
+      EventManager.emit(EVENT_TYPES.MISTAKE_ADDED, {
+        mistake: result.data || formData,
+        timestamp: Date.now()
+      });
+      
       wx.navigateBack();
     } catch (error) {
       this.setData({ isSubmitting: false });
