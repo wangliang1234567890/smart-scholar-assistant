@@ -64,7 +64,7 @@ Page({
     
     // 弹窗状态
     showTimePicker: false,
-    currentTime: new Date(),
+    currentTime: '19:00', // 修复：时间选择器需要字符串格式
     
     // 存储信息
     cacheSize: '计算中...',

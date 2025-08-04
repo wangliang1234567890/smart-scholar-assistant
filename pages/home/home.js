@@ -122,9 +122,11 @@ Page({
   },
 
   onPullDownRefresh() {
-    this.refreshData().finally(() => {
-      wx.stopPullDownRefresh();
-    });
+    // 修复：确保refreshData返回Promise
+    Promise.resolve(this.refreshData())
+      .finally(() => {
+        wx.stopPullDownRefresh();
+      });
   },
 
   // 添加缺失的简单防抖函数
@@ -287,13 +289,14 @@ Page({
   /**
    * 刷新数据
    */
-  refreshData() {
+  async refreshData() {
     try {
-      if (this.debouncedRefresh) {
-        this.debouncedRefresh();
-      } else {
-        this.loadRealStudyStats();
-      }
+      // 并行加载所有数据
+      await Promise.all([
+        this.loadRealStudyStats(),
+        this.loadRecommendations(),
+        this.loadReviewReminders()
+      ]);
     } catch (error) {
       console.error('刷新数据失败:', error);
     }

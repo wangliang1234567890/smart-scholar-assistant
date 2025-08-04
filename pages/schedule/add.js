@@ -41,7 +41,7 @@ Page({
     showTimePicker: false,
     currentTimeType: '', // 'startTime' 或 'endTime'
     datePickerValue: new Date(),
-    timePickerValue: new Date(),
+    timePickerValue: '09:00', // 修复：时间选择器需要字符串格式
     minDate: new Date(),
     
     // 日期格式化器

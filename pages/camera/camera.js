@@ -444,6 +444,7 @@ Page({
       
       // 🔧 修复：直接保存到错题本，而不是只跳转
       const mistakeData = {
+        userId: DatabaseManager.getCurrentUserId(), // 修复：添加缺失的userId
         question: recognizedText,
         subject: result.subject || '未知',
         difficulty: result.difficulty || 3,
