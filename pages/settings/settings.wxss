@@ -2,41 +2,67 @@
 
 .settings-container {
   min-height: 100vh;
-  background: #f5f5f5;
-}
-
-.nav-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: #ffffff;
+  background: #F8FAFC;
 }
 
 .settings-content {
   height: calc(100vh - 88rpx);
-  padding: 20rpx;
+  padding: 24rpx;
 }
 
 /* 设置分组 */
 .settings-section {
-  margin-bottom: 30rpx;
+  margin-bottom: 32rpx;
+}
+
+/* 分组标题 */
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+  padding: 0 8rpx;
+}
+
+.section-icon {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 12rpx;
+  background: #4F46E5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16rpx;
+}
+
+.section-icon-purple {
+  background: #8B5CF6;
+}
+
+.section-icon-green {
+  background: #10B981;
+}
+
+.section-icon-orange {
+  background: #F59E0B;
+}
+
+.icon-text {
+  font-size: 24rpx;
+  line-height: 1;
 }
 
 .section-title {
-  display: flex;
-  align-items: center;
-  padding: 0 20rpx 16rpx 20rpx;
-  font-size: 28rpx;
+  font-size: 32rpx;
   font-weight: 600;
-  color: #333333;
-  gap: 12rpx;
+  color: #1F2937;
 }
 
-.setting-group {
-  background: #ffffff;
+/* 设置组 */
+.settings-group {
+  background: #FFFFFF;
   border-radius: 16rpx;
+  box-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
 }
 
 /* 设置项 */
@@ -45,101 +71,126 @@
   align-items: center;
   justify-content: space-between;
   padding: 32rpx 24rpx;
-  border-bottom: 1rpx solid #f0f0f0;
-  transition: background-color 0.2s ease;
+  border-bottom: 1rpx solid #F3F4F6;
+  min-height: 80rpx;
 }
 
 .setting-item:last-child {
   border-bottom: none;
 }
 
-.setting-item.action-item:active {
-  background-color: #f8f9fa;
+.setting-item:active {
+  background-color: #F9FAFB;
 }
 
-.setting-info {
+.setting-left {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8rpx;
+  gap: 4rpx;
 }
 
 .setting-label {
-  font-size: 28rpx;
-  color: #333333;
+  font-size: 32rpx;
   font-weight: 500;
-}
-
-.setting-desc {
-  font-size: 24rpx;
-  color: #666666;
+  color: #1F2937;
   line-height: 1.4;
 }
 
+.setting-desc {
+  font-size: 26rpx;
+  color: #6B7280;
+  line-height: 1.3;
+}
+
+.setting-right {
+  display: flex;
+  align-items: center;
+}
+
 .setting-value {
-  font-size: 28rpx;
-  color: #4285F4;
-  padding: 8rpx 16rpx;
-  background: #f0f8ff;
-  border-radius: 8rpx;
-  min-width: 120rpx;
+  font-size: 32rpx;
+  color: #4F46E5;
+  font-weight: 500;
+  padding: 12rpx 20rpx;
+  background: #EEF2FF;
+  border-radius: 12rpx;
+  min-width: 100rpx;
   text-align: center;
 }
 
-/* 存储统计 */
-.storage-stats {
-  background: #ffffff;
+/* 清理按钮 */
+.clear-btn {
+  background: #4F46E5;
+  color: #FFFFFF;
+  font-size: 28rpx;
+  font-weight: 500;
+  padding: 12rpx 24rpx;
+  border-radius: 12rpx;
+  text-align: center;
+  min-width: 80rpx;
+}
+
+.clear-btn:active {
+  background: #4338CA;
+}
+
+/* 应用信息 */
+.app-info {
+  background: #FFFFFF;
   border-radius: 16rpx;
-  padding: 24rpx;
-  margin-bottom: 16rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.1);
+  padding: 48rpx 24rpx;
+  margin-top: 32rpx;
+  margin-bottom: 32rpx;
+  text-align: center;
 }
 
-.stats-item {
+.app-logo {
+  width: 120rpx;
+  height: 120rpx;
+  margin: 0 auto 24rpx auto;
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 16rpx 0;
-  border-bottom: 1rpx solid #f0f0f0;
+  justify-content: center;
+  box-shadow: 0 8rpx 32rpx rgba(102, 126, 234, 0.3);
 }
 
-.stats-item:last-child {
-  border-bottom: none;
+.logo-text {
+  font-size: 64rpx;
+  line-height: 1;
 }
 
-.stats-label {
-  font-size: 28rpx;
-  color: #333333;
-}
-
-.stats-value {
-  font-size: 28rpx;
-  color: #4285F4;
+.app-name {
+  font-size: 40rpx;
   font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 8rpx;
 }
 
-/* 退出登录 */
-.logout-section {
-  margin-top: 40rpx;
-  padding: 0 20rpx 40rpx 20rpx;
+.app-version {
+  font-size: 28rpx;
+  color: #4F46E5;
+  font-weight: 500;
+  margin-bottom: 16rpx;
 }
 
-.logout-btn {
-  height: 88rpx !important;
-  border-radius: 16rpx !important;
-  font-size: 32rpx !important;
-  font-weight: 600 !important;
+.app-copyright {
+  font-size: 24rpx;
+  color: #9CA3AF;
+  line-height: 1.4;
 }
 
-/* 开关组件样式重写 */
+/* 开关组件样式 */
 .van-switch {
-  transform: scale(0.9);
+  transform: scale(1.1);
 }
 
-/* 选择器样式 */
+/* picker样式 */
 picker {
-  display: flex;
-  align-items: center;
+  display: block;
 }
 
 /* 响应式适配 */
@@ -150,61 +201,80 @@ picker {
   
   .setting-item {
     padding: 24rpx 20rpx;
+    min-height: 72rpx;
+  }
+  
+  .section-title {
+    font-size: 28rpx;
   }
   
   .setting-label {
-    font-size: 26rpx;
+    font-size: 28rpx;
   }
   
   .setting-desc {
-    font-size: 22rpx;
+    font-size: 24rpx;
   }
   
   .setting-value {
+    font-size: 28rpx;
+    padding: 10rpx 16rpx;
+  }
+  
+  .app-name {
+    font-size: 36rpx;
+  }
+  
+  .app-version {
     font-size: 26rpx;
-    min-width: 100rpx;
+  }
+  
+  .logo-text {
+    font-size: 56rpx;
   }
 }
 
 /* 深色主题适配 */
 @media (prefers-color-scheme: dark) {
   .settings-container {
-    background: #1a1a1a;
+    background: #111827;
   }
   
-  .nav-header {
-    background: #2a2a2a;
+  .settings-group {
+    background: #1F2937;
+    box-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.3);
   }
   
-  .setting-group {
-    background: #2a2a2a;
-  }
-  
-  .storage-stats {
-    background: #2a2a2a;
+  .app-info {
+    background: #1F2937;
+    box-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.3);
   }
   
   .setting-item {
-    border-bottom-color: #3a3a3a;
+    border-bottom-color: #374151;
   }
   
-  .stats-item {
-    border-bottom-color: #3a3a3a;
-  }
-  
-  .setting-label {
-    color: #ffffff;
-  }
-  
-  .setting-desc {
-    color: #cccccc;
-  }
-  
-  .stats-label {
-    color: #ffffff;
+  .setting-item:active {
+    background-color: #374151;
   }
   
   .section-title {
-    color: #ffffff;
+    color: #F9FAFB;
+  }
+  
+  .setting-label {
+    color: #F9FAFB;
+  }
+  
+  .setting-desc {
+    color: #D1D5DB;
+  }
+  
+  .app-name {
+    color: #F9FAFB;
+  }
+  
+  .app-copyright {
+    color: #9CA3AF;
   }
 } 

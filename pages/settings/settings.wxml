@@ -4,24 +4,33 @@
     
     <!-- 学习设置 -->
     <view class="settings-section">
-      <view class="section-title">
-        <van-icon name="setting-o" size="18" color="#4285F4" />
-        <text>学习设置</text>
+      <view class="section-header">
+        <view class="section-icon">
+          <text class="icon-text">⚙️</text>
+        </view>
+        <text class="section-title">学习设置</text>
       </view>
       
-      <van-cell-group>
-        <!-- 提醒开关 -->
-        <van-cell title="学习提醒" size="large">
-          <van-switch 
-            checked="{{userSettings.reminderEnabled}}" 
-            bind:change="onToggleChange"
-            data-key="reminderEnabled"
-          />
-        </van-cell>
+      <view class="settings-group">
+        <!-- 学习提醒 -->
+        <view class="setting-item">
+          <view class="setting-left">
+            <text class="setting-label">学习提醒</text>
+            <text class="setting-desc">每日复习提醒时间</text>
+          </view>
+          <view class="setting-right">
+            <van-switch 
+              checked="{{userSettings.reminderEnabled}}" 
+              bind:change="onToggleChange"
+              data-key="reminderEnabled"
+              active-color="#4F46E5"
+            />
+          </view>
+        </view>
         
         <!-- 提醒时间 -->
         <view class="setting-item" wx:if="{{userSettings.reminderEnabled}}">
-          <view class="setting-info">
+          <view class="setting-left">
             <text class="setting-label">提醒时间</text>
             <text class="setting-desc">每日复习提醒时间</text>
           </view>
@@ -34,8 +43,9 @@
           </picker>
         </view>
         
+        <!-- 复习间隔 -->
         <view class="setting-item">
-          <view class="setting-info">
+          <view class="setting-left">
             <text class="setting-label">复习间隔</text>
             <text class="setting-desc">错题复习的间隔时间</text>
           </view>
@@ -47,14 +57,13 @@
             data-key="reviewInterval"
             data-options="reviewIntervals"
           >
-            <view class="setting-value">
-              {{reviewIntervalLabel}}
-            </view>
+            <view class="setting-value">{{reviewIntervalLabel}}</view>
           </picker>
         </view>
         
+        <!-- 练习模式 -->
         <view class="setting-item">
-          <view class="setting-info">
+          <view class="setting-left">
             <text class="setting-label">练习模式</text>
             <text class="setting-desc">题目的出现顺序</text>
           </view>
@@ -66,14 +75,13 @@
             data-key="practiceMode"
             data-options="practiceModes"
           >
-            <view class="setting-value">
-              {{practiceModeLabel}}
-            </view>
+            <view class="setting-value">{{practiceModeLabel}}</view>
           </picker>
         </view>
         
+        <!-- 难度等级 -->
         <view class="setting-item">
-          <view class="setting-info">
+          <view class="setting-left">
             <text class="setting-label">难度等级</text>
             <text class="setting-desc">题目难度偏好</text>
           </view>
@@ -85,24 +93,25 @@
             data-key="difficultyLevel"
             data-options="difficultyLevels"
           >
-            <view class="setting-value">
-              {{difficultyLevelLabel}}
-            </view>
+            <view class="setting-value">{{difficultyLevelLabel}}</view>
           </picker>
         </view>
-      </van-cell-group>
+      </view>
     </view>
 
     <!-- 界面设置 -->
     <view class="settings-section">
-      <view class="section-title">
-        <van-icon name="eye-o" size="18" color="#4285F4" />
-        <text>界面设置</text>
+      <view class="section-header">
+        <view class="section-icon section-icon-purple">
+          <text class="icon-text">👁️</text>
+        </view>
+        <text class="section-title">界面设置</text>
       </view>
       
-      <van-cell-group>
+      <view class="settings-group">
+        <!-- 主题模式 -->
         <view class="setting-item">
-          <view class="setting-info">
+          <view class="setting-left">
             <text class="setting-label">主题模式</text>
             <text class="setting-desc">选择应用主题</text>
           </view>
@@ -114,14 +123,13 @@
             data-key="theme"
             data-options="themes"
           >
-            <view class="setting-value">
-              {{themeLabel}}
-            </view>
+            <view class="setting-value">{{themeLabel}}</view>
           </picker>
         </view>
         
+        <!-- 字体大小 -->
         <view class="setting-item">
-          <view class="setting-info">
+          <view class="setting-left">
             <text class="setting-label">字体大小</text>
             <text class="setting-desc">调整界面字体大小</text>
           </view>
@@ -133,130 +141,101 @@
             data-key="fontSize"
             data-options="fontSizes"
           >
-            <view class="setting-value">
-              {{fontSizeLabel}}
-            </view>
+            <view class="setting-value">{{fontSizeLabel}}</view>
           </picker>
         </view>
         
-        <van-cell title="声音效果" size="large">
-          <van-switch 
-            checked="{{userSettings.soundEnabled}}" 
-            bind:change="onToggleChange"
-            data-key="soundEnabled"
-          />
-        </van-cell>
+        <!-- 音效设置 -->
+        <view class="setting-item">
+          <view class="setting-left">
+            <text class="setting-label">音效设置</text>
+            <text class="setting-desc">按键音、提示音</text>
+          </view>
+          <view class="setting-right">
+            <van-switch 
+              checked="{{userSettings.soundEnabled}}" 
+              bind:change="onToggleChange"
+              data-key="soundEnabled"
+              active-color="#4F46E5"
+            />
+          </view>
+        </view>
         
-        <van-cell title="震动反馈" size="large">
-          <van-switch 
-            checked="{{userSettings.vibrationEnabled}}" 
-            bind:change="onToggleChange"
-            data-key="vibrationEnabled"
-          />
-        </van-cell>
-      </van-cell-group>
+        <!-- 震动反馈 -->
+        <view class="setting-item">
+          <view class="setting-left">
+            <text class="setting-label">震动反馈</text>
+            <text class="setting-desc">触摸震动反馈</text>
+          </view>
+          <view class="setting-right">
+            <van-switch 
+              checked="{{userSettings.vibrationEnabled}}" 
+              bind:change="onToggleChange"
+              data-key="vibrationEnabled"
+              active-color="#4F46E5"
+            />
+          </view>
+        </view>
+      </view>
     </view>
 
     <!-- 数据管理 -->
     <view class="settings-section">
-      <view class="section-title">
-        <van-icon name="records" size="18" color="#4285F4" />
-        <text>数据管理</text>
+      <view class="section-header">
+        <view class="section-icon section-icon-green">
+          <text class="icon-text">📊</text>
+        </view>
+        <text class="section-title">数据管理</text>
       </view>
       
-      <van-cell-group>
-        <van-cell title="自动同步" size="large">
-          <van-switch 
-            checked="{{userSettings.autoSync}}" 
-            bind:change="onToggleChange"
-            data-key="autoSync"
-          />
-        </van-cell>
-        
-        <van-cell 
-          title="数据备份" 
-          value="{{lastBackupTime}}"
-          is-link
-          bind:click="onDataBackup"
-        />
-        
-        <van-cell 
-          title="数据恢复" 
-          is-link
-          bind:click="onDataRestore"
-        />
-        
+      <view class="settings-group">
+        <!-- 自动备份 -->
         <view class="setting-item">
-          <view class="setting-info">
+          <view class="setting-left">
+            <text class="setting-label">自动备份</text>
+            <text class="setting-desc">学习数据云端同步</text>
+          </view>
+          <view class="setting-right">
+            <van-switch 
+              checked="{{userSettings.autoSync}}" 
+              bind:change="onToggleChange"
+              data-key="autoSync"
+              active-color="#4F46E5"
+            />
+          </view>
+        </view>
+        
+        <!-- 缓存清理 -->
+        <view class="setting-item">
+          <view class="setting-left">
             <text class="setting-label">缓存清理</text>
             <text class="setting-desc">当前缓存: {{cacheSize}}</text>
           </view>
-          <van-button 
-            type="default" 
-            size="small"
-            bind:click="onClearCache"
-          >
-            清理
-          </van-button>
+          <view class="setting-right">
+            <view class="clear-btn" bind:tap="onClearCache">清理</view>
+          </view>
         </view>
-      </van-cell-group>
+      </view>
     </view>
 
     <!-- 关于应用 -->
     <view class="settings-section">
-      <view class="section-title">
-        <van-icon name="info-o" size="18" color="#4285F4" />
-        <text>关于应用</text>
+      <view class="section-header">
+        <view class="section-icon section-icon-orange">
+          <text class="icon-text">ℹ️</text>
+        </view>
+        <text class="section-title">关于应用</text>
       </view>
-      
-      <van-cell-group>
-        <van-cell 
-          title="应用版本" 
-          value="1.0.0"
-        />
-        
-        <van-cell 
-          title="用户协议" 
-          is-link
-          bind:click="onNavigateToPage"
-          data-url="/pages/help/help?type=terms"
-        />
-        
-        <van-cell 
-          title="隐私政策" 
-          is-link
-          bind:click="onNavigateToPage"
-          data-url="/pages/help/help?type=privacy"
-        />
-        
-        <van-cell 
-          title="意见反馈" 
-          is-link
-          bind:click="onNavigateToPage"
-          data-url="/pages/feedback/feedback"
-        />
-        
-        <van-cell 
-          title="关于我们" 
-          is-link
-          bind:click="onNavigateToPage"
-          data-url="/pages/about/about"
-        />
-      </van-cell-group>
     </view>
 
-    <!-- 账户操作 -->
-    <view class="settings-section">
-      <view class="account-actions">
-        <van-button 
-          type="warning" 
-          size="large"
-          bind:click="onLogout"
-          block
-        >
-          退出登录
-        </van-button>
+    <!-- 应用信息 -->
+    <view class="app-info">
+      <view class="app-logo">
+        <text class="logo-text">🧠</text>
       </view>
+      <view class="app-name">智能学霸小助手</view>
+      <view class="app-version">版本 1.0.0</view>
+      <view class="app-copyright">© 2025 智能学习科技有限公司</view>
     </view>
 
   </scroll-view>
@@ -270,14 +249,5 @@
     bind:confirm="confirmTime"
     bind:cancel="hideTimePicker"
     title="设置提醒时间"
-  />
-</van-popup>
-
-<van-popup show="{{showGoalPicker}}" position="bottom" bind:close="hideGoalPicker">
-  <van-picker 
-    columns="{{goalColumns}}" 
-    bind:confirm="confirmGoal"
-    bind:cancel="hideGoalPicker"
-    title="设置每日目标"
   />
 </van-popup> 
