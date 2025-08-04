@@ -7,31 +7,33 @@
 
 .settings-content {
   height: calc(100vh - 88rpx);
-  padding: 24rpx;
+  padding: 20rpx 24rpx 40rpx 24rpx;
+  max-width: 720rpx;
+  margin: 0 auto;
 }
 
 /* 设置分组 */
 .settings-section {
-  margin-bottom: 32rpx;
+  margin-bottom: 24rpx;
 }
 
 /* 分组标题 */
 .section-header {
   display: flex;
   align-items: center;
-  margin-bottom: 16rpx;
-  padding: 0 8rpx;
+  margin-bottom: 12rpx;
+  padding: 0 4rpx;
 }
 
 .section-icon {
-  width: 48rpx;
-  height: 48rpx;
-  border-radius: 12rpx;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 10rpx;
   background: #4F46E5;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 16rpx;
+  margin-right: 12rpx;
 }
 
 .section-icon-purple {
@@ -47,12 +49,12 @@
 }
 
 .icon-text {
-  font-size: 24rpx;
+  font-size: 20rpx;
   line-height: 1;
 }
 
 .section-title {
-  font-size: 32rpx;
+  font-size: 28rpx;
   font-weight: 600;
   color: #1F2937;
 }
@@ -60,8 +62,8 @@
 /* 设置组 */
 .settings-group {
   background: #FFFFFF;
-  border-radius: 16rpx;
-  box-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.1);
+  border-radius: 12rpx;
+  box-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.06);
   overflow: hidden;
 }
 
@@ -70,9 +72,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 32rpx 24rpx;
-  border-bottom: 1rpx solid #F3F4F6;
-  min-height: 80rpx;
+  padding: 24rpx 20rpx;
+  border-bottom: 1rpx solid #F1F5F9;
+  min-height: 60rpx;
 }
 
 .setting-item:last-child {
@@ -80,55 +82,63 @@
 }
 
 .setting-item:active {
-  background-color: #F9FAFB;
+  background-color: #F8FAFC;
 }
 
 .setting-left {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4rpx;
+  gap: 2rpx;
+  min-width: 0;
 }
 
 .setting-label {
-  font-size: 32rpx;
+  font-size: 28rpx;
   font-weight: 500;
-  color: #1F2937;
+  color: #0F172A;
   line-height: 1.4;
 }
 
 .setting-desc {
-  font-size: 26rpx;
-  color: #6B7280;
+  font-size: 22rpx;
+  color: #64748B;
   line-height: 1.3;
+  margin-top: 2rpx;
 }
 
 .setting-right {
   display: flex;
   align-items: center;
+  margin-left: 16rpx;
+  flex-shrink: 0;
 }
 
 .setting-value {
-  font-size: 32rpx;
+  font-size: 26rpx;
   color: #4F46E5;
   font-weight: 500;
-  padding: 12rpx 20rpx;
+  padding: 6rpx 16rpx;
   background: #EEF2FF;
-  border-radius: 12rpx;
-  min-width: 100rpx;
+  border-radius: 8rpx;
+  min-width: 80rpx;
   text-align: center;
+  line-height: 1.3;
+  white-space: nowrap;
 }
 
 /* 清理按钮 */
 .clear-btn {
   background: #4F46E5;
   color: #FFFFFF;
-  font-size: 28rpx;
+  font-size: 24rpx;
   font-weight: 500;
-  padding: 12rpx 24rpx;
-  border-radius: 12rpx;
+  padding: 8rpx 20rpx;
+  border-radius: 8rpx;
   text-align: center;
-  min-width: 80rpx;
+  min-width: 60rpx;
+  line-height: 1.3;
+  white-space: nowrap;
 }
 
 .clear-btn:active {
@@ -138,54 +148,56 @@
 /* 应用信息 */
 .app-info {
   background: #FFFFFF;
-  border-radius: 16rpx;
-  box-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.1);
-  padding: 48rpx 24rpx;
-  margin-top: 32rpx;
-  margin-bottom: 32rpx;
+  border-radius: 12rpx;
+  box-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.06);
+  padding: 40rpx 20rpx 32rpx 20rpx;
+  margin-top: 24rpx;
+  margin-bottom: 40rpx;
   text-align: center;
 }
 
 .app-logo {
-  width: 120rpx;
-  height: 120rpx;
-  margin: 0 auto 24rpx auto;
-  border-radius: 24rpx;
+  width: 100rpx;
+  height: 100rpx;
+  margin: 0 auto 20rpx auto;
+  border-radius: 20rpx;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8rpx 32rpx rgba(102, 126, 234, 0.3);
+  box-shadow: 0 6rpx 24rpx rgba(102, 126, 234, 0.25);
 }
 
 .logo-text {
-  font-size: 64rpx;
+  font-size: 56rpx;
   line-height: 1;
 }
 
 .app-name {
-  font-size: 40rpx;
+  font-size: 32rpx;
   font-weight: 600;
-  color: #1F2937;
-  margin-bottom: 8rpx;
+  color: #0F172A;
+  margin-bottom: 6rpx;
+  line-height: 1.3;
 }
 
 .app-version {
-  font-size: 28rpx;
+  font-size: 24rpx;
   color: #4F46E5;
   font-weight: 500;
-  margin-bottom: 16rpx;
+  margin-bottom: 12rpx;
+  line-height: 1.3;
 }
 
 .app-copyright {
-  font-size: 24rpx;
-  color: #9CA3AF;
+  font-size: 20rpx;
+  color: #94A3B8;
   line-height: 1.4;
 }
 
 /* 开关组件样式 */
 .van-switch {
-  transform: scale(1.1);
+  transform: scale(0.85);
 }
 
 /* picker样式 */
@@ -196,85 +208,120 @@ picker {
 /* 响应式适配 */
 @media (max-width: 400px) {
   .settings-content {
-    padding: 16rpx;
+    padding: 16rpx 20rpx 32rpx 20rpx;
+    max-width: none;
   }
   
   .setting-item {
-    padding: 24rpx 20rpx;
-    min-height: 72rpx;
+    padding: 20rpx 16rpx;
+    min-height: 56rpx;
+  }
+  
+  .section-icon {
+    width: 36rpx;
+    height: 36rpx;
+    border-radius: 8rpx;
+    margin-right: 10rpx;
+  }
+  
+  .icon-text {
+    font-size: 18rpx;
   }
   
   .section-title {
-    font-size: 28rpx;
-  }
-  
-  .setting-label {
-    font-size: 28rpx;
-  }
-  
-  .setting-desc {
-    font-size: 24rpx;
-  }
-  
-  .setting-value {
-    font-size: 28rpx;
-    padding: 10rpx 16rpx;
-  }
-  
-  .app-name {
-    font-size: 36rpx;
-  }
-  
-  .app-version {
     font-size: 26rpx;
   }
   
+  .setting-label {
+    font-size: 26rpx;
+  }
+  
+  .setting-desc {
+    font-size: 20rpx;
+  }
+  
+  .setting-value {
+    font-size: 24rpx;
+    padding: 5rpx 14rpx;
+    min-width: 70rpx;
+  }
+  
+  .clear-btn {
+    font-size: 22rpx;
+    padding: 7rpx 18rpx;
+    min-width: 54rpx;
+  }
+  
+  .app-logo {
+    width: 88rpx;
+    height: 88rpx;
+    border-radius: 18rpx;
+    margin-bottom: 16rpx;
+  }
+  
   .logo-text {
-    font-size: 56rpx;
+    font-size: 48rpx;
+  }
+  
+  .app-name {
+    font-size: 28rpx;
+  }
+  
+  .app-version {
+    font-size: 22rpx;
+  }
+  
+  .app-copyright {
+    font-size: 18rpx;
   }
 }
 
 /* 深色主题适配 */
 @media (prefers-color-scheme: dark) {
   .settings-container {
-    background: #111827;
+    background: #0F172A;
   }
   
   .settings-group {
-    background: #1F2937;
-    box-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.3);
+    background: #1E293B;
+    box-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.25);
   }
   
   .app-info {
-    background: #1F2937;
-    box-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.3);
+    background: #1E293B;
+    box-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.25);
   }
   
   .setting-item {
-    border-bottom-color: #374151;
+    border-bottom-color: #334155;
   }
   
   .setting-item:active {
-    background-color: #374151;
+    background-color: #334155;
   }
   
   .section-title {
-    color: #F9FAFB;
+    color: #F1F5F9;
   }
   
   .setting-label {
-    color: #F9FAFB;
+    color: #F1F5F9;
   }
   
   .setting-desc {
-    color: #D1D5DB;
+    color: #CBD5E1;
   }
   
   .app-name {
-    color: #F9FAFB;
+    color: #F1F5F9;
   }
   
   .app-copyright {
-    color: #9CA3AF;
+    color: #94A3B8;
+  }
+  
+  .setting-value {
+    background: #1E293B;
+    color: #60A5FA;
   }
 } 

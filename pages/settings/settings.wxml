@@ -24,6 +24,7 @@
               bind:change="onToggleChange"
               data-key="reminderEnabled"
               active-color="#4F46E5"
+              size="24"
             />
           </view>
         </view>
@@ -34,13 +35,15 @@
             <text class="setting-label">提醒时间</text>
             <text class="setting-desc">每日复习提醒时间</text>
           </view>
-          <picker 
-            mode="time" 
-            value="{{userSettings.reminderTime}}" 
-            bind:change="onTimeChange"
-          >
-            <view class="setting-value">{{userSettings.reminderTime}}</view>
-          </picker>
+          <view class="setting-right">
+            <picker 
+              mode="time" 
+              value="{{userSettings.reminderTime}}" 
+              bind:change="onTimeChange"
+            >
+              <view class="setting-value">{{userSettings.reminderTime}}</view>
+            </picker>
+          </view>
         </view>
         
         <!-- 复习间隔 -->
@@ -49,16 +52,18 @@
             <text class="setting-label">复习间隔</text>
             <text class="setting-desc">错题复习的间隔时间</text>
           </view>
-          <picker 
-            range="{{settingOptions.reviewIntervals}}" 
-            range-key="label"
-            value="{{userSettings.reviewInterval}}"
-            bind:change="onPickerChange"
-            data-key="reviewInterval"
-            data-options="reviewIntervals"
-          >
-            <view class="setting-value">{{reviewIntervalLabel}}</view>
-          </picker>
+          <view class="setting-right">
+            <picker 
+              range="{{settingOptions.reviewIntervals}}" 
+              range-key="label"
+              value="{{userSettings.reviewInterval}}"
+              bind:change="onPickerChange"
+              data-key="reviewInterval"
+              data-options="reviewIntervals"
+            >
+              <view class="setting-value">{{reviewIntervalLabel}}</view>
+            </picker>
+          </view>
         </view>
         
         <!-- 练习模式 -->
@@ -67,16 +72,18 @@
             <text class="setting-label">练习模式</text>
             <text class="setting-desc">题目的出现顺序</text>
           </view>
-          <picker 
-            range="{{settingOptions.practiceModes}}" 
-            range-key="label"
-            value="{{userSettings.practiceMode}}"
-            bind:change="onPickerChange"
-            data-key="practiceMode"
-            data-options="practiceModes"
-          >
-            <view class="setting-value">{{practiceModeLabel}}</view>
-          </picker>
+          <view class="setting-right">
+            <picker 
+              range="{{settingOptions.practiceModes}}" 
+              range-key="label"
+              value="{{userSettings.practiceMode}}"
+              bind:change="onPickerChange"
+              data-key="practiceMode"
+              data-options="practiceModes"
+            >
+              <view class="setting-value">{{practiceModeLabel}}</view>
+            </picker>
+          </view>
         </view>
         
         <!-- 难度等级 -->
@@ -85,16 +92,18 @@
             <text class="setting-label">难度等级</text>
             <text class="setting-desc">题目难度偏好</text>
           </view>
-          <picker 
-            range="{{settingOptions.difficultyLevels}}" 
-            range-key="label"
-            value="{{userSettings.difficultyLevel}}"
-            bind:change="onPickerChange"
-            data-key="difficultyLevel"
-            data-options="difficultyLevels"
-          >
-            <view class="setting-value">{{difficultyLevelLabel}}</view>
-          </picker>
+          <view class="setting-right">
+            <picker 
+              range="{{settingOptions.difficultyLevels}}" 
+              range-key="label"
+              value="{{userSettings.difficultyLevel}}"
+              bind:change="onPickerChange"
+              data-key="difficultyLevel"
+              data-options="difficultyLevels"
+            >
+              <view class="setting-value">{{difficultyLevelLabel}}</view>
+            </picker>
+          </view>
         </view>
       </view>
     </view>
@@ -115,16 +124,18 @@
             <text class="setting-label">主题模式</text>
             <text class="setting-desc">选择应用主题</text>
           </view>
-          <picker 
-            range="{{settingOptions.themes}}" 
-            range-key="label"
-            value="{{userSettings.theme}}"
-            bind:change="onPickerChange"
-            data-key="theme"
-            data-options="themes"
-          >
-            <view class="setting-value">{{themeLabel}}</view>
-          </picker>
+          <view class="setting-right">
+            <picker 
+              range="{{settingOptions.themes}}" 
+              range-key="label"
+              value="{{userSettings.theme}}"
+              bind:change="onPickerChange"
+              data-key="theme"
+              data-options="themes"
+            >
+              <view class="setting-value">{{themeLabel}}</view>
+            </picker>
+          </view>
         </view>
         
         <!-- 字体大小 -->
@@ -133,16 +144,18 @@
             <text class="setting-label">字体大小</text>
             <text class="setting-desc">调整界面字体大小</text>
           </view>
-          <picker 
-            range="{{settingOptions.fontSizes}}" 
-            range-key="label"
-            value="{{userSettings.fontSize}}"
-            bind:change="onPickerChange"
-            data-key="fontSize"
-            data-options="fontSizes"
-          >
-            <view class="setting-value">{{fontSizeLabel}}</view>
-          </picker>
+          <view class="setting-right">
+            <picker 
+              range="{{settingOptions.fontSizes}}" 
+              range-key="label"
+              value="{{userSettings.fontSize}}"
+              bind:change="onPickerChange"
+              data-key="fontSize"
+              data-options="fontSizes"
+            >
+              <view class="setting-value">{{fontSizeLabel}}</view>
+            </picker>
+          </view>
         </view>
         
         <!-- 音效设置 -->
@@ -157,6 +170,7 @@
               bind:change="onToggleChange"
               data-key="soundEnabled"
               active-color="#4F46E5"
+              size="24"
             />
           </view>
         </view>
@@ -173,6 +187,7 @@
               bind:change="onToggleChange"
               data-key="vibrationEnabled"
               active-color="#4F46E5"
+              size="24"
             />
           </view>
         </view>
@@ -201,6 +216,7 @@
               bind:change="onToggleChange"
               data-key="autoSync"
               active-color="#4F46E5"
+              size="24"
             />
           </view>
         </view>
