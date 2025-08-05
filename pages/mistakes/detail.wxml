@@ -145,19 +145,18 @@
       </view>
 
       <!-- 相关题目 -->
-      <view class="related-section">
+      <view class="related-section" wx:if="{{relatedMistakes.length > 0}}">
         <view class="section-header">
-          <van-icon name="question-o" size="16" color="#FF5722" />
+          <view class="section-icon">🔗</view>
           <text class="section-title">相关题目</text>
         </view>
-        
-        <view class="related-item" bind:tap="navigateToRelated" data-url="/pages/mistakes/detail?id=related1">
-          <text class="related-text">18个橘子平均分给3个人...</text>
-          <van-icon name="arrow" size="14" color="#999" />
-        </view>
-        <view class="related-item" bind:tap="navigateToRelated" data-url="/pages/mistakes/detail?id=related2">
-          <text class="related-text">30个糖果分给5个小朋友...</text>
-          <van-icon name="arrow" size="14" color="#999" />
+        <view class="related-item" 
+              wx:for="{{relatedMistakes}}" 
+              wx:key="_id"
+              bind:tap="navigateToRelated" 
+              data-url="/pages/mistakes/detail?id={{item._id}}">
+          <text class="related-text">{{item.question}}</text>
+          <view class="related-arrow">→</view>
         </view>
       </view>
 

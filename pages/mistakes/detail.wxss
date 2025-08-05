@@ -339,41 +339,49 @@
   flex: 1;
 }
 
-/* 相关题目区域 */
+/* 相关题目 */
 .related-section {
-  margin: 0 24rpx 32rpx;
-  background: #ffffff;
-  border-radius: 24rpx;
-  padding: 32rpx;
-  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
+  background: white;
+  margin: 20rpx;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.section-icon {
+  margin-right: 12rpx;
+  font-size: 32rpx;
 }
 
 .related-item {
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 20rpx;
-  background: #f8f9fa;
-  border-radius: 16rpx;
-  margin-bottom: 16rpx;
-  border: 1rpx solid #e5e7eb;
-  transition: all 0.3s ease;
+  align-items: center;
+  transition: background-color 0.2s;
 }
 
 .related-item:last-child {
-  margin-bottom: 0;
+  border-bottom: none;
 }
 
 .related-item:active {
-  background: #e5e7eb;
-  transform: scale(0.98);
+  background-color: #f8f9fa;
 }
 
 .related-text {
   font-size: 28rpx;
-  color: #666;
-  line-height: 1.6;
+  color: #333;
   flex: 1;
+  margin-right: 20rpx;
+  line-height: 1.4;
+}
+
+.related-arrow {
+  color: #999;
+  font-size: 24rpx;
+  font-weight: bold;
 }
 
 /* 底部操作 */

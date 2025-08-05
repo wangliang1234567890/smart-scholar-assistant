@@ -105,7 +105,8 @@ class DatabaseManager {
         page = 1,
         pageSize = 20,
         sortBy = 'createTime',
-        sortOrder = 'desc'
+        sortOrder = 'desc',
+        excludeId = '' // 排除特定ID的错题
       } = options;
 
       // 构建查询条件
@@ -136,6 +137,13 @@ class DatabaseManager {
             regexp: keyword,
             options: 'i'
           })
+        });
+      }
+
+      // 排除特定ID
+      if (excludeId) {
+        query = query.where({
+          _id: this.db.command.neq(excludeId)
         });
       }
 
