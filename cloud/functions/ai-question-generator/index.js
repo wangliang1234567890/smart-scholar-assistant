@@ -49,7 +49,10 @@ exports.main = async (event, context) => {
       questionTypes = ['single_choice'], 
       difficulty = 'medium',
       subject = 'math',
-      knowledgePoints = []
+      knowledgePoints = [],
+      type = 'question_generation', // 新增：请求类型
+      question, // 新增：用于答案生成的题目
+      options = {} // 新增：选项参数
     } = event;
 
     console.log('📋 参数解析结果:', {
@@ -59,9 +62,32 @@ exports.main = async (event, context) => {
       generateCount,
       questionTypes,
       difficulty,
-      subject
+      subject,
+      type,
+      hasQuestion: !!question
     });
 
+    // 处理答案生成请求
+    if (type === 'answer_generation' && question) {
+      console.log('🎯 开始生成答案，题目:', question.substring(0, 100) + '...');
+      
+      const answerResult = await generateAnswerWithDoubao(
+        question,
+        options,
+        DOUBAO_CONFIG
+      );
+      
+      return {
+        success: true,
+        answer: answerResult.answer,
+        analysis: answerResult.analysis,
+        provider: '豆包AI',
+        processingTime: Date.now() - startTime,
+        type: 'answer_generation'
+      };
+    }
+
+    // 原有的题目生成逻辑
     if (!errorQuestion && (!sourceErrors || sourceErrors.length === 0)) {
       console.error('❌ 错题数据检查失败:', {
         errorQuestion: errorQuestion,
@@ -274,6 +300,203 @@ async function generateQuestionsWithDoubao(errorQuestion, count, types, difficul
       throw new Error('豆包AI请求超时');
     }
     throw error;
+  }
+}
+
+/**
+ * 使用豆包AI生成答案和解析
+ */
+async function generateAnswerWithDoubao(question, options, config) {
+  const fetch = require('node-fetch');
+  
+  const TIMEOUT = 60000; // 60秒超时
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT);
+  
+  try {
+    console.log('🔍 开始生成答案，题目长度:', question.length);
+    
+    // 构建豆包AI请求数据
+    const requestData = {
+      model: config.MODEL_ID,
+      messages: [
+        {
+          role: "system",
+          content: "你是一位专业的教师，擅长各科目的题目解答。请根据题目内容，提供准确的答案和详细的解题步骤。"
+        },
+        {
+          role: "user",
+          content: `请解答以下题目，并提供详细的解题步骤：
+
+题目：${question}
+
+请按以下格式回答：
+答案：[具体答案]
+解析：[详细的解题步骤和思路分析]`
+        }
+      ],
+      max_tokens: 1000,
+      temperature: 0.3,
+      top_p: 0.9
+    };
+
+    console.log('📡 发送请求到豆包AI进行答案生成');
+
+    // 发送请求到豆包AI
+    const response = await fetch(config.ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${config.API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestData),
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+
+    console.log('📡 豆包AI响应状态:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ 豆包AI API错误:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      });
+      throw new Error(`豆包AI API错误: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    
+    console.log('✅ 豆包AI调用成功:', {
+      hasChoices: !!(result.choices && result.choices.length > 0),
+      choicesCount: result.choices ? result.choices.length : 0,
+      usage: result.usage
+    });
+
+    // 解析豆包AI响应
+    const content = result.choices[0].message.content;
+    console.log('🔍 AI原始返回内容长度:', content.length);
+    console.log('📝 AI返回内容前200字符:', content.substring(0, 200));
+    
+    // 解析答案和解析
+    const parsedResult = parseAnswerResponse(content);
+    
+    console.log('✅ 答案生成成功:', {
+      hasAnswer: !!parsedResult.answer,
+      hasAnalysis: !!parsedResult.analysis,
+      answerLength: parsedResult.answer?.length || 0,
+      analysisLength: parsedResult.analysis?.length || 0
+    });
+
+    return {
+      success: true,
+      answer: parsedResult.answer || 'AI生成的答案',
+      analysis: parsedResult.analysis || 'AI生成的解析',
+      provider: '豆包AI'
+    };
+
+  } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (error.name === 'AbortError') {
+      console.error('⏰ 豆包AI请求超时');
+      throw new Error('AI服务请求超时，请稍后重试');
+    }
+    
+    console.error('❌ 豆包AI答案生成失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * 解析AI答案响应
+ */
+function parseAnswerResponse(content) {
+  try {
+    console.log('🔍 开始解析AI响应，内容长度:', content.length);
+    console.log('📝 AI响应内容:', content);
+    
+    // 多种格式的答案和解析提取
+    let answer = '';
+    let analysis = '';
+    
+    // 格式1: 答案：[内容] 解析：[内容]
+    const answerMatch1 = content.match(/答案[：:]\s*(.+?)(?=\n|解析|$)/s);
+    const analysisMatch1 = content.match(/解析[：:]\s*(.+?)$/s);
+    
+    if (answerMatch1) answer = answerMatch1[1].trim();
+    if (analysisMatch1) analysis = analysisMatch1[1].trim();
+    
+    // 格式2: 答案：内容\n解析：内容
+    if (!answer || !analysis) {
+      const answerMatch2 = content.match(/答案[：:]\s*([^\n]+)/);
+      const analysisMatch2 = content.match(/解析[：:]\s*([\s\S]+)/);
+      
+      if (answerMatch2) answer = answerMatch2[1].trim();
+      if (analysisMatch2) analysis = analysisMatch2[1].trim();
+    }
+    
+    // 格式3: 直接分段处理
+    if (!answer || !analysis) {
+      const lines = content.split('\n').filter(line => line.trim());
+      console.log('📋 分段处理，行数:', lines.length);
+      
+      if (lines.length >= 2) {
+        // 第一行作为答案，其余作为解析
+        answer = lines[0].trim();
+        analysis = lines.slice(1).join('\n').trim();
+      } else if (lines.length === 1) {
+        // 只有一行，尝试提取等号后的内容作为答案
+        const equalMatch = lines[0].match(/=\s*(.+)/);
+        if (equalMatch) {
+          answer = equalMatch[1].trim();
+          analysis = lines[0].trim();
+        } else {
+          answer = lines[0].trim();
+          analysis = 'AI生成的解析';
+        }
+      }
+    }
+    
+    // 格式4: 数学题特殊处理
+    if (!answer && content.includes('=')) {
+      const equalMatch = content.match(/=\s*([^\n]+)/);
+      if (equalMatch) {
+        answer = equalMatch[1].trim();
+        analysis = content.trim();
+      }
+    }
+    
+    // 如果还是没有找到，使用整个内容
+    if (!answer) {
+      answer = content.trim();
+      analysis = 'AI生成的解析';
+    }
+    
+    console.log('✅ 解析结果:', {
+      answer: answer.substring(0, 50) + (answer.length > 50 ? '...' : ''),
+      analysis: analysis.substring(0, 100) + (analysis.length > 100 ? '...' : ''),
+      answerLength: answer.length,
+      analysisLength: analysis.length
+    });
+    
+    return {
+      answer: answer || 'AI生成的答案',
+      analysis: analysis || 'AI生成的解析'
+    };
+    
+  } catch (error) {
+    console.error('❌ 解析AI答案响应失败:', error);
+    return {
+      answer: 'AI生成的答案',
+      analysis: 'AI生成的解析'
+    };
   }
 }
 

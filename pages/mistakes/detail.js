@@ -206,37 +206,44 @@ Page({
     try {
       console.log('开始AI答案生成，题目:', mistake.question);
       
-      // 由于AI服务调用复杂，先使用智能备用答案
-      const intelligentAnswer = this.generateIntelligentAnswer(mistake);
+      // 调用豆包AI云函数生成答案
+      const aiResult = await this.callDoubaoAI(mistake.question);
       
-      // 模拟AI处理时间
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      console.log('AI生成的答案:', intelligentAnswer.answer);
-      console.log('AI生成的解析:', intelligentAnswer.analysis);
-      
-      // 更新数据
-      this.setData({
-        aiAnswer: intelligentAnswer.answer,
-        aiAnalysis: intelligentAnswer.analysis,
-        isGeneratingAnswer: false
-      });
-      
-      // 将生成的答案保存到数据库
-      if (intelligentAnswer.answer && intelligentAnswer.analysis) {
-        this.saveAIAnswerToDatabase(mistake._id, intelligentAnswer.answer, intelligentAnswer.analysis);
+      if (aiResult.success) {
+        console.log('豆包AI生成的答案:', aiResult.answer);
+        console.log('豆包AI生成的解析:', aiResult.analysis);
+        
+        // 更新数据
+        this.setData({
+          aiAnswer: aiResult.answer,
+          aiAnalysis: aiResult.analysis,
+          isGeneratingAnswer: false
+        });
+        
+        // 将生成的答案保存到数据库
+        if (aiResult.answer && aiResult.analysis) {
+          this.saveAIAnswerToDatabase(mistake._id, aiResult.answer, aiResult.analysis);
+        }
+      } else {
+        throw new Error(aiResult.error || 'AI生成失败');
       }
       
     } catch (error) {
       console.error('AI答案生成失败:', error);
       
-      // 如果生成失败，提供基础答案
-      const fallbackAnswer = this.generateFallbackAnswer(mistake);
+      // 如果AI生成失败，使用本地智能备用答案
+      const fallbackAnswer = this.generateIntelligentAnswer(mistake);
       
       this.setData({ 
         isGeneratingAnswer: false,
         aiAnswer: fallbackAnswer.answer,
         aiAnalysis: fallbackAnswer.analysis
+      });
+      
+      wx.showToast({
+        title: 'AI生成失败，使用备用答案',
+        icon: 'none',
+        duration: 2000
       });
     }
   },
@@ -592,39 +599,138 @@ Page({
     try {
       console.log('开始AI答案生成，题目:', mistake.question);
       
-      // 由于AI服务调用复杂，先使用智能备用答案
-      const intelligentAnswer = this.generateIntelligentAnswer(mistake);
+      // 调用豆包AI云函数生成答案
+      const aiResult = await this.callDoubaoAI(mistake.question);
       
-      // 模拟AI处理时间
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      console.log('AI生成的答案:', intelligentAnswer.answer);
-      console.log('AI生成的解析:', intelligentAnswer.analysis);
-      
-      // 更新数据
-      this.setData({
-        aiAnswer: intelligentAnswer.answer,
-        aiAnalysis: intelligentAnswer.analysis,
-        isGeneratingAnswer: false
-      });
-      
-      // 将生成的答案保存到数据库
-      if (intelligentAnswer.answer && intelligentAnswer.analysis) {
-        this.saveAIAnswerToDatabase(mistake._id, intelligentAnswer.answer, intelligentAnswer.analysis);
+      if (aiResult.success) {
+        console.log('豆包AI生成的答案:', aiResult.answer);
+        console.log('豆包AI生成的解析:', aiResult.analysis);
+        
+        // 更新数据
+        this.setData({
+          aiAnswer: aiResult.answer,
+          aiAnalysis: aiResult.analysis,
+          isGeneratingAnswer: false
+        });
+        
+        // 将生成的答案保存到数据库
+        if (aiResult.answer && aiResult.analysis) {
+          this.saveAIAnswerToDatabase(mistake._id, aiResult.answer, aiResult.analysis);
+        }
+      } else {
+        throw new Error(aiResult.error || 'AI生成失败');
       }
       
     } catch (error) {
       console.error('AI答案生成失败:', error);
       
-      // 如果生成失败，提供基础答案
-      const fallbackAnswer = this.generateFallbackAnswer(mistake);
+      // 如果AI生成失败，使用本地智能备用答案
+      const fallbackAnswer = this.generateIntelligentAnswer(mistake);
       
       this.setData({ 
         isGeneratingAnswer: false,
         aiAnswer: fallbackAnswer.answer,
         aiAnalysis: fallbackAnswer.analysis
       });
+      
+      wx.showToast({
+        title: 'AI生成失败，使用备用答案',
+        icon: 'none',
+        duration: 2000
+      });
     }
+  },
+
+  /**
+   * 调用豆包AI云函数生成答案
+   */
+  async callDoubaoAI(question) {
+    try {
+      // 预处理题目内容，清理OCR格式
+      const cleanQuestion = this.preprocessQuestion(question);
+      console.log('预处理后的题目:', cleanQuestion);
+      console.log('调用豆包AI云函数，题目:', cleanQuestion.substring(0, 50) + '...');
+      
+      // 构建AI请求参数
+      const requestData = {
+        question: cleanQuestion,
+        type: 'answer_generation',
+        options: {
+          includeSteps: true,
+          includeAnalysis: true,
+          language: 'zh-CN'
+        }
+      };
+      
+      // 调用AI题目生成云函数
+      const result = await wx.cloud.callFunction({
+        name: 'ai-question-generator',
+        data: requestData,
+        timeout: 30000 // 30秒超时
+      });
+      
+      console.log('豆包AI云函数返回结果:', result);
+      
+      if (result.result && result.result.success) {
+        // 解析AI返回的结果
+        const aiResponse = result.result;
+        
+        return {
+          success: true,
+          answer: aiResponse.answer || 'AI生成的答案',
+          analysis: aiResponse.analysis || 'AI生成的解析'
+        };
+      } else {
+        throw new Error(result.result?.error || 'AI服务返回错误');
+      }
+      
+    } catch (error) {
+      console.error('调用豆包AI失败:', error);
+      return {
+        success: false,
+        error: error.message || 'AI服务调用失败'
+      };
+    }
+  },
+
+  /**
+   * 预处理题目内容，清理OCR格式
+   */
+  preprocessQuestion(question) {
+    if (!question) return '';
+    
+    let cleanQuestion = question;
+    
+    // 移除Markdown格式
+    cleanQuestion = cleanQuestion.replace(/###\s*题目文字内容：\s*/g, '');
+    cleanQuestion = cleanQuestion.replace(/###\s*公式\/算式：\s*/g, '');
+    cleanQuestion = cleanQuestion.replace(/\*\*(.*?)\*\*/g, '$1'); // 移除粗体
+    cleanQuestion = cleanQuestion.replace(/图片中的文字内容为：\s*/g, '');
+    
+    // 移除多余的换行和空格
+    cleanQuestion = cleanQuestion.replace(/\n+/g, '\n').trim();
+    
+    // 提取数学公式
+    const mathMatch = cleanQuestion.match(/\\\(([^)]+)\\\)/);
+    if (mathMatch) {
+      cleanQuestion = mathMatch[1];
+    }
+    
+    // 如果题目太短，尝试提取等号部分
+    if (cleanQuestion.length < 10 && cleanQuestion.includes('=')) {
+      const equalMatch = cleanQuestion.match(/([^=]+=)/);
+      if (equalMatch) {
+        cleanQuestion = equalMatch[1];
+      }
+    }
+    
+    console.log('题目预处理结果:', {
+      original: question.substring(0, 100),
+      cleaned: cleanQuestion,
+      length: cleanQuestion.length
+    });
+    
+    return cleanQuestion;
   },
 
   /**
