@@ -330,6 +330,12 @@ async function generateAnswerWithDoubao(question, options, config) {
 
 题目：${question}
 
+重要要求：
+1. 使用简洁易读的文字描述，不要使用LaTeX、MathML等特殊格式
+2. 数学符号请使用常见的文字符号：× ÷ ² ³ √ ≥ ≤ ≠ 等
+3. 分数请写成"1/2"、"3/4"这样的形式
+4. 解析要分步骤，每步都要清晰说明
+
 请按以下格式回答：
 答案：[具体答案]
 解析：[详细的解题步骤和思路分析]`
@@ -387,17 +393,21 @@ async function generateAnswerWithDoubao(question, options, config) {
     // 解析答案和解析
     const parsedResult = parseAnswerResponse(content);
     
+    // 清理LaTeX格式
+    const cleanAnswer = cleanLatexFormat(parsedResult.answer || 'AI生成的答案');
+    const cleanAnalysis = cleanLatexFormat(parsedResult.analysis || 'AI生成的解析');
+    
     console.log('✅ 答案生成成功:', {
       hasAnswer: !!parsedResult.answer,
       hasAnalysis: !!parsedResult.analysis,
-      answerLength: parsedResult.answer?.length || 0,
-      analysisLength: parsedResult.analysis?.length || 0
+      answerLength: cleanAnswer.length,
+      analysisLength: cleanAnalysis.length
     });
 
     return {
       success: true,
-      answer: parsedResult.answer || 'AI生成的答案',
-      analysis: parsedResult.analysis || 'AI生成的解析',
+      answer: cleanAnswer,
+      analysis: cleanAnalysis,
       provider: '豆包AI'
     };
 
@@ -412,6 +422,36 @@ async function generateAnswerWithDoubao(question, options, config) {
     console.error('❌ 豆包AI答案生成失败:', error);
     throw error;
   }
+}
+
+/**
+ * 清理LaTeX格式，转换为易读文本
+ */
+function cleanLatexFormat(text) {
+  if (!text) return '';
+  
+  let cleaned = text;
+  
+  // 移除LaTeX包装符号
+  cleaned = cleaned.replace(/\\\(([^)]+)\\\)/g, '$1'); // \(内容\) -> 内容
+  cleaned = cleaned.replace(/\\\[([^\]]+)\\\]/g, '$1'); // \[内容\] -> 内容
+  cleaned = cleaned.replace(/\$([^$]+)\$/g, '$1'); // $内容$ -> 内容
+  
+  // 替换常见的LaTeX命令为文字符号
+  cleaned = cleaned.replace(/\\times/g, '×');
+  cleaned = cleaned.replace(/\\div/g, '÷');
+  cleaned = cleaned.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1/$2'); // \frac{a}{b} -> a/b
+  cleaned = cleaned.replace(/\\sqrt\{([^}]+)\}/g, '√($1)'); // \sqrt{x} -> √(x)
+  cleaned = cleaned.replace(/\\geq/g, '≥');
+  cleaned = cleaned.replace(/\\leq/g, '≤');
+  cleaned = cleaned.replace(/\\neq/g, '≠');
+  cleaned = cleaned.replace(/\\pm/g, '±');
+  cleaned = cleaned.replace(/\\cdot/g, '·');
+  
+  // 清理多余的空格和换行
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  
+  return cleaned;
 }
 
 /**
